@@ -29,25 +29,31 @@ Currently the scheduler architectures supported are:
 
 Be aware that the scheduler simulators original code might be different after the refactoring and improvements, but the logic is the same.
 
-## Metrics recorded
+## Metrics
 
-Below there is a table that summarize the metric used for each scheduler simulator.
+### Plotted
 
-|                                   | Monolithic  |  Mesos  | Omega  | Spark  |
+Below there is a table that summarize the metric plotted for each scheduler simulator.
+
+|                                   | Monolithic  |  Mesos  | Omega     | Spark     | Zoe       |
 |:-:|:-:|:-:|:-:|:-:|:-:|
-| Avg Cell CPU Utilization          | &#10004;  | &#10004;  | &#10004;  |   |
-| Avg Cell RAM Utilization          | &#10004;  | &#10004;  | &#10004;  |   |
-| Avg Cell CPU Locked               | &#10004;  | &#10004;  | &#10004;  |   |
-| Avg Cell RAM Locked               | &#10004;  | &#10004;  | &#10004;  |   |
-| Busy Time Fraction                | &#10004;  | &#10004;  | &#10004;  |   |
-| Conflict Fraction                 |           |           | &#10004;  |   |
-| Daily Busy Fraction Median        | &#10004;  | &#10004;  | &#10004;  |   |
-| Daily Conflict Fraction Median    |           |           | &#10004;  |   |
-| Failed Task Allocation            | &#10004;  | &#10004;  | &#10004;  |   |
-| Jobs Unscheduled                  | &#10004;  | &#10004;  | &#10004;  |   |
-| Number Jobs Timed Out             | &#10004;  | &#10004;  | &#10004;  |   |
-| Number Pending Jobs at the End    | &#10004;  | &#10004;  | &#10004;  |   |
-| Retried Transactions              |           |           | &#10004;  |   |
-| Task Conflict Fraction            |           |           | &#10004;  |   |
-| Wait Time Before First Task       | &#10004;  | &#10004;  | &#10004;  |   |
-| Wait Time Before All Tasks        | &#10004;  | &#10004;  | &#10004;  |   |
+| Avg Cell CPU Utilization          | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Avg Cell RAM Utilization          | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Avg Cell CPU Locked               | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Avg Cell RAM Locked               | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Busy Time Fraction                | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Conflict Fraction                 |           |           | &#10004;  |           |           |
+| Daily Busy Fraction Median        | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Daily Conflict Fraction Median    |           |           | &#10004;  |           |           |
+| Failed Task Allocation            | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Jobs Unscheduled                  | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Jobs Scheduled                    |           |   |   |           | &#10004;  |
+| Jobs Fully Scheduled              |           |   |   |           | &#10004;  |
+| Number Jobs Timed Out             | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Number Pending Jobs at the End    | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  | 
+| Retried Transactions              |           |           | &#10004;  |           |           |
+| Task Conflict Fraction            |           |           | &#10004;  |           |           |
+| Wait Time Before First Task       | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Wait Time Before All Tasks        | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Avg Job Execution Time            |           |   |   |           | &#10004;  |
+| Avg Job Completion Time           |           |   |   |           | &#10004;  |

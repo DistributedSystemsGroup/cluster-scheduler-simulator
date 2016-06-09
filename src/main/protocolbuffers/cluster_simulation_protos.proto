@@ -29,72 +29,91 @@ package ClusterSchedulingSimulation;
 message ExperimentResultSet {
   repeated ExperimentEnv experiment_env = 1;
 
+  // There is a 1-1 relationship between an ExperimentEnv and a WorkloadDesc.
   message ExperimentEnv {
     optional string cell_name = 1;
     optional string workload_split_type = 2;
-    optional bool is_prefilled = 5 [default = false];
     optional double run_time = 3;
     repeated ExperimentResult experiment_result = 4;
-    // Next field number: 6
+    optional bool is_prefilled = 5 [default = false];
+    repeated CommonWorkloadStats common_workload_stats = 6;
+    // Next field number: 7
 
-    // There is a 1-1 relationship between an ExperimentResult and a WorkloadDesc.
+    message CommonWorkloadStats {
+      optional string workload_name = 1;
+      repeated JobStats job_stats = 2;
+      // Job-level stats.
+      message JobStats {
+        optional int64 id = 1;
+        optional int32 num_tasks = 2;
+        optional double mem_per_task = 3;
+        optional double cpu_per_task = 4;
+        optional double task_duration = 5;
+      }
+    }
+
+
     message ExperimentResult {
       // Track avg resource utilization attributable to tasks actually running.
-      optional double cell_state_avg_cpu_utilization = 4;
-      optional double cell_state_avg_mem_utilization = 5;
+      optional double cell_state_avg_cpu_utilization = 1;
+      optional double cell_state_avg_mem_utilization = 2;
       // Track avg resource utilization attributable to pessimistic locking
       // while schedulers make their scheduling decisions.
-      optional double cell_state_avg_cpu_locked = 13;
-      optional double cell_state_avg_mem_locked = 14;
+      optional double cell_state_avg_cpu_locked = 3;
+      optional double cell_state_avg_mem_locked = 4;
       // Track per-workload level stats for this experiment.
-      repeated WorkloadStats workload_stats = 6;
+      repeated WorkloadStats workload_stats = 5;
       // Workload specific experiment parameters.
-      optional string sweep_workload = 8;
-      optional double avg_job_interarrival_time = 9;
+      optional string sweep_workload = 6;
+      optional double avg_job_interarrival_time = 7;
       // Track per-scheduler level stats for this experiment.
-      repeated SchedulerStats scheduler_stats = 7;
+      repeated SchedulerStats scheduler_stats = 8;
       // Scheduler specific experiment parameters.
-      repeated SchedulerWorkload sweep_scheduler_workload = 10;
-      optional double constant_think_time = 11;
-      optional double per_task_think_time = 12;
-      // Next field number: 15
+      repeated SchedulerWorkload sweep_scheduler_workload = 9;
+      optional double constant_think_time = 10;
+      optional double per_task_think_time = 11;
+      // Next field number: 12
 
       // Workload-level stats.
       message WorkloadStats {
         optional string workload_name = 1;
         optional int64 num_jobs = 2;
         optional int64 num_jobs_scheduled = 3;
-        optional double job_think_times_90_percentile = 4;
-        optional double avg_job_queue_times_till_first_scheduled = 5;
-        optional double avg_job_queue_times_till_fully_scheduled = 6;
-        optional double job_queue_time_till_first_scheduled_90_percentile = 7;
-        optional double job_queue_time_till_fully_scheduled_90_percentile = 8;
-        optional double num_scheduling_attempts_90_percentile = 9;
-        optional double num_scheduling_attempts_99_percentile = 10;
-        optional double num_task_scheduling_attempts_90_percentile = 11;
-        optional double num_task_scheduling_attempts_99_percentile = 12;
+        optional int64 num_jobs_fully_scheduled = 4;
+        optional double job_think_times_90_percentile = 5;
+        optional double avg_job_queue_times_till_first_scheduled = 6;
+        optional double avg_job_queue_times_till_fully_scheduled = 7;
+        optional double job_queue_time_till_first_scheduled_90_percentile = 8;
+        optional double job_queue_time_till_fully_scheduled_90_percentile = 9;
+        optional double num_scheduling_attempts_90_percentile = 10;
+        optional double num_scheduling_attempts_99_percentile = 11;
+        optional double num_task_scheduling_attempts_90_percentile = 12;
+        optional double num_task_scheduling_attempts_99_percentile = 13;
+        optional double avg_job_execution_time = 14;
+        optional double avg_job_completion_time = 15;
+
       }
 
       message SchedulerStats {
         optional string scheduler_name = 1;
-        optional double useful_busy_time = 3;
-        optional double wasted_busy_time = 4;
-        repeated PerDayStats per_day_stats = 15;
+        optional double useful_busy_time = 2;
+        optional double wasted_busy_time = 3;
+        repeated PerDayStats per_day_stats = 4;
         repeated PerWorkloadBusyTime per_workload_busy_time = 5;
         // These are job level transactions
         // TODO(andyk): rename these to include "job" in the name.
         optional int64 num_successful_transactions = 6;
         optional int64 num_failed_transactions = 7;
-        optional int64 num_no_resources_found_scheduling_attempts = 13;
-        optional int64 num_retried_transactions = 11;
-        optional int64 num_jobs_timed_out_scheduling = 16;
-        optional int64 num_successful_task_transactions = 9;
-        optional int64 num_failed_task_transactions = 10;
-        optional bool is_multi_path = 8;
+        optional int64 num_no_resources_found_scheduling_attempts = 8;
+        optional int64 num_retried_transactions = 9;
+        optional int64 num_jobs_timed_out_scheduling = 10;
+        optional int64 num_successful_task_transactions = 11;
+        optional int64 num_failed_task_transactions = 12;
+        optional bool is_multi_path = 13;
         // Num jobs in schedulers job queue when simulation ended.
-        optional int64 num_jobs_left_in_queue = 12;
-        optional int64 failed_find_victim_attempts = 14;
-        // Next field ID:17
+        optional int64 num_jobs_left_in_queue = 14;
+        optional int64 failed_find_victim_attempts = 15;
+        // Next field ID:16
 
         // Per-day bucketing of important stats to support error bars.
         message PerDayStats {

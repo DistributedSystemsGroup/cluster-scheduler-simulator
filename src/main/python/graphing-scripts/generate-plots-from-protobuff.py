@@ -96,9 +96,9 @@ if paper_mode:
 else:
     fig = plt.figure()
 
-prefilled_colors_web = {'Eurecom': 'b', 'example': 'k', 'C': 'c', "SYNTH": 'y'}
-colors_web = {'Eurecom': 'b', 'example': 'k', 'C': 'm', "SYNTH": 'y'}
-colors_paper = {'Eurecom': 'b', 'example': 'k', 'C': 'c', "SYNTH": 'b'}
+prefilled_colors_web = {'Eurecom': 'b', '10xEurecom': 'r', '5xEurecom': 'c', "SYNTH": 'y'}
+colors_web = {'Eurecom': 'b', '10xEurecom': 'r', '5xEurecom': 'm', "SYNTH": 'y'}
+colors_paper = {'Eurecom': 'b', '10xEurecom': 'k', '5xEurecom': 'c', "SYNTH": 'b'}
 per_wl_colors = {'OmegaService': 'k',
                  'OmegaBatch': 'b'
                  }
@@ -197,6 +197,10 @@ workload_queue_time_till_fully = {}
 workload_queue_time_till_first_90_ptile = {}
 workload_queue_time_till_fully_90_ptile = {}
 workload_num_jobs_unscheduled = {}
+workload_num_jobs_scheduled = {}
+workload_num_jobs_fully_scheduled = {}
+workload_avg_job_execution_time = {}
+workload_avg_job_completion_time = {}
 # (cellName, assignmentPolicy, scheduler_name) -> array of data points
 # for the parameter sweep done in the experiment.
 sched_total_busy_fraction = {}
@@ -214,6 +218,11 @@ sched_num_retried_transactions = {}
 sched_num_jobs_remaining = {}
 sched_failed_find_victim_attempts = {}
 sched_num_jobs_timed_out = {}
+
+workload_job_num_tasks = {}
+workload_job_mem_tasks = {}
+workload_job_cpu_tasks = {}
+workload_job_runtime_tasks = {}
 
 
 # Convenience wrapper to override __str__()
@@ -359,11 +368,38 @@ for filename in input_list:
             sorted_exp_results = sorted(env.experiment_result, l_comparator)
         else:
             sorted_exp_results = sorted(env.experiment_result, lambda_comparator)
-        for exp_result in sorted_exp_results:
 
+        for common_workload_stats in env.common_workload_stats:
+            workload_name = common_workload_stats.workload_name
+            for job_stats in common_workload_stats.job_stats:
+                # Number of Tasks
+                append_or_create_2d(workload_job_num_tasks,
+                                    exp_env,
+                                    workload_name,
+                                    job_stats.num_tasks)
+
+                # Memory per Tasks
+                append_or_create_2d(workload_job_mem_tasks,
+                                    exp_env,
+                                    workload_name,
+                                    job_stats.mem_per_task * (1024 ** 2))
+
+                # CPU per Tasks
+                append_or_create_2d(workload_job_cpu_tasks,
+                                    exp_env,
+                                    workload_name,
+                                    job_stats.cpu_per_task)
+
+                # Tasks Runtime
+                append_or_create_2d(workload_job_runtime_tasks,
+                                    exp_env,
+                                    workload_name,
+                                    job_stats.task_duration)
+
+        for exp_result in sorted_exp_results:
             # Record the correct x val depending on which dimension is being
             # swept over in this experiment.
-            vary_dim = exp_env.vary_dim()  # This line is unecessary since this value
+            vary_dim = exp_env.vary_dim()  # This line is unnecessary since this value
             # is a flag passed as an arg to the script.
             if vary_dim == "c":
                 x_val = exp_result.constant_think_time
@@ -439,6 +475,34 @@ for filename in input_list:
                                     value)
                 # logging.debug("num_jobs_unscheduled[%s %s].append(%s)."
                 #               % (exp_env, wl_stat.workload_name, value))
+
+                # Num jobs that did schedule at least one task.
+                value = Value(x_val, wl_stat.num_jobs_scheduled)
+                append_or_create_2d(workload_num_jobs_scheduled,
+                                    exp_env,
+                                    wl_stat.workload_name,
+                                    value)
+
+                # Num jobs that did fully schedule.
+                value = Value(x_val, wl_stat.num_jobs_fully_scheduled)
+                append_or_create_2d(workload_num_jobs_fully_scheduled,
+                                    exp_env,
+                                    wl_stat.workload_name,
+                                    value)
+
+                # Avg job execution time.
+                value = Value(x_val, wl_stat.avg_job_execution_time)
+                append_or_create_2d(workload_avg_job_execution_time,
+                                    exp_env,
+                                    wl_stat.workload_name,
+                                    value)
+
+                # Avg completion time.
+                value = Value(x_val, wl_stat.avg_job_completion_time)
+                append_or_create_2d(workload_avg_job_completion_time,
+                                    exp_env,
+                                    wl_stat.workload_name,
+                                    value)
 
             # If we have multiple schedulers of the same type, track
             # some stats as an average across them, using a (counter, sum).
@@ -717,7 +781,7 @@ def plot_1d_data_set_dict(data_set_1d_dict,
                 label=cell_label, markersize=ms,
                 mec=local_colors[cell_to_anon(exp_env.cell_name)])
 
-    setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, all_x_vals_set)
+    setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, all_x_vals_set, v_dim=vary_dim)
 
 
 # In our per-workload or per-scheduler plots, all lines
@@ -840,10 +904,111 @@ def plot_2d_data_set_dict(data_set_2d_dict,
                             markersize=ms, capsize=1, yerr=err_bar_vals)
 
     logging.debug("all_x_vals_set size: {}".format(len(all_x_vals_set)))
-    setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, all_x_vals_set)
+    setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, all_x_vals_set, v_dim=vary_dim)
 
 
-def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x_vals_set):
+def plot_distribution(data_set_2d_dict,
+                      plot_title,
+                      filename_suffix,
+                      x_label,
+                      y_axis_type):
+    assert (y_axis_type == "0-to-1" or
+            y_axis_type == "ms-to-day" or
+            y_axis_type == "abs")
+    logging.info("Plotting {}".format(plot_title))
+    plt.clf()
+    ax = fig.add_subplot(111)
+    # Track a union of all x_vals which can be used to figure out
+    # the x-axis for the plot we are generating.
+    all_x_vals_set = sets.Set()
+    for exp_env, name_to_job_map in data_set_2d_dict.iteritems():
+        if paper_mode:
+            cell_label = cell_to_anon(exp_env.cell_name)
+        else:
+            cell_label = exp_env.cell_name
+
+        # if exp_env.cell_name != "B":
+        #      print("skipping %s" % exp_env.cell_name)
+        #      continue
+        #    else:
+        #      print("not skipping %s" % exp_env.cell_name)
+
+        # If in paper mode, skip this plot if the cell name was not
+        # passed in as argument envs_to_plot.
+        if paper_mode and not re.search(cell_label, envs_to_plot):
+            logging.debug(
+                "skipping plot because cell_label %s was not passed in as envs_to_plot %s" % (cell_label, envs_to_plot))
+            continue
+        # if exp_env.is_prefilled:
+        #   # TEMPORARY: Skip prefilled to get smaller place-holder graph
+        #   #            for paper draft.
+        #   continue
+
+        for wl_or_sched_name, values in name_to_job_map.iteritems():
+            # Skip service schedulers.
+            logging.debug("wl_or_sched_name is {}".format(wl_or_sched_name))
+            # if re.search('Service', wl_or_sched_name):
+            #     logging.debug("Skipping %s" % wl_or_sched_name)
+            #     continue
+
+            wl_or_sched_num = wl_or_sched_name
+            result = re.search('[0-9]+$', wl_or_sched_name)
+            if result is not None:
+                wl_or_sched_num = result.group(0)
+
+            line_label = str(wl_or_sched_num)
+            # Hacky: chop MonolithicBatch, MesosBatch, MonolithicService, etc.
+            # down to "Batch" and "Service" if in paper mode.
+            updated_wl_or_sched_name = wl_or_sched_name
+            if paper_mode and re.search("Batch", wl_or_sched_name):
+                updated_wl_or_sched_name = "Batch"
+            if paper_mode and re.search("Service", wl_or_sched_name):
+                updated_wl_or_sched_name = "Service"
+            # Append scheduler or workload name unless in paper mode and
+            # graphing monolithic.
+            # if not (paper_mode and re.search("Monolithic", wl_or_sched_name)):
+            #   line_label += " " + updated_wl_or_sched_name
+
+            # if exp_env.is_prefilled:
+            #   line_label += " prefilled"
+            # Don't add an item to the legend for batch schedulers/workloads
+            # in paper mode. We'll explain those in the caption.
+            if paper_mode and updated_wl_or_sched_name == "Service":
+                line_label = "_nolegend_"
+
+            cdf = []
+            x_vals = [value for value in values]
+            x_vals.sort()
+            for i, value in enumerate(x_vals):
+                cdf.append(i / float(len(x_vals)))
+
+            x_vals = np.array(x_vals)
+            all_x_vals_set = all_x_vals_set.union(x_vals)
+            logging.debug("all_x_vals_set updated, now = %s" % all_x_vals_set)
+            y_vals = np.array(cdf)
+            logging.debug("Plotting line for %s %s %s, line_label = %s." %
+                          (exp_env, wl_or_sched_name, plot_title, line_label))
+            logging.debug("x vals: " + " ".join([str(i) for i in x_vals]))
+            logging.debug("y vals: " + " ".join([str(i) for i in y_vals]))
+
+            if exp_env.is_prefilled:
+                local_colors = prefilled_colors_web
+                local_linestyles = prefilled_linestyles_web
+            else:
+                local_colors = colors
+                local_linestyles = linestyles
+
+            ax.plot(x_vals, y_vals, linestyles_paper[wl_or_sched_num],
+                    dashes=dashes_paper[wl_or_sched_num],
+                    color=local_colors[cell_to_anon(exp_env.cell_name)],
+                    label=line_label, markersize=ms,
+                    mec=local_colors[cell_to_anon(exp_env.cell_name)])
+
+    logging.debug("all_x_vals_set size: {}".format(len(all_x_vals_set)))
+    setup_graph_details(ax, plot_title, filename_suffix, "", y_axis_type, all_x_vals_set, x_label=x_label)
+
+
+def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x_vals_set, v_dim="", x_label=""):
     assert (y_axis_type == "0-to-1" or
             y_axis_type == "ms-to-day" or
             y_axis_type == "abs")
@@ -851,7 +1016,7 @@ def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x
     # Paper title.
     if not paper_mode:
         plt.title(plot_title)
-        leg = plt.legend(loc=2, labelspacing=0)
+        leg = plt.legend(loc='upper right', bbox_to_anchor=(1.02, -0.1000), labelspacing=0)
 
     if paper_mode:
         try:
@@ -868,23 +1033,24 @@ def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x
     # Axis labels.
     if not paper_mode:
         ax.set_ylabel(y_label)
-        if vary_dim == "c":
+        ax.set_xlabel(x_label)
+        if v_dim == "c":
             ax.set_xlabel(u'Scheduler 1 constant processing time [sec]')
-        elif vary_dim == "l":
+        elif v_dim == "l":
             ax.set_xlabel(u'Scheduler 1 per-task processing time [sec]')
-        elif vary_dim == "lambda":
+        elif v_dim == "lambda":
             ax.set_xlabel(u'Job arrival rate to scheduler 1, lambda 1')
 
     # x-axis scale, limit, tics and tic labels.
     ax.set_xscale('log')
     ax.set_autoscalex_on(False)
-    if vary_dim == 'c':
+    if v_dim == 'c':
         plt.xlim(xmin=0.01)
         plt.xticks((0.01, 0.1, 1, 10, 100), ('10ms', '0.1s', '1s', '10s', '100s'))
-    elif vary_dim == 'l':
+    elif v_dim == 'l':
         plt.xlim(xmin=0.001, xmax=1)
         plt.xticks((0.001, 0.01, 0.1, 1), ('1ms', '10ms', '0.1s', '1s'))
-    elif vary_dim == 'lambda':
+    elif v_dim == 'lambda':
         ax.set_xscale('linear')
         logging.debug("x_vals_set is %s" % x_vals_set)
         if len(x_vals_set) != 0:
@@ -915,9 +1081,9 @@ def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x
                       ', "ms-to-day", or "abs".')
         sys.exit(1)
 
-    final_filename = (output_prefix +
-                      ('/%s-vs-' % vary_dim) +
-                      filename_suffix)
+    ax.grid(True)
+    final_filename = os.path.join(output_prefix,
+                                  '{}-vs-{}'.format(v_dim, filename_suffix) if v_dim != "" else filename_suffix)
     logging.debug("Writing plot to %s", final_filename)
     writeout(final_filename, output_formats)
 
@@ -980,6 +1146,30 @@ plot_2d_data_set_dict(workload_num_jobs_unscheduled,
                       "jobs-unscheduled",
                       u'Num jobs unscheduled',
                       "abs")
+
+plot_2d_data_set_dict(workload_num_jobs_scheduled,
+                      "Scheduler processing time vs. num jobs scheduled",
+                      "jobs-scheduled",
+                      u'Num jobs scheduled',
+                      "abs")
+
+plot_2d_data_set_dict(workload_num_jobs_fully_scheduled,
+                      "Scheduler processing time vs. num jobs fully scheduled",
+                      "jobs-fully-scheduled",
+                      u'Num jobs fully scheduled',
+                      "abs")
+
+plot_2d_data_set_dict(workload_avg_job_execution_time,
+                      "Scheduler processing time vs. avg jobs execution time",
+                      "avg-jobs-execution-time",
+                      u'Avg jobs execution time',
+                      "ms-to-day")
+
+plot_2d_data_set_dict(workload_avg_job_completion_time,
+                      "Scheduler processing time vs. avg job completion time",
+                      "avg-jobs-completion-time",
+                      u'Avg jobs completion time',
+                      "ms-to-day")
 
 # SCHEDULER BUSY TIME FRACTION PLOT
 plot_2d_data_set_dict(sched_total_busy_fraction,
@@ -1053,3 +1243,27 @@ plot_2d_data_set_dict(sched_num_jobs_timed_out,
                       "num-jobs-timed-out",
                       u'Num jobs ignored due to failed scheduling',
                       "abs")
+
+plot_distribution(workload_job_num_tasks,
+                  "Job Tasks distribution",
+                  "tasks-job-distribution",
+                  u'Num tasks',
+                  "abs")
+
+plot_distribution(workload_job_mem_tasks,
+                  "Job Tasks Memory distribution",
+                  "tasks-memory-distribution",
+                  u'Memory (KB)',
+                  "abs")
+
+plot_distribution(workload_job_cpu_tasks,
+                  "Job Tasks CPU distribution",
+                  "tasks-cpu-distribution",
+                  u'CPU',
+                  "abs")
+
+plot_distribution(workload_job_runtime_tasks,
+                  "Job Tasks Runtime distribution",
+                  "tasks-runtime-distribution",
+                  u'Runtime (s)',
+                  "abs")

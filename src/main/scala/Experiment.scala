@@ -98,10 +98,10 @@ class Experiment(
           simulatorDesc.runTime))
 
     var allRuns: ListBuffer[ExperimentRun] = ListBuffer()
-    val allExperimentEnv = collection.mutable.HashMap[Int, ExperimentEnv.Builder]()
-    val allExperimentResult = collection.mutable.HashMap[Int, Array[ExperimentResult]]()
-    val experimentResultSet = ExperimentResultSet.newBuilder()
 
+    val allExperimentEnv: Array[ExperimentEnv.Builder] = new Array[ExperimentEnv.Builder](workloadDescs.length)
+    val allExperimentResult: Array[Array[ExperimentResult]] = new Array[Array[ExperimentResult]](workloadDescs.length)
+    val experimentResultSet = ExperimentResultSet.newBuilder()
 
     logger.debug("Running Experiment %s with RunTime: %.2fs and Timeout: %.2fs".format(name, simulatorDesc.runTime, simulationTimeout))
     // Parameter sweep over workloadDescs
@@ -117,7 +117,7 @@ class Experiment(
       experimentEnv.setIsPrefilled(
         workloadDesc.prefillWorkloadGenerators.nonEmpty)
       experimentEnv.setRunTime(simulatorDesc.runTime)
-      allExperimentEnv.put(workloadDescId, experimentEnv)
+      allExperimentEnv(workloadDescId) = experimentEnv
 
       // Generate preFill workloads. The simulator doesn't modify
       // these workloads like it does the workloads that are played during
@@ -149,6 +149,32 @@ class Experiment(
         prefillWorkloads ::= newWorkload
       })
 
+      // Set up a list of workloads
+      val commonWorkloadMap = scala.collection.mutable.Map[WorkloadGenerator, Workload]()
+      workloadDesc.workloadGenerators.foreach(workloadGenerator => {
+        logger.debug("Generating new Workload %s for window %f seconds long."
+          .format(workloadGenerator.workloadName, simulatorDesc.runTime))
+        val newWorkload = workloadGenerator
+          .newWorkload(timeWindow = simulatorDesc.runTime)
+        commonWorkloadMap(workloadGenerator) = newWorkload
+        val commonWorkloadStats = ExperimentResultSet.
+          ExperimentEnv.CommonWorkloadStats.newBuilder()
+        commonWorkloadStats.setWorkloadName(workloadGenerator.workloadName)
+        newWorkload.getJobs.foreach(job => {
+          val jobStats = ExperimentResultSet.
+            ExperimentEnv.CommonWorkloadStats.JobStats.newBuilder()
+
+          jobStats.setId(job.id)
+          jobStats.setNumTasks(job.numTasks)
+          jobStats.setMemPerTask(job.memPerTask)
+          jobStats.setCpuPerTask(job.cpusPerTask)
+          jobStats.setTaskDuration(job.taskDuration)
+
+          commonWorkloadStats.addJobStats(jobStats)
+        })
+        experimentEnv.addCommonWorkloadStats(commonWorkloadStats)
+      })
+
       // Parameter sweep over lambda.
       // If we have a range for lambda, loop over it, else
       // we just loop over a list holding a single element: None
@@ -162,29 +188,25 @@ class Experiment(
         if (avgJobInterarrivalTime.isEmpty) {
           logger.debug("Since we're not in a lambda sweep, not overwriting lambda.")
         } else {
+          var newAvgJobInterarrivalTime: Option[Double] = None
+          commonWorkloadMap.foreach{ case(workloadGenerator, workload) =>
+            assert(workloadGenerator.workloadName == workload.name)
+            if (workloadToSweepOver.equals(
+              workloadGenerator.workloadName)) {
+              // Only update the workload interarrival time if this is the
+              // workload we are supposed to sweep over. If this is not a
+              // lambda parameter sweep then updatedAvgJobInterarrivalTime
+              // will remain None after this line is executed.
+              newAvgJobInterarrivalTime = avgJobInterarrivalTime
+            }
+              logger.debug("Updating Workload %s with new interarrival time %s."
+                .format(workloadGenerator.workloadName, avgJobInterarrivalTime))
+            workloadGenerator.updateJobsArrivalTime(workload, timeWindow = simulatorDesc.runTime,
+              updatedAvgJobInterarrivalTime = newAvgJobInterarrivalTime)
+          }
           logger.debug("Curr avgJobInterarrivalTime: %s".format(avgJobInterarrivalTime))
         }
-
-        // Set up a list of workloads
-        val commonWorkloadSet = ListBuffer[Workload]()
-        var newAvgJobInterarrivalTime: Option[Double] = None
-        workloadDesc.workloadGenerators.foreach(workloadGenerator => {
-          if (workloadToSweepOver.equals(
-            workloadGenerator.workloadName)) {
-            // Only update the workload interarrival time if this is the
-            // workload we are supposed to sweep over. If this is not a
-            // lambda parameter sweep then updatedAvgJobInterarrivalTime
-            // will remain None after this line is executed.
-            newAvgJobInterarrivalTime = avgJobInterarrivalTime
-          }
-          logger.debug("Generating new Workload %s for window %f seconds long."
-            .format(workloadGenerator.workloadName, simulatorDesc.runTime))
-          val newWorkload =
-            workloadGenerator
-              .newWorkload(timeWindow = simulatorDesc.runTime,
-                updatedAvgJobInterarrivalTime = newAvgJobInterarrivalTime)
-          commonWorkloadSet.append(newWorkload)
-        })
+        val commonWorkloadSet: List[Workload] = commonWorkloadMap.values.toList
 
         // Parameter sweep over L.
         perTaskThinkTimeRange.foreach(perTaskThinkTime => {
@@ -210,6 +232,8 @@ class Experiment(
                 workloads.append(workload.copy)
               })
 
+              val copyOfSchedulerWorkloadsToSweepOver = Map[String, Seq[String]]() ++ schedulerWorkloadsToSweepOver
+
               logger.debug("Setting up run %d".format(run_id + 1))
               allRuns += new ExperimentRun(
                 run_id,
@@ -217,7 +241,7 @@ class Experiment(
                 workloadToSweepOver = new String(workloadToSweepOver),
                 avgJobInterarrivalTime = avgJobInterarrivalTime,
                 workloadDescId = workloadDescId,
-                schedulerWorkloadsToSweepOver = Map[String, Seq[String]]() ++ schedulerWorkloadsToSweepOver,
+                schedulerWorkloadsToSweepOver = copyOfSchedulerWorkloadsToSweepOver,
                 constantThinkTime = constantThinkTime,
                 perTaskThinkTime = perTaskThinkTime,
                 simulatorRunTime = simulatorDesc.runTime,
@@ -226,7 +250,7 @@ class Experiment(
                 simulator = simulatorDesc.newSimulator(constantThinkTime,
                   perTaskThinkTime,
                   blackListPercent,
-                  Map[String, Seq[String]]() ++ schedulerWorkloadsToSweepOver,
+                  copyOfSchedulerWorkloadsToSweepOver,
                   Map[String, Seq[String]]() ++ schedulerWorkloadMap,
                   workloadDesc.cellStateDesc,
                   workloads,
@@ -240,10 +264,12 @@ class Experiment(
       }) // lambda
       workloadDescId += 1
     }) // WorkloadDescs
+
     val numTotalRun = allRuns.length
     var numFinishedRuns = 0
-    allExperimentEnv.foreach{ case (id, experimentEnv) =>
-      allExperimentResult.put(id, new Array[ExperimentResult](numTotalRun))
+
+    for(id <- allExperimentEnv.indices){
+      allExperimentResult(id) = new Array[ExperimentResult](numTotalRun)
     }
 
     /**
@@ -273,8 +299,9 @@ class Experiment(
         val elapsedTime: Double = (System.currentTimeMillis() - startTime) / 1000.0
         numFinishedRuns += completed.length
         // Let's calculate the estimated time left for this experiment
-        val etl = (elapsedTime/numFinishedRuns) * ((numTotalRun - numFinishedRuns) / numThreads.toDouble)
-        logger.info("%d more runs just finished running. In total, %d of %d have finished. ETL: %.2fs (%.2fm)"
+        val numRunsLeft: Double = (numTotalRun - numFinishedRuns) / numThreads.toDouble
+        val etl = elapsedTime / Math.ceil(numFinishedRuns / numThreads.toDouble) * numRunsLeft
+        logger.info("%d more runs just finished. In total, %d of %d have finished. ETL: %.2fs (%.2fm)"
           .format(completed.length, numFinishedRuns, numTotalRun, etl, etl / 60.0))
         completed.foreach(x => {
           val callableResult = x.get()
@@ -283,7 +310,7 @@ class Experiment(
             // We have to use another structure because insert an experimentResult
             // in a specific position is not working with the protobuf
             // (an IndexOutOfBoundException is triggered)
-            val experimentEnv = allExperimentResult.get(workloadDescId).get
+            val experimentEnv = allExperimentResult(workloadDescId)
             experimentEnv(callableResult._2) =  callableResult._3
           }
         })
@@ -291,13 +318,20 @@ class Experiment(
       futures = running
     }
     logger.info("Done all (%d) runs".format(numTotalRun))
-    allExperimentEnv.foreach{ case (id, experimentEnv) =>
-      val experimentResults = allExperimentResult.get(id).get
+    for(id <- allExperimentEnv.indices){
+      val experimentEnv = allExperimentEnv(id)
+      val experimentResults: Array[ExperimentResult] = allExperimentResult(id)
       experimentResults.foreach(experimentResult => {
-        experimentEnv.addExperimentResult(experimentResult)
+        // This is required because we put all runs in an array of length equal to the total number of runs
+        // but the runs for a workloads are not that much.
+        // To fix this we have to predict the number of runs that a single workload will have
+        // and to assign a relative (to the workload) id to the ExperimentRun instead of an absolute id
+        // For now we can use an if statement to check if the experimentResult is no null
+        if(experimentResult != null)
+          experimentEnv.addExperimentResult(experimentResult)
       })
       logger.debug("Workload %d has %d experimentResults.".format(id, experimentEnv.getExperimentResultCount))
-      experimentResultSet.addExperimentEnv(id, experimentEnv)
+      experimentResultSet.addExperimentEnv(experimentEnv)
     }
     experimentResultSet.build().writeTo(output)
     output.close()
@@ -358,6 +392,7 @@ class ExperimentRun(
       workloadStats.setNumJobs(workload.numJobs)
       workloadStats.setNumJobsScheduled(
         workload.getJobs.count(_.numSchedulingAttempts > 0))
+      workloadStats.setNumJobsFullyScheduled(workload.getJobs.count(_.finalStatus == JobStates.Fully_Scheduled ))
       workloadStats.setJobThinkTimes90Percentile(
         workload.jobUsefulThinkTimesPercentile(0.9))
       workloadStats.setAvgJobQueueTimesTillFirstScheduled(
@@ -376,6 +411,20 @@ class ExperimentRun(
         workload.numTaskSchedulingAttemptsPercentile(0.9))
       workloadStats.setNumTaskSchedulingAttempts99Percentile(
         workload.numTaskSchedulingAttemptsPercentile(0.99))
+
+      var totalJobExecutionTime = 0.0
+      var totalJobCompletionTime = 0.0
+      var countJobFinished = 0
+      workload.getJobs.foreach(job => {
+        if (job.finalStatus == JobStates.Fully_Scheduled) {
+          totalJobExecutionTime += job.jobFinishedWorking - job.jobStartedWorking
+          totalJobCompletionTime += job.jobFinishedWorking - job.submitted
+          countJobFinished += 1
+        }
+      })
+      workloadStats.setAvgJobExecutionTime(totalJobExecutionTime / countJobFinished.toDouble)
+      workloadStats.setAvgJobCompletionTime(totalJobCompletionTime / countJobFinished.toDouble)
+
 
       experimentResult.addWorkloadStats(workloadStats)
     })

@@ -82,14 +82,32 @@ def append_or_create_2d(d, i, k, e):
         d[i][k].append(e)
 
 
-def cell_to_anon(cell):
-    if cell == 'A':
-        return 'A'
-    elif cell == 'B':
-        return 'B'
-    elif cell == 'C':
-        return 'C'
-    elif cell == 'Eurecom':
-        return 'Eurecom'
+# Append e to the array at position (i,k).
+# d - a dictionary of dictionaries of arrays, essentially a 2d dictionary.
+# i, k - essentially a 2 element tuple to use as the key into this 2d dict.
+# e - the value to add to the array indexed by key (i,k).
+def append_or_create_3d(d, i, k, e, v):
+    if i not in d:
+        d[i] = {k: {e: [v]}}
+    elif k not in d[i]:
+        d[i][k] = {e: [v]}
+    elif e not in d[i][k]:
+        d[i][k][e] = [v]
     else:
-        return 'SYNTH'
+        d[i][k][e].append(v)
+
+
+def cell_to_anon(cell):
+    # if cell == 'A':
+    #     return 'A'
+    # elif cell == 'B':
+    #     return 'B'
+    # elif cell == 'C':
+    #     return 'C'
+    # elif cell == 'Eurecom':
+    #     return 'Eurecom'
+    # elif cell == 'example':
+    #     return 'example'
+    # else:
+    #     return 'SYNTH'
+    return cell

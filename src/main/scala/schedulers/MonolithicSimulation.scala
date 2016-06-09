@@ -165,6 +165,7 @@ class MonolithicScheduler(name: String,
                                 job.cpusPerTask,
                                 job.memPerTask,
                                 job.unscheduledTasks))
+          numNoResourcesFoundSchedulingAttempts += 1
         }
         var jobEventType = "" // Set this conditionally below; used in logging.
         // If the job isn't yet fully scheduled, put it back in the queue.

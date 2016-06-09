@@ -7,15 +7,15 @@ VERSION=''
 PUSH=0
 
 function print_help {
-    echo "Usage: $0 [-r registry] [-v version] [-p] [-sp Swarm_IP] <repository>"
+    echo "Usage: $0 [-r registry] [-v version] [-p] [-s Swarm_IP] <repository>"
     echo
     echo "Will build Docker images names [registry]/<repository>/<image name>:version"
     echo "If -p is specified, docker push will be called at the end of the build"
-    echo "If -sp is specified, swarm pull will be called at the end of the build"
+    echo "If -s is specified, swarm pull will be called at the end of the build"
     exit
 }
 
-while getopts ":hr:v:p:sp" opt; do
+while getopts ":hr:v:ps:" opt; do
     case ${opt} in
         \?|h)
           print_help
@@ -29,7 +29,7 @@ while getopts ":hr:v:p:sp" opt; do
         p)
           PUSH=1
           ;;
-        sp)
+        s)
           SWARM_PULL=1
           ;;
     esac

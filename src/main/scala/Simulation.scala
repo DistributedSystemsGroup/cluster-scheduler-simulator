@@ -29,7 +29,7 @@ import java.nio.channels.FileChannel
 
 import ClusterSchedulingSimulation._
 import ClusterSchedulingSimulation.Workloads._
-import ClusterSchedulingSimulation.schedulers._
+import schedulers.{ZoeSimulatorDesc, _}
 import ca.zmatrix.utils._
 import org.apache.log4j.Logger
 
@@ -68,14 +68,14 @@ object Simulation{
     /**
       * Start Config Variables
       */
-    val runMonolithic = true
+    val runMonolithic = false
     val runSpark = false
     val runNewSpark = false
-    val runMesos = true
-    val runOmega = true
-    val runZoe = false
+    val runMesos = false
+    val runOmega = false
+    val runZoe = true
 
-    val globalRunTime = 86400.0 //86400.0 // 1 Day
+    val globalRunTime = 86400.0 * 3 //86400.0 // 1 Day
     val threadSleep = 5
 
     /**
@@ -136,8 +136,8 @@ object Simulation{
 
     val timeout = 60.0 * 60.0 // In seconds.
 
-    val sweepC = true
-    val sweepL = true
+    val sweepC = false
+    val sweepL = false
     val sweepCL = false
     val sweepPickiness = false
     val sweepLambda = true
@@ -184,33 +184,9 @@ object Simulation{
     // Prefills jobs based on prefill trace. Loads Job stats (interarrival
     // time, num tasks, duration) and task stats (cpusPerTask, memPerTask)
     // from traces.
-//    allWorkloadDescs ::= eurecomCellTraceAllWorkloadPrefillDesc
-    allWorkloadDescs ::= exampleCellTraceAllWorkloadPrefillDesc
-    //    /**
-    //     * Synthetic workloads for testing.
-    //     * These can probably be deleted eventually.
-    //     */
-    //    val synthWorkloadGeneratorService =
-    //        new ExpExpExpWorkloadGenerator(workloadName = "Service".intern(),
-    //                                       initAvgJobInterarrivalTime = 5.0,
-    //                                       avgTasksPerJob = 100,
-    //                                       avgJobDuration = 10.0,
-    //                                       avgCpusPerTask = 1.0,
-    //                                       avgMemPerTask = 1.5)
-    //    val synthWorkloadGeneratorBatch =
-    //        new ExpExpExpWorkloadGenerator(workloadName = "Batch".intern(),
-    //                                       initAvgJobInterarrivalTime = 3.0,
-    //                                       avgTasksPerJob = 100,
-    //                                       avgJobDuration = 10.0,
-    //                                       avgCpusPerTask = 1.0,
-    //                                       avgMemPerTask = 1.5)
-    //    val synthWorkloadDesc =
-    //        WorkloadDesc(cell = "synth",
-    //                     assignmentPolicy = "none",
-    //                     workloadGenerators =
-    //                       synthWorkloadGeneratorService ::
-    //                       synthWorkloadGeneratorBatch :: Nil,
-    //                     cellStateDesc = exampleCellStateDesc)
+    allWorkloadDescs ::= eurecomCellTraceAllWorkloadPrefillDesc
+//    allWorkloadDescs ::= tenEurecomCellTraceAllWorkloadPrefillDesc
+//    allWorkloadDescs ::= fiveEurecomCellTraceAllWorkloadPrefillDesc
 
     var allExperiments: List[Experiment] = List()
     val wlDescs = allWorkloadDescs
@@ -1202,6 +1178,7 @@ object Simulation{
     logger.info(("Running %d experiments with the following options:\n" +
       "\t - threads:     %d\n" +
       "\t - random seed: %d\n").format(numTotalExps, numThreads, randomSeed))
+    val startTime = System.currentTimeMillis()
     var futures = allExperiments.map(pool.submit)
     // Let go of pointers to Experiments because each Experiment will use
     // quite a lot of memory.
@@ -1211,9 +1188,13 @@ object Simulation{
       Thread.sleep(threadSleep * 1000)
       val (completed, running) = futures.partition(_.isDone)
       if (completed.nonEmpty) {
+        val elapsedTime: Double = (System.currentTimeMillis() - startTime) / 1000.0
         numFinishedExps += completed.length
-        logger.info("%d more experiments just finished running. In total, %d of %d have finished."
-          .format(completed.length, numFinishedExps, numTotalExps))
+        // Let's calculate the estimated time left for this simulation
+        val numExpsLeft: Double = (numTotalExps - numFinishedExps) / numThreads.toDouble
+        val etl = elapsedTime / Math.ceil(numFinishedExps / numThreads.toDouble) * numExpsLeft
+        logger.info("%d more experiments just finished running. In total, %d of %d have finished. ETL: %.2fs (%.2fm)"
+          .format(completed.length, numFinishedExps, numTotalExps, etl, etl / 60.0))
         //      completed.foreach(x => try x.get() catch {
         //        case e: Throwable => e.printStackTrace()
         //      })

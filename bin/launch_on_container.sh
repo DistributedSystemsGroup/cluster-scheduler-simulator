@@ -91,15 +91,15 @@ function send_mail(){
         zip -r ${zip_name} ${last_created_dir}
         attachment="-A ${zip_name}"
         echo -e \
-        "Cluster Scheduler Simulation ended with Success.\n" \
-        "You can find the results in the attachment(s).\n" \
-        "Cheers :)\n" \
-        | mail -s "Cluster-Scheduler-Simulator" ${attachment} "${TO_MAIL}"
+            "Cluster Scheduler Simulation ended with Success.\n" \
+            "You can find the results in the attachment(s).\n" \
+            "Cheers :)\n" \
+            | mail -s "Cluster-Scheduler-Simulator" ${attachment} "${TO_MAIL}"
     else
         echo -e \
-        "Cluster Scheduler Simulation ended with an Error.\n" \
-        "Sorry :(\n" \
-        | mail -s "Cluster-Scheduler-Simulator" "${TO_MAIL}"
+            "Cluster Scheduler Simulation ended with an Error.\n" \
+            "Sorry :(\n" \
+            | mail -s "Cluster-Scheduler-Simulator" "${TO_MAIL}"
     fi
     popd
 }

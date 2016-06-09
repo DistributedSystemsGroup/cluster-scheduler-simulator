@@ -39,6 +39,7 @@ import ClusterSchedulingSimulation.OmegaSimulator
 import ClusterSchedulingSimulation.OmegaScheduler
 import ClusterSchedulingSimulation.PrefillPbbTraceWorkloadGenerator
 import ClusterSchedulingSimulation.InterarrivalTimeTraceExpExpWLGenerator
+import ClusterSchedulingSimulation.schedulers._
 import schedulers._
 
 import collection.mutable.HashMap
@@ -54,7 +55,7 @@ class SimulatorsTestSuite extends FunSuite {
     println("Testing Monolithic simulator functionality.")
     println("=====================\n\n")
     // Build a workload manually.
-    var workload = new Workload("unif")
+    val workload = new Workload("unif")
     val numJobs = 4 // Don't change this unless you update the
                     // hand calculations used in assert()-s below.
 
@@ -174,7 +175,7 @@ class SimulatorsTestSuite extends FunSuite {
     println("Testing Mesos simulator functionality.")
     println("=====================\n\n")
 
-    var workload = new Workload("unif")
+    val workload = new Workload("unif")
     val numJobs = 40 
     (1 to numJobs).foreach(i => {
       workload.addJob(Job(id = i,
@@ -253,7 +254,7 @@ class SimulatorsTestSuite extends FunSuite {
     println("=====================\n\n")
     println("\nRunning cellstate functionality test.")
     // Set up a workload with one job with one task.
-    var workload = new Workload("unif")
+    val workload = new Workload("unif")
     workload.addJob(Job(id = 1,
                         submitted = 1.0,
                         numTasks = 1,
@@ -275,7 +276,7 @@ class SimulatorsTestSuite extends FunSuite {
                                         transactionMode = "all-or-nothing")
 
     // Set up a Simulator.
-    val omegaSimulator = new OmegaSimulator(
+    val omegaSimulator = new ClusterSimulator(
           commonCellState,
           Map(scheduler.name -> scheduler),
           Map("unif" -> Seq("omega_test_sched")),
@@ -290,7 +291,7 @@ class SimulatorsTestSuite extends FunSuite {
     assert(privateCellState.cpusPerMachine == commonCellState.cpusPerMachine)
     assert(privateCellState.memPerMachine == commonCellState.memPerMachine)
     // Test that the per machine state was successfully copied.
-    (0 to commonCellState.allocatedCpusPerMachine.length - 1).foreach{ i => {
+    commonCellState.allocatedCpusPerMachine.indices.foreach{ i => {
       assert(privateCellState.allocatedCpusPerMachine(i) ==
              commonCellState.allocatedCpusPerMachine(i))
     }}
@@ -302,7 +303,7 @@ class SimulatorsTestSuite extends FunSuite {
                                     duration = 10,
                                     cpus = 0.25,
                                     mem = 0.75)
-    claimDelta.apply(privateCellState, false)
+    claimDelta.apply(privateCellState, locked = false)
     // Check that machines sequence number was incremented in private cellstate.
     assert(privateCellState.machineSeqNums(0) == 1)
     // Check that changes to private cellstate stuck.
@@ -341,7 +342,7 @@ class SimulatorsTestSuite extends FunSuite {
                                      duration = 10,
                                      cpus = 0.25,
                                      mem = 0.75)
-    claimDelta1.apply(privateCellState1, false)
+    claimDelta1.apply(privateCellState1, locked = false)
     assert(privateCellState1.machineSeqNums(0) == 2)
 
     // Check that the other private cellstate didn't change yet.
@@ -357,13 +358,13 @@ class SimulatorsTestSuite extends FunSuite {
                                      duration = 10,
                                      cpus = 0.25,
                                      mem = 0.75)
-    claimDelta2.apply(privateCellState2, false)
+    claimDelta2.apply(privateCellState2, locked = false)
 
     // Commit the changes from the first private cellstate to common cellstate.
-    assert(commonCellState.commit(Seq(claimDelta1)).conflictedDeltas.length == 0)
+    assert(commonCellState.commit(Seq(claimDelta1)).conflictedDeltas.isEmpty)
     // Commit the changes from the second private cellstate and check
     // that it conflicts and doesn't change common cellstate.
-    assert(commonCellState.commit(Seq(claimDelta2)).conflictedDeltas.length > 0)
+    assert(commonCellState.commit(Seq(claimDelta2)).conflictedDeltas.nonEmpty)
     assert(commonCellState.availableCpusPerMachine(0) == 1.0 - 2 * 0.25)
     assert(commonCellState.availableMemPerMachine(0) == 2.0 - 2 * 0.75)
     assert(commonCellState.allocatedCpusPerMachine(0) == 2 * 0.25)
@@ -374,7 +375,7 @@ class SimulatorsTestSuite extends FunSuite {
   test("omegaSchedulerTest") {
     println("===========\nomegaSchedulerTest\n==========")
     println("\nRunning cellstate flow test.")
-    var workload = new Workload("unif")
+    val workload = new Workload("unif")
     workload.addJob(Job(id = 1,
                              submitted = 1.0,
                              numTasks = 1,
@@ -393,7 +394,7 @@ class SimulatorsTestSuite extends FunSuite {
                                         conflictMode = "sequence-numbers",
                                         transactionMode = "all-or-nothing")
 
-    val omegaSimulator = new OmegaSimulator(commonCellState,
+    val omegaSimulator = new ClusterSimulator(commonCellState,
                                             Map(scheduler.name -> scheduler),
                                             Map("unif" -> Seq("omega_test_sched")),
                                             List(workload),
@@ -413,7 +414,7 @@ class SimulatorsTestSuite extends FunSuite {
     println("===========\nomegaSimulatorRunWithSingleSchedulerTest\n===========")
     println("\nRunning cellstate run w/ single scheduler test.")
     // Set up a workload with 40 jobs, each with 1 task.
-    var workload = new Workload("unif")
+    val workload = new Workload("unif")
     val numJobs = 40 
     (1 to numJobs).foreach(i => {
       workload.addJob(Job(id = i,
@@ -438,7 +439,7 @@ class SimulatorsTestSuite extends FunSuite {
                                         transactionMode = "all-or-nothing")
 
     // Set up a Simulator.
-    val omegaSimulator = new OmegaSimulator(
+    val omegaSimulator = new ClusterSimulator(
           commonCellState,
           Map(scheduler.name -> scheduler),
           Map("unif" -> Seq("omega_test_sched")),
@@ -461,13 +462,13 @@ class SimulatorsTestSuite extends FunSuite {
   test("UniformWorkloadGeneratorTest") {
     println("\nRunning Uniform workload generator test.")
     // create a new WorkloadGenerator
-    var workloadGen =
-        new UniformWorkloadGenerator(workloadName = "test_wl",
-                                     initJobInterarrivalTime = 1.0,
-                                     tasksPerJob = 2,
-                                     jobDuration = 3.0,
-                                     cpusPerTask = 4.0,
-                                     memPerTask = 5.0)
+    val workloadGen =
+      new UniformWorkloadGenerator(workloadName = "test_wl",
+        initJobInterarrivalTime = 1.0,
+        tasksPerJob = 2,
+        jobDuration = 3.0,
+        cpusPerTask = 4.0,
+        memPerTask = 5.0)
 
     // Test newWorkload.
     val workload = workloadGen.newWorkload(100.0)
