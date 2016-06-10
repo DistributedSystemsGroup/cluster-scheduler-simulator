@@ -94,7 +94,7 @@ class Experiment(
     val output =
       new java.io.FileOutputStream("%s/%s-%.0f.protobuf"
         .format(outputDirectory,
-          name,
+          name.toLowerCase,
           simulatorDesc.runTime))
 
     var allRuns: ListBuffer[ExperimentRun] = ListBuffer()
@@ -391,8 +391,11 @@ class ExperimentRun(
       workloadStats.setWorkloadName(workload.name)
       workloadStats.setNumJobs(workload.numJobs)
       workloadStats.setNumJobsScheduled(
-        workload.getJobs.count(_.numSchedulingAttempts > 0))
-      workloadStats.setNumJobsFullyScheduled(workload.getJobs.count(_.finalStatus == JobStates.Fully_Scheduled ))
+        workload.getJobs.count(_.isScheduled))
+      workloadStats.setNumJobsFullyScheduled(
+        workload.getJobs.count(_.isFullyScheduled))
+      workloadStats.setNumJobsTimedOutScheduling(
+        workload.getJobs.count(_.isTimedOut))
       workloadStats.setJobThinkTimes90Percentile(
         workload.jobUsefulThinkTimesPercentile(0.9))
       workloadStats.setAvgJobQueueTimesTillFirstScheduled(
@@ -416,7 +419,7 @@ class ExperimentRun(
       var totalJobCompletionTime = 0.0
       var countJobFinished = 0
       workload.getJobs.foreach(job => {
-        if (job.finalStatus == JobStates.Fully_Scheduled) {
+        if (job.isFullyScheduled) {
           totalJobExecutionTime += job.jobFinishedWorking - job.jobStartedWorking
           totalJobCompletionTime += job.jobFinishedWorking - job.submitted
           countJobFinished += 1

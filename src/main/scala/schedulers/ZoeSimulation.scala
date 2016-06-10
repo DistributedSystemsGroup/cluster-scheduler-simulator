@@ -25,7 +25,7 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+  */
 
 package ClusterSchedulingSimulation.schedulers
 
@@ -40,8 +40,9 @@ import scala.collection.mutable
  * construct the simulator.
  */
 class ZoeSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
-                              runTime: Double)
-                             extends ClusterSimulatorDesc(runTime){
+                       runTime: Double,
+                       allocationMode: AllocationModes.Value)
+  extends ClusterSimulatorDesc(runTime, allocationMode){
   override
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
@@ -64,52 +65,53 @@ class ZoeSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
         schedDesc.perTaskThinkTimes.toSeq: _*)
       var newBlackListPercent = 0.0
       if (schedulerWorkloadsToSweepOver
-          .contains(schedDesc.name)) {
+        .contains(schedDesc.name)) {
         newBlackListPercent = blackListPercent
         schedulerWorkloadsToSweepOver(schedDesc.name)
-            .foreach(workloadName => {
-          constantThinkTimes(workloadName) = constantThinkTime
-          perTaskThinkTimes(workloadName) = perTaskThinkTime
-        })
+          .foreach(workloadName => {
+            constantThinkTimes(workloadName) = constantThinkTime
+            perTaskThinkTimes(workloadName) = perTaskThinkTime
+          })
       }
       schedulers(schedDesc.name) =
-          new ZoeScheduler(schedDesc.name,
-                                  constantThinkTimes.toMap,
-                                  perTaskThinkTimes.toMap,
-                                  math.floor(newBlackListPercent *
-                                    cellStateDesc.numMachines.toDouble).toInt)
+        new ZoeScheduler(schedDesc.name,
+          constantThinkTimes.toMap,
+          perTaskThinkTimes.toMap,
+          math.floor(newBlackListPercent *
+            cellStateDesc.numMachines.toDouble).toInt)
     })
 
     val cellState = new CellState(cellStateDesc.numMachines,
-                                  cellStateDesc.cpusPerMachine,
-                                  cellStateDesc.memPerMachine,
-                                  conflictMode = "resource-fit",
-                                  transactionMode = "all-or-nothing")
+      cellStateDesc.cpusPerMachine,
+      cellStateDesc.memPerMachine,
+      conflictMode = "resource-fit",
+      transactionMode = "all-or-nothing")
 
     new ClusterSimulator(cellState,
-                         schedulers.toMap,
-                         workloadToSchedulerMap,
-                         workloads,
-                         prefillWorkloads,
-                         logging)
+      schedulers.toMap,
+      workloadToSchedulerMap,
+      workloads,
+      prefillWorkloads,
+      allocationMode,
+      logging)
   }
 }
 
 class ZoeScheduler(name: String,
-                          constantThinkTimes: Map[String, Double],
-                          perTaskThinkTimes: Map[String, Double],
-                          numMachinesToBlackList: Double = 0)
-                         extends Scheduler(name,
-                                           constantThinkTimes,
-                                           perTaskThinkTimes,
-                                           numMachinesToBlackList) {
+                   constantThinkTimes: Map[String, Double],
+                   perTaskThinkTimes: Map[String, Double],
+                   numMachinesToBlackList: Double = 0)
+  extends Scheduler(name,
+    constantThinkTimes,
+    perTaskThinkTimes,
+    numMachinesToBlackList) {
   val logger = Logger.getLogger(this.getClass.getName)
   logger.debug("scheduler-id-info: %d, %s, %d, %s, %s"
-          .format(Thread.currentThread().getId,
-                  name,
-                  hashCode(),
-                  constantThinkTimes.mkString(";"),
-                  perTaskThinkTimes.mkString(";")))
+    .format(Thread.currentThread().getId,
+      name,
+      hashCode(),
+      constantThinkTimes.mkString(";"),
+      perTaskThinkTimes.mkString(";")))
 
   override
   def addJob(job: Job) = {
@@ -121,13 +123,13 @@ class ZoeScheduler(name: String,
   }
 
   /**
-   * Checks to see if there is currently a job in this scheduler's job queue.
-   * If there is, and this scheduler is not currently scheduling a job, then
-   * pop that job off of the queue and "begin scheduling it". Scheduling a
-   * job consists of setting this scheduler's state to scheduling = true, and
-   * adding a finishSchedulingJobAction to the simulators event queue by
-   * calling afterDelay().
-   */
+    * Checks to see if there is currently a job in this scheduler's job queue.
+    * If there is, and this scheduler is not currently scheduling a job, then
+    * pop that job off of the queue and "begin scheduling it". Scheduling a
+    * job consists of setting this scheduler's state to scheduling = true, and
+    * adding a finishSchedulingJobAction to the simulators event queue by
+    * calling afterDelay().
+    */
   def scheduleNextJobAction(): Unit = {
     if (!scheduling && pendingQueue.nonEmpty) {
       scheduling = true
@@ -136,65 +138,66 @@ class ZoeScheduler(name: String,
       job.lastSchedulingStartTime = simulator.currentTime
       val jobThinkTime = getThinkTime(job)
       simulator.afterDelay(jobThinkTime) {
+        var unscheduledTasks: Int = job.getUnscheduledTasks
+        val numTasks: Int = job.getNumTasks
+
         simulator.logger.info(("Job %d (%s) finished %f seconds of scheduling " +
           "thinktime; now trying to claim resources for %d " +
           "tasks with %f cpus and %f mem each.")
           .format(job.id,
             job.workloadName,
             jobThinkTime,
-            job.numTasks,
+            numTasks,
             job.cpusPerTask,
             job.memPerTask))
         job.numSchedulingAttempts += 1
-        job.numTaskSchedulingAttempts += job.unscheduledTasks
+        job.numTaskSchedulingAttempts += unscheduledTasks
 
-        assert(job.unscheduledTasks > 0)
+        assert(unscheduledTasks > 0)
         val claimDeltas = scheduleJob(job, simulator.cellState)
-        if(claimDeltas.nonEmpty) {
+        if(isAllocationSuccessfully(claimDeltas, job)) {
           job.jobStartedWorking = simulator.currentTime
-          simulator.cellState.scheduleEndEvents(claimDeltas)
-          job.unscheduledTasks -= claimDeltas.length
-          simulator.logger.info("scheduled %d tasks of job %d's, %d remaining."
-                        .format(claimDeltas.length, job.id, job.unscheduledTasks))
-          numSuccessfulTransactions += 1
           job.finalStatus = JobStates.Partially_Scheduled
+          simulator.cellState.scheduleEndEvents(claimDeltas)
+          unscheduledTasks -= claimDeltas.length
+          job.setUnscheduleTasks(unscheduledTasks)
+          simulator.logger.info("scheduled %d tasks of job %d's, %d remaining."
+            .format(claimDeltas.length, job.id, job.getUnscheduledTasks))
+          numSuccessfulTransactions += 1
           recordUsefulTimeScheduling(job,
-                                     jobThinkTime,
-                                     job.numSchedulingAttempts == 1)
+            jobThinkTime,
+            job.numSchedulingAttempts == 1)
         } else {
           simulator.logger.info(("No tasks scheduled for job %d (%f cpu %f mem) " +
-                         "during this scheduling attempt, not recording " +
-                         "any busy time. %d unscheduled tasks remaining.")
-                        .format(job.id,
-                                job.cpusPerTask,
-                                job.memPerTask,
-                                job.unscheduledTasks))
+            "during this scheduling attempt, not recording " +
+            "any busy time. %d unscheduled tasks remaining.")
+            .format(job.id,
+              job.cpusPerTask,
+              job.memPerTask,
+              unscheduledTasks))
           numNoResourcesFoundSchedulingAttempts += 1
         }
         // If the job isn't yet fully scheduled, put it back in the queue.
-        if (job.unscheduledTasks > 0) {
+        if (unscheduledTasks > 0) {
           simulator.logger.info(("Job %s didn't fully schedule, %d / %d tasks remain " +
-                         "(shape: %f cpus, %f mem). Putting it " +
-                         "back in the queue").format(job.id,
-                                                     job.unscheduledTasks,
-                                                     job.numTasks,
-                                                     job.cpusPerTask,
-                                                     job.memPerTask))
-          // Give up on a job if (a) it hasn't scheduled a single task in
-          // 100 tries or (b) it hasn't finished scheduling after 1000 tries.
-          if ((job.numSchedulingAttempts > 100 &&
-               job.unscheduledTasks == job.numTasks) ||
-              job.numSchedulingAttempts > 1000) {
+            "(shape: %f cpus, %f mem). Putting it " +
+            "back in the queue").format(job.id,
+            unscheduledTasks,
+            numTasks,
+            job.cpusPerTask,
+            job.memPerTask))
+
+          if (giveUpSchedulingJob(job)) {
             simulator.logger.info(("Abandoning job %d (%f cpu %f mem) with %d/%d " +
-                   "remaining tasks, after %d scheduling " +
-                   "attempts.").format(job.id,
-                                       job.cpusPerTask,
-                                       job.memPerTask,
-                                       job.unscheduledTasks,
-                                       job.numTasks,
-                                       job.numSchedulingAttempts))
+              "remaining tasks, after %d scheduling " +
+              "attempts.").format(job.id,
+              job.cpusPerTask,
+              job.memPerTask,
+              unscheduledTasks,
+              numTasks,
+              job.numSchedulingAttempts))
             numJobsTimedOutScheduling += 1
-            job.finalStatus = JobStates.Abandoned
+            job.finalStatus = JobStates.TimedOut
           } else {
             simulator.afterDelay(1) {
               addJob(job)
@@ -220,7 +223,7 @@ class ZoeScheduler(name: String,
         scheduleNextJobAction()
       }
       simulator.logger.info("Scheduler '%s' started scheduling job %d "
-                    .format(name,job.id))
+        .format(name,job.id))
     }
   }
 }

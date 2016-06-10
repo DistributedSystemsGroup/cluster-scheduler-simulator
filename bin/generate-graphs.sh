@@ -136,8 +136,17 @@ function graph_experiment() {
       esac
       echo Pathness is ${pathness}.
 
+      case ${filename} in
+        *allocation_incremental*)   allocation_mode=incremental;;
+        *allocation_all*)           allocation_mode=all;;
+        *)             echo "Protobuf filename must contain"         \
+                            "allocation_[incremental|all]."
+                       exit 1
+      esac
+      echo Allocation Mode is ${allocation_mode}.
+
       for envs_to_plot in ${env_sets_to_plot}; do
-        complete_out_dir=${out_dir}/${sim}/${pathness}/${envs_to_plot}/${num_service_scheds}_service-${num_batch_scheds}_batch
+        complete_out_dir=${out_dir}/${sim}/${pathness}/${allocation_mode}/${envs_to_plot}/${num_service_scheds}_service-${num_batch_scheds}_batch
         mkdir -p ${complete_out_dir}
 #        echo 'PYTHONPATH=$PYTHONPATH:.. '"python ${plotting_script}" \
 #           "${complete_out_dir}"                                       \

@@ -26,6 +26,7 @@ Currently the scheduler architectures supported are:
 2. Mesos by [Google](https://github.com/google/cluster-scheduler-simulator/blob/master/src/main/scala/MesosSimulation.scala)
 3. Omega by [Google](https://github.com/google/cluster-scheduler-simulator/blob/master/src/main/scala/OmegaSimulation.scala)
 4. Spark by [Liang-Chi Hsieh](https://github.com/viirya/cluster-scheduler-simulator/blob/spark_support/src/main/scala/SparkSimulation.scala)
+5. Zoe   by [Pace Francesco](https://github.com/Nosfe)
 
 Be aware that the scheduler simulators original code might be different after the refactoring and improvements, but the logic is the same.
 
@@ -47,13 +48,13 @@ Below there is a table that summarize the metric plotted for each scheduler simu
 | Daily Conflict Fraction Median    |           |           | &#10004;  |           |           |
 | Failed Task Allocation            | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
 | Jobs Unscheduled                  | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
-| Jobs Scheduled                    |           |   |   |           | &#10004;  |
-| Jobs Fully Scheduled              |           |   |   |           | &#10004;  |
+| Jobs Scheduled                    | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Jobs Fully Scheduled              | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
 | Number Jobs Timed Out             | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
 | Number Pending Jobs at the End    | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  | 
 | Retried Transactions              |           |           | &#10004;  |           |           |
 | Task Conflict Fraction            |           |           | &#10004;  |           |           |
 | Wait Time Before First Task       | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
 | Wait Time Before All Tasks        | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
-| Avg Job Execution Time            |           |   |   |           | &#10004;  |
-| Avg Job Completion Time           |           |   |   |           | &#10004;  |
+| Avg Job Execution Time            | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |
+| Avg Job Completion Time           | &#10004;  | &#10004;  | &#10004;  |           | &#10004;  |

@@ -114,7 +114,11 @@ abstract class Simulator(logging: Boolean = false){
   }
 }
 
-abstract class ClusterSimulatorDesc(val runTime: Double) {
+object AllocationModes extends Enumeration {
+  val Incremental, All = Value
+}
+
+abstract class ClusterSimulatorDesc(val runTime: Double, val allocationMode: AllocationModes.Value) {
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
                    blackListPercent: Double,
@@ -143,6 +147,7 @@ class ClusterSimulator(val cellState: CellState,
                        val workloadToSchedulerMap: Map[String, Seq[String]],
                        val workloads: Seq[Workload],
                        prefillWorkloads: Seq[Workload],
+                       val allocationMode: AllocationModes.Value,
                        logging: Boolean = false,
                        monitorUtilization: Boolean = true,
                        monitoringPeriod: Double = 1.0)
@@ -155,6 +160,13 @@ class ClusterSimulator(val cellState: CellState,
                                                                    ,("Workload-Scheduler map points to a scheduler, " +
                                                                      "%s, that is not registered").format(schedulerName)))
 
+  assert(allocationMode == AllocationModes.Incremental ||
+    allocationMode == AllocationModes.All,
+    "allocationMode must be one of: {%s, %s}, " +
+      "but it was %s.".format(AllocationModes.Incremental, AllocationModes.All, allocationMode))
+
+  def getAllocationMode: AllocationModes.Value = allocationMode
+
   // Set up a pointer to this simulator in the cellstate.
   cellState.simulator = this
   // Set up a pointer to this simulator in each scheduler.
@@ -165,6 +177,7 @@ class ClusterSimulator(val cellState: CellState,
                         constantThinkTimes = Map[String, Double](),
                         perTaskThinkTimes = Map[String, Double](),
                         numMachinesToBlackList = 0) {}
+
   private val prefillScheduler = new PrefillScheduler
   prefillScheduler.simulator = this
   // Prefill jobs that exist at the beginning of the simulation.
@@ -422,7 +435,7 @@ abstract class Scheduler(val name: String,
   def addJob(job: Job): Unit = {
     checkRegistered()
 
-    assert(job.unscheduledTasks > 0)
+    assert(job.getUnscheduledTasks > 0, "A job must have at least one unscheduled task.")
     // Make sure the perWorkloadTimeScheduling Map has a key for this job's
     // workload type, so that we still print something for statistics about
     // that workload type for this scheduler, even if this scheduler never
@@ -500,7 +513,7 @@ abstract class Scheduler(val name: String,
         candidatePoolCache.getOrElseUpdate(cellState.numMachines,
                                            Array.range(0, cellState.numMachines))
 
-    var numRemainingTasks = job.unscheduledTasks
+    var numRemainingTasks = job.getUnscheduledTasks
     var remainingCandidates =
         math.max(0, cellState.numMachines - numMachinesToBlackList).toInt
     while(numRemainingTasks > 0 && remainingCandidates > 0) {
@@ -546,6 +559,26 @@ abstract class Scheduler(val name: String,
       }
     }
     claimDeltas
+  }
+
+  def isAllocationSuccessfully(claimDeltas: Seq[ClaimDelta], job: Job): Boolean = {
+    if(simulator.allocationMode == AllocationModes.Incremental)
+      claimDeltas.nonEmpty
+    else if(simulator.allocationMode == AllocationModes.All)
+      claimDeltas.length == job.getNumTasks
+    else
+      false
+  }
+
+  // Give up on a job if (a) it hasn't scheduled a single task in
+  // 100 tries or (b) it hasn't finished scheduling after 1000 tries.
+  def giveUpSchedulingJob(job: Job): Boolean = {
+    if(simulator.allocationMode == AllocationModes.Incremental)
+      (job.numSchedulingAttempts > 100 && job.getUnscheduledTasks == job.getNumTasks) || job.numSchedulingAttempts > 1000
+    else if(simulator.allocationMode == AllocationModes.All)
+      job.numSchedulingAttempts > 1000
+    else
+      false
   }
 
   def jobQueueSize: Long = pendingQueue.size
@@ -613,7 +646,7 @@ abstract class Scheduler(val name: String,
     assert(constantThinkTimes.contains(job.workloadName))
     assert(perTaskThinkTimes.contains(job.workloadName))
     constantThinkTimes(job.workloadName) +
-        perTaskThinkTimes(job.workloadName) * job.unscheduledTasks.toFloat
+        perTaskThinkTimes(job.workloadName) * job.getUnscheduledTasks.toFloat
   }
 }
 
@@ -963,7 +996,7 @@ class CellState(val numMachines: Int,
 }
 
 object JobStates extends Enumeration {
-  val Abandoned, Fully_Scheduled, Not_Scheduled, Partially_Scheduled = Value
+  val TimedOut, Not_Scheduled, Partially_Scheduled, Fully_Scheduled = Value
 }
 
 /**
@@ -1018,9 +1051,41 @@ case class Job(id: Long,
   var jobFinishedWorking: Double = 0.0
 
   // Zoe Applications variables
+  var isZoeApp: Boolean = false
   var moldableTasks: Int = 0
   var elasticTasks: Int = 0
-  //
+  var moldableTasksUnschedule: Int = 0
+  var elasticTasksUnschedule: Int = 0
+
+  // We return the unscheduled tasks depending of the type of Job
+  def getUnscheduledTasks: Int = {
+    if(isZoeApp)
+      moldableTasksUnschedule
+    else
+      unscheduledTasks
+  }
+
+  def setUnscheduleTasks(unscheduleTasks: Int): Unit = {
+    if(isZoeApp)
+      this.moldableTasksUnschedule = unscheduleTasks
+    else
+      this.unscheduledTasks = unscheduleTasks
+  }
+
+  def getNumTasks: Int = {
+    if(isZoeApp)
+      moldableTasks
+    else
+      numTasks
+  }
+
+  def isScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled || finalStatus == JobStates.Fully_Scheduled ||
+    (finalStatus == JobStates.TimedOut && getUnscheduledTasks != getNumTasks)
+  def isFullyScheduled: Boolean = finalStatus == JobStates.Fully_Scheduled
+  def isPartiallyScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled
+  def isTimedOut: Boolean = finalStatus == JobStates.TimedOut
+  def isNotScheduled: Boolean = finalStatus == JobStates.Not_Scheduled
+
   /**
     * We set the number of moldable tasks that compose the Zoe Applications
     * remember that at least one moldable service must exist
@@ -1029,19 +1094,23 @@ case class Job(id: Long,
     * @param moldableTasksPercentage The percentage of moldable tasks
     */
   def setMoldableTasksPercentage(moldableTasksPercentage:Int): Unit ={
+    this.isZoeApp = true
     this.moldableTasks = Math.ceil(numTasks * moldableTasksPercentage / 100.0).toInt
     if(this.moldableTasks == 0)
       this.moldableTasks = 1
     this.elasticTasks = numTasks - moldableTasks
+    this.moldableTasksUnschedule = this.moldableTasks
+    this.elasticTasksUnschedule = this.elasticTasks
   }
 
   // For Spark
-  def scheduledTasks = numTasks - unscheduledTasks
+  def scheduledTasks = getNumTasks - getUnscheduledTasks
   def coresGranted = cpusPerTask * scheduledTasks
   def coresLeft = math.max(0, requestedCores - coresGranted)
 
-  def cpusStillNeeded: Double = cpusPerTask * unscheduledTasks
-  def memStillNeeded: Double = memPerTask * unscheduledTasks
+  def cpusStillNeeded: Double = cpusPerTask * getUnscheduledTasks
+  def memStillNeeded: Double = memPerTask * getUnscheduledTasks
+
   // Calculate the maximum number of this jobs tasks that can fit into
   // the specified resources
   def numTasksToSchedule(cpusAvail: Double, memAvail: Double): Int = {
@@ -1054,7 +1123,7 @@ case class Job(id: Long,
       val maxTasksThatWillFitByMem = math.round(memChoppedToTaskSize / memPerTask)
       val maxTasksThatWillFit = math.min(maxTasksThatWillFitByCpu,
                                          maxTasksThatWillFitByMem)
-      math.min(unscheduledTasks, maxTasksThatWillFit.toInt)
+      math.min(getUnscheduledTasks, maxTasksThatWillFit.toInt)
     }
   }
   def updateTimeInQueueStats(currentTime: Double) = {
@@ -1088,8 +1157,8 @@ class Workload(val name: String,
   def addJobs(jobs: Seq[Job]) = jobs.foreach(addJob)
   def numJobs: Int = jobs.length
 
-  def cpus: Double = jobs.map(j => {j.numTasks * j.cpusPerTask}).sum
-  def mem: Double = jobs.map(j => {j.numTasks * j.memPerTask}).sum
+//  def cpus: Double = jobs.map(j => {j.numTasks * j.cpusPerTask}).sum
+//  def mem: Double = jobs.map(j => {j.numTasks * j.memPerTask}).sum
   // Generate a new workload that has a copy of the jobs that
   // this workload has.
   def copy: Workload = {
@@ -1117,7 +1186,7 @@ class Workload(val name: String,
 
   def jobUsefulThinkTimesPercentile(percentile: Double): Double = {
     assert(percentile <= 1.0 && percentile >= 0)
-    val scheduledJobs = jobs.filter(_.numSchedulingAttempts > 0).toList
+    val scheduledJobs = jobs.filter(_.isScheduled).toList
     // println("Setting up thinkTimesArray of length " +
     //         scheduledJobs.length)
     if (scheduledJobs.nonEmpty) {
@@ -1137,7 +1206,7 @@ class Workload(val name: String,
 
   def avgJobQueueTimeTillFirstScheduled: Double = {
     // println("Computing avgJobQueueTimeTillFirstScheduled.")
-    val scheduledJobs = jobs.filter(_.numSchedulingAttempts > 0)
+    val scheduledJobs = jobs.filter(_.isScheduled)
     if (scheduledJobs.nonEmpty) {
       val queueTimes = scheduledJobs.map(_.timeInQueueTillFirstScheduled).sum
       queueTimes / scheduledJobs.length
@@ -1148,7 +1217,7 @@ class Workload(val name: String,
 
   def avgJobQueueTimeTillFullyScheduled: Double = {
     // println("Computing avgJobQueueTimeTillFullyScheduled.")
-    val scheduledJobs = jobs.filter(_.numSchedulingAttempts > 0)
+    val scheduledJobs = jobs.filter(_.isFullyScheduled)
     if (scheduledJobs.nonEmpty) {
       val queueTimes = scheduledJobs.map(_.timeInQueueTillFullyScheduled).sum
       queueTimes / scheduledJobs.length
@@ -1159,7 +1228,7 @@ class Workload(val name: String,
 
   def jobQueueTimeTillFirstScheduledPercentile(percentile: Double): Double = {
     assert(percentile <= 1.0 && percentile >= 0)
-    val scheduled = jobs.filter(_.numSchedulingAttempts > 0)
+    val scheduled = jobs.filter(_.isScheduled)
     if (scheduled.nonEmpty) {
       val queueTimesArray = new Array[Double](scheduled.length)
       scheduled.map(_.timeInQueueTillFirstScheduled)
@@ -1180,7 +1249,7 @@ class Workload(val name: String,
 
   def jobQueueTimeTillFullyScheduledPercentile(percentile: Double): Double = {
     assert(percentile <= 1.0 && percentile >= 0)
-    val scheduled = jobs.filter(_.numSchedulingAttempts > 0)
+    val scheduled = jobs.filter(_.isFullyScheduled)
     if (scheduled.nonEmpty) {
       val queueTimesArray = new Array[Double](scheduled.length)
       scheduled.map(_.timeInQueueTillFullyScheduled)

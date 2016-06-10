@@ -38,8 +38,9 @@ import scala.collection.mutable.HashMap
  * construct the simulator.
  */
 class MonolithicSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
-                              runTime: Double)
-                             extends ClusterSimulatorDesc(runTime){
+                              runTime: Double,
+                              allocationMode: AllocationModes.Value)
+                             extends ClusterSimulatorDesc(runTime, allocationMode){
   override
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
@@ -89,6 +90,7 @@ class MonolithicSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
                          workloadToSchedulerMap,
                          workloads,
                          prefillWorkloads,
+      allocationMode,
                          logging)
   }
 }
@@ -149,11 +151,13 @@ class MonolithicScheduler(name: String,
         assert(job.unscheduledTasks > 0)
         val claimDeltas = scheduleJob(job, simulator.cellState)
         if(claimDeltas.nonEmpty) {
+          job.jobStartedWorking = simulator.currentTime
           simulator.cellState.scheduleEndEvents(claimDeltas)
           job.unscheduledTasks -= claimDeltas.length
           simulator.logger.info("scheduled %d tasks of job %d's, %d remaining."
                         .format(claimDeltas.length, job.id, job.unscheduledTasks))
           numSuccessfulTransactions += 1
+          job.finalStatus = JobStates.Partially_Scheduled
           recordUsefulTimeScheduling(job,
                                      jobThinkTime,
                                      job.numSchedulingAttempts == 1)
@@ -167,49 +171,49 @@ class MonolithicScheduler(name: String,
                                 job.unscheduledTasks))
           numNoResourcesFoundSchedulingAttempts += 1
         }
-        var jobEventType = "" // Set this conditionally below; used in logging.
         // If the job isn't yet fully scheduled, put it back in the queue.
         if (job.unscheduledTasks > 0) {
           simulator.logger.info(("Job %s didn't fully schedule, %d / %d tasks remain " +
-                         "(shape: %f cpus, %f mem). Putting it " +
-                         "back in the queue").format(job.id,
-                                                     job.unscheduledTasks,
-                                                     job.numTasks,
-                                                     job.cpusPerTask,
-                                                     job.memPerTask))
+            "(shape: %f cpus, %f mem). Putting it " +
+            "back in the queue").format(job.id,
+            job.unscheduledTasks,
+            job.numTasks,
+            job.cpusPerTask,
+            job.memPerTask))
           // Give up on a job if (a) it hasn't scheduled a single task in
           // 100 tries or (b) it hasn't finished scheduling after 1000 tries.
           if ((job.numSchedulingAttempts > 100 &&
-               job.unscheduledTasks == job.numTasks) ||
-              job.numSchedulingAttempts > 1000) {
+            job.unscheduledTasks == job.numTasks) ||
+            job.numSchedulingAttempts > 1000) {
             simulator.logger.info(("Abandoning job %d (%f cpu %f mem) with %d/%d " +
-                   "remaining tasks, after %d scheduling " +
-                   "attempts.").format(job.id,
-                                       job.cpusPerTask,
-                                       job.memPerTask,
-                                       job.unscheduledTasks,
-                                       job.numTasks,
-                                       job.numSchedulingAttempts))
+              "remaining tasks, after %d scheduling " +
+              "attempts.").format(job.id,
+              job.cpusPerTask,
+              job.memPerTask,
+              job.unscheduledTasks,
+              job.numTasks,
+              job.numSchedulingAttempts))
             numJobsTimedOutScheduling += 1
-            jobEventType = "abandoned"
+            job.finalStatus = JobStates.TimedOut
           } else {
             simulator.afterDelay(1) {
               addJob(job)
             }
           }
         } else {
+          job.jobFinishedWorking = simulator.currentTime + job.taskDuration
           // All tasks in job scheduled so don't put it back in pendingQueue.
-          jobEventType = "fully-scheduled"
+          job.finalStatus = JobStates.Fully_Scheduled
         }
-        if (!jobEventType.equals("")) {
+        if (job.finalStatus != JobStates.Not_Scheduled) {
           simulator.logger.info("%s %s %d %s %d %d %f"
-                   .format(Thread.currentThread().getId,
-                           name,
-                           hashCode(),
-                           jobEventType,
-                           job.id,
-                           job.numSchedulingAttempts,
-                           simulator.currentTime - job.submitted))
+            .format(Thread.currentThread().getId,
+              name,
+              hashCode(),
+              job.finalStatus,
+              job.id,
+              job.numSchedulingAttempts,
+              simulator.currentTime - job.submitted))
         }
 
         scheduling = false

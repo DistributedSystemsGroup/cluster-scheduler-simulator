@@ -201,6 +201,7 @@ workload_num_jobs_scheduled = {}
 workload_num_jobs_fully_scheduled = {}
 workload_avg_job_execution_time = {}
 workload_avg_job_completion_time = {}
+workload_num_jobs_timed_out = {}
 # (cellName, assignmentPolicy, scheduler_name) -> array of data points
 # for the parameter sweep done in the experiment.
 sched_total_busy_fraction = {}
@@ -479,6 +480,13 @@ for filename in input_list:
                 # Num jobs that did schedule at least one task.
                 value = Value(x_val, wl_stat.num_jobs_scheduled)
                 append_or_create_2d(workload_num_jobs_scheduled,
+                                    exp_env,
+                                    wl_stat.workload_name,
+                                    value)
+
+                # Num jobs that timed out.
+                value = Value(x_val, wl_stat.num_jobs_timed_out_scheduling)
+                append_or_create_2d(workload_num_jobs_timed_out,
                                     exp_env,
                                     wl_stat.workload_name,
                                     value)
@@ -1153,6 +1161,12 @@ plot_2d_data_set_dict(workload_num_jobs_scheduled,
                       u'Num jobs scheduled',
                       "abs")
 
+plot_2d_data_set_dict(workload_num_jobs_timed_out,
+                      "Scheduler processing time vs. num jobs ignored due to no-fit events",
+                      "num-jobs-timed-out",
+                      u'Num jobs ignored due to failed scheduling',
+                      "abs")
+
 plot_2d_data_set_dict(workload_num_jobs_fully_scheduled,
                       "Scheduler processing time vs. num jobs fully scheduled",
                       "jobs-fully-scheduled",
@@ -1240,7 +1254,7 @@ plot_2d_data_set_dict(sched_failed_find_victim_attempts,
 
 plot_2d_data_set_dict(sched_num_jobs_timed_out,
                       "Scheduler processing time vs. num jobs ignored due to no-fit events.",
-                      "num-jobs-timed-out",
+                      "num-jobs-timed-out-scheduler",
                       u'Num jobs ignored due to failed scheduling',
                       "abs")
 

@@ -2429,113 +2429,123 @@ public final class ClusterSimulationProtos {
            */
           long getNumJobsFullyScheduled();
 
-          // optional double job_think_times_90_percentile = 5;
+          // optional int64 num_jobs_timed_out_scheduling = 5;
           /**
-           * <code>optional double job_think_times_90_percentile = 5;</code>
+           * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
+           */
+          boolean hasNumJobsTimedOutScheduling();
+          /**
+           * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
+           */
+          long getNumJobsTimedOutScheduling();
+
+          // optional double job_think_times_90_percentile = 6;
+          /**
+           * <code>optional double job_think_times_90_percentile = 6;</code>
            */
           boolean hasJobThinkTimes90Percentile();
           /**
-           * <code>optional double job_think_times_90_percentile = 5;</code>
+           * <code>optional double job_think_times_90_percentile = 6;</code>
            */
           double getJobThinkTimes90Percentile();
 
-          // optional double avg_job_queue_times_till_first_scheduled = 6;
+          // optional double avg_job_queue_times_till_first_scheduled = 7;
           /**
-           * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+           * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
            */
           boolean hasAvgJobQueueTimesTillFirstScheduled();
           /**
-           * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+           * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
            */
           double getAvgJobQueueTimesTillFirstScheduled();
 
-          // optional double avg_job_queue_times_till_fully_scheduled = 7;
+          // optional double avg_job_queue_times_till_fully_scheduled = 8;
           /**
-           * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+           * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
            */
           boolean hasAvgJobQueueTimesTillFullyScheduled();
           /**
-           * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+           * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
            */
           double getAvgJobQueueTimesTillFullyScheduled();
 
-          // optional double job_queue_time_till_first_scheduled_90_percentile = 8;
+          // optional double job_queue_time_till_first_scheduled_90_percentile = 9;
           /**
-           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
            */
           boolean hasJobQueueTimeTillFirstScheduled90Percentile();
           /**
-           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
            */
           double getJobQueueTimeTillFirstScheduled90Percentile();
 
-          // optional double job_queue_time_till_fully_scheduled_90_percentile = 9;
+          // optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
           /**
-           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
            */
           boolean hasJobQueueTimeTillFullyScheduled90Percentile();
           /**
-           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
            */
           double getJobQueueTimeTillFullyScheduled90Percentile();
 
-          // optional double num_scheduling_attempts_90_percentile = 10;
+          // optional double num_scheduling_attempts_90_percentile = 11;
           /**
-           * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+           * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
            */
           boolean hasNumSchedulingAttempts90Percentile();
           /**
-           * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+           * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
            */
           double getNumSchedulingAttempts90Percentile();
 
-          // optional double num_scheduling_attempts_99_percentile = 11;
+          // optional double num_scheduling_attempts_99_percentile = 12;
           /**
-           * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+           * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
            */
           boolean hasNumSchedulingAttempts99Percentile();
           /**
-           * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+           * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
            */
           double getNumSchedulingAttempts99Percentile();
 
-          // optional double num_task_scheduling_attempts_90_percentile = 12;
+          // optional double num_task_scheduling_attempts_90_percentile = 13;
           /**
-           * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+           * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
            */
           boolean hasNumTaskSchedulingAttempts90Percentile();
           /**
-           * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+           * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
            */
           double getNumTaskSchedulingAttempts90Percentile();
 
-          // optional double num_task_scheduling_attempts_99_percentile = 13;
+          // optional double num_task_scheduling_attempts_99_percentile = 14;
           /**
-           * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+           * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
            */
           boolean hasNumTaskSchedulingAttempts99Percentile();
           /**
-           * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+           * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
            */
           double getNumTaskSchedulingAttempts99Percentile();
 
-          // optional double avg_job_execution_time = 14;
+          // optional double avg_job_execution_time = 15;
           /**
-           * <code>optional double avg_job_execution_time = 14;</code>
+           * <code>optional double avg_job_execution_time = 15;</code>
            */
           boolean hasAvgJobExecutionTime();
           /**
-           * <code>optional double avg_job_execution_time = 14;</code>
+           * <code>optional double avg_job_execution_time = 15;</code>
            */
           double getAvgJobExecutionTime();
 
-          // optional double avg_job_completion_time = 15;
+          // optional double avg_job_completion_time = 16;
           /**
-           * <code>optional double avg_job_completion_time = 15;</code>
+           * <code>optional double avg_job_completion_time = 16;</code>
            */
           boolean hasAvgJobCompletionTime();
           /**
-           * <code>optional double avg_job_completion_time = 15;</code>
+           * <code>optional double avg_job_completion_time = 16;</code>
            */
           double getAvgJobCompletionTime();
         }
@@ -2614,58 +2624,63 @@ public final class ClusterSimulationProtos {
                     numJobsFullyScheduled_ = input.readInt64();
                     break;
                   }
-                  case 41: {
+                  case 40: {
                     bitField0_ |= 0x00000010;
-                    jobThinkTimes90Percentile_ = input.readDouble();
+                    numJobsTimedOutScheduling_ = input.readInt64();
                     break;
                   }
                   case 49: {
                     bitField0_ |= 0x00000020;
-                    avgJobQueueTimesTillFirstScheduled_ = input.readDouble();
+                    jobThinkTimes90Percentile_ = input.readDouble();
                     break;
                   }
                   case 57: {
                     bitField0_ |= 0x00000040;
-                    avgJobQueueTimesTillFullyScheduled_ = input.readDouble();
+                    avgJobQueueTimesTillFirstScheduled_ = input.readDouble();
                     break;
                   }
                   case 65: {
                     bitField0_ |= 0x00000080;
-                    jobQueueTimeTillFirstScheduled90Percentile_ = input.readDouble();
+                    avgJobQueueTimesTillFullyScheduled_ = input.readDouble();
                     break;
                   }
                   case 73: {
                     bitField0_ |= 0x00000100;
-                    jobQueueTimeTillFullyScheduled90Percentile_ = input.readDouble();
+                    jobQueueTimeTillFirstScheduled90Percentile_ = input.readDouble();
                     break;
                   }
                   case 81: {
                     bitField0_ |= 0x00000200;
-                    numSchedulingAttempts90Percentile_ = input.readDouble();
+                    jobQueueTimeTillFullyScheduled90Percentile_ = input.readDouble();
                     break;
                   }
                   case 89: {
                     bitField0_ |= 0x00000400;
-                    numSchedulingAttempts99Percentile_ = input.readDouble();
+                    numSchedulingAttempts90Percentile_ = input.readDouble();
                     break;
                   }
                   case 97: {
                     bitField0_ |= 0x00000800;
-                    numTaskSchedulingAttempts90Percentile_ = input.readDouble();
+                    numSchedulingAttempts99Percentile_ = input.readDouble();
                     break;
                   }
                   case 105: {
                     bitField0_ |= 0x00001000;
-                    numTaskSchedulingAttempts99Percentile_ = input.readDouble();
+                    numTaskSchedulingAttempts90Percentile_ = input.readDouble();
                     break;
                   }
                   case 113: {
                     bitField0_ |= 0x00002000;
-                    avgJobExecutionTime_ = input.readDouble();
+                    numTaskSchedulingAttempts99Percentile_ = input.readDouble();
                     break;
                   }
                   case 121: {
                     bitField0_ |= 0x00004000;
+                    avgJobExecutionTime_ = input.readDouble();
+                    break;
+                  }
+                  case 129: {
+                    bitField0_ |= 0x00008000;
                     avgJobCompletionTime_ = input.readDouble();
                     break;
                   }
@@ -2800,177 +2815,193 @@ public final class ClusterSimulationProtos {
             return numJobsFullyScheduled_;
           }
 
-          // optional double job_think_times_90_percentile = 5;
-          public static final int JOB_THINK_TIMES_90_PERCENTILE_FIELD_NUMBER = 5;
-          private double jobThinkTimes90Percentile_;
+          // optional int64 num_jobs_timed_out_scheduling = 5;
+          public static final int NUM_JOBS_TIMED_OUT_SCHEDULING_FIELD_NUMBER = 5;
+          private long numJobsTimedOutScheduling_;
           /**
-           * <code>optional double job_think_times_90_percentile = 5;</code>
+           * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
            */
-          public boolean hasJobThinkTimes90Percentile() {
+          public boolean hasNumJobsTimedOutScheduling() {
             return ((bitField0_ & 0x00000010) == 0x00000010);
           }
           /**
-           * <code>optional double job_think_times_90_percentile = 5;</code>
+           * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
+           */
+          public long getNumJobsTimedOutScheduling() {
+            return numJobsTimedOutScheduling_;
+          }
+
+          // optional double job_think_times_90_percentile = 6;
+          public static final int JOB_THINK_TIMES_90_PERCENTILE_FIELD_NUMBER = 6;
+          private double jobThinkTimes90Percentile_;
+          /**
+           * <code>optional double job_think_times_90_percentile = 6;</code>
+           */
+          public boolean hasJobThinkTimes90Percentile() {
+            return ((bitField0_ & 0x00000020) == 0x00000020);
+          }
+          /**
+           * <code>optional double job_think_times_90_percentile = 6;</code>
            */
           public double getJobThinkTimes90Percentile() {
             return jobThinkTimes90Percentile_;
           }
 
-          // optional double avg_job_queue_times_till_first_scheduled = 6;
-          public static final int AVG_JOB_QUEUE_TIMES_TILL_FIRST_SCHEDULED_FIELD_NUMBER = 6;
+          // optional double avg_job_queue_times_till_first_scheduled = 7;
+          public static final int AVG_JOB_QUEUE_TIMES_TILL_FIRST_SCHEDULED_FIELD_NUMBER = 7;
           private double avgJobQueueTimesTillFirstScheduled_;
           /**
-           * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+           * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
            */
           public boolean hasAvgJobQueueTimesTillFirstScheduled() {
-            return ((bitField0_ & 0x00000020) == 0x00000020);
+            return ((bitField0_ & 0x00000040) == 0x00000040);
           }
           /**
-           * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+           * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
            */
           public double getAvgJobQueueTimesTillFirstScheduled() {
             return avgJobQueueTimesTillFirstScheduled_;
           }
 
-          // optional double avg_job_queue_times_till_fully_scheduled = 7;
-          public static final int AVG_JOB_QUEUE_TIMES_TILL_FULLY_SCHEDULED_FIELD_NUMBER = 7;
+          // optional double avg_job_queue_times_till_fully_scheduled = 8;
+          public static final int AVG_JOB_QUEUE_TIMES_TILL_FULLY_SCHEDULED_FIELD_NUMBER = 8;
           private double avgJobQueueTimesTillFullyScheduled_;
           /**
-           * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+           * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
            */
           public boolean hasAvgJobQueueTimesTillFullyScheduled() {
-            return ((bitField0_ & 0x00000040) == 0x00000040);
+            return ((bitField0_ & 0x00000080) == 0x00000080);
           }
           /**
-           * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+           * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
            */
           public double getAvgJobQueueTimesTillFullyScheduled() {
             return avgJobQueueTimesTillFullyScheduled_;
           }
 
-          // optional double job_queue_time_till_first_scheduled_90_percentile = 8;
-          public static final int JOB_QUEUE_TIME_TILL_FIRST_SCHEDULED_90_PERCENTILE_FIELD_NUMBER = 8;
+          // optional double job_queue_time_till_first_scheduled_90_percentile = 9;
+          public static final int JOB_QUEUE_TIME_TILL_FIRST_SCHEDULED_90_PERCENTILE_FIELD_NUMBER = 9;
           private double jobQueueTimeTillFirstScheduled90Percentile_;
           /**
-           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
            */
           public boolean hasJobQueueTimeTillFirstScheduled90Percentile() {
-            return ((bitField0_ & 0x00000080) == 0x00000080);
+            return ((bitField0_ & 0x00000100) == 0x00000100);
           }
           /**
-           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+           * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
            */
           public double getJobQueueTimeTillFirstScheduled90Percentile() {
             return jobQueueTimeTillFirstScheduled90Percentile_;
           }
 
-          // optional double job_queue_time_till_fully_scheduled_90_percentile = 9;
-          public static final int JOB_QUEUE_TIME_TILL_FULLY_SCHEDULED_90_PERCENTILE_FIELD_NUMBER = 9;
+          // optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
+          public static final int JOB_QUEUE_TIME_TILL_FULLY_SCHEDULED_90_PERCENTILE_FIELD_NUMBER = 10;
           private double jobQueueTimeTillFullyScheduled90Percentile_;
           /**
-           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
            */
           public boolean hasJobQueueTimeTillFullyScheduled90Percentile() {
-            return ((bitField0_ & 0x00000100) == 0x00000100);
+            return ((bitField0_ & 0x00000200) == 0x00000200);
           }
           /**
-           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+           * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
            */
           public double getJobQueueTimeTillFullyScheduled90Percentile() {
             return jobQueueTimeTillFullyScheduled90Percentile_;
           }
 
-          // optional double num_scheduling_attempts_90_percentile = 10;
-          public static final int NUM_SCHEDULING_ATTEMPTS_90_PERCENTILE_FIELD_NUMBER = 10;
+          // optional double num_scheduling_attempts_90_percentile = 11;
+          public static final int NUM_SCHEDULING_ATTEMPTS_90_PERCENTILE_FIELD_NUMBER = 11;
           private double numSchedulingAttempts90Percentile_;
           /**
-           * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+           * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
            */
           public boolean hasNumSchedulingAttempts90Percentile() {
-            return ((bitField0_ & 0x00000200) == 0x00000200);
+            return ((bitField0_ & 0x00000400) == 0x00000400);
           }
           /**
-           * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+           * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
            */
           public double getNumSchedulingAttempts90Percentile() {
             return numSchedulingAttempts90Percentile_;
           }
 
-          // optional double num_scheduling_attempts_99_percentile = 11;
-          public static final int NUM_SCHEDULING_ATTEMPTS_99_PERCENTILE_FIELD_NUMBER = 11;
+          // optional double num_scheduling_attempts_99_percentile = 12;
+          public static final int NUM_SCHEDULING_ATTEMPTS_99_PERCENTILE_FIELD_NUMBER = 12;
           private double numSchedulingAttempts99Percentile_;
           /**
-           * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+           * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
            */
           public boolean hasNumSchedulingAttempts99Percentile() {
-            return ((bitField0_ & 0x00000400) == 0x00000400);
+            return ((bitField0_ & 0x00000800) == 0x00000800);
           }
           /**
-           * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+           * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
            */
           public double getNumSchedulingAttempts99Percentile() {
             return numSchedulingAttempts99Percentile_;
           }
 
-          // optional double num_task_scheduling_attempts_90_percentile = 12;
-          public static final int NUM_TASK_SCHEDULING_ATTEMPTS_90_PERCENTILE_FIELD_NUMBER = 12;
+          // optional double num_task_scheduling_attempts_90_percentile = 13;
+          public static final int NUM_TASK_SCHEDULING_ATTEMPTS_90_PERCENTILE_FIELD_NUMBER = 13;
           private double numTaskSchedulingAttempts90Percentile_;
           /**
-           * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+           * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
            */
           public boolean hasNumTaskSchedulingAttempts90Percentile() {
-            return ((bitField0_ & 0x00000800) == 0x00000800);
+            return ((bitField0_ & 0x00001000) == 0x00001000);
           }
           /**
-           * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+           * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
            */
           public double getNumTaskSchedulingAttempts90Percentile() {
             return numTaskSchedulingAttempts90Percentile_;
           }
 
-          // optional double num_task_scheduling_attempts_99_percentile = 13;
-          public static final int NUM_TASK_SCHEDULING_ATTEMPTS_99_PERCENTILE_FIELD_NUMBER = 13;
+          // optional double num_task_scheduling_attempts_99_percentile = 14;
+          public static final int NUM_TASK_SCHEDULING_ATTEMPTS_99_PERCENTILE_FIELD_NUMBER = 14;
           private double numTaskSchedulingAttempts99Percentile_;
           /**
-           * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+           * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
            */
           public boolean hasNumTaskSchedulingAttempts99Percentile() {
-            return ((bitField0_ & 0x00001000) == 0x00001000);
+            return ((bitField0_ & 0x00002000) == 0x00002000);
           }
           /**
-           * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+           * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
            */
           public double getNumTaskSchedulingAttempts99Percentile() {
             return numTaskSchedulingAttempts99Percentile_;
           }
 
-          // optional double avg_job_execution_time = 14;
-          public static final int AVG_JOB_EXECUTION_TIME_FIELD_NUMBER = 14;
+          // optional double avg_job_execution_time = 15;
+          public static final int AVG_JOB_EXECUTION_TIME_FIELD_NUMBER = 15;
           private double avgJobExecutionTime_;
           /**
-           * <code>optional double avg_job_execution_time = 14;</code>
+           * <code>optional double avg_job_execution_time = 15;</code>
            */
           public boolean hasAvgJobExecutionTime() {
-            return ((bitField0_ & 0x00002000) == 0x00002000);
+            return ((bitField0_ & 0x00004000) == 0x00004000);
           }
           /**
-           * <code>optional double avg_job_execution_time = 14;</code>
+           * <code>optional double avg_job_execution_time = 15;</code>
            */
           public double getAvgJobExecutionTime() {
             return avgJobExecutionTime_;
           }
 
-          // optional double avg_job_completion_time = 15;
-          public static final int AVG_JOB_COMPLETION_TIME_FIELD_NUMBER = 15;
+          // optional double avg_job_completion_time = 16;
+          public static final int AVG_JOB_COMPLETION_TIME_FIELD_NUMBER = 16;
           private double avgJobCompletionTime_;
           /**
-           * <code>optional double avg_job_completion_time = 15;</code>
+           * <code>optional double avg_job_completion_time = 16;</code>
            */
           public boolean hasAvgJobCompletionTime() {
-            return ((bitField0_ & 0x00004000) == 0x00004000);
+            return ((bitField0_ & 0x00008000) == 0x00008000);
           }
           /**
-           * <code>optional double avg_job_completion_time = 15;</code>
+           * <code>optional double avg_job_completion_time = 16;</code>
            */
           public double getAvgJobCompletionTime() {
             return avgJobCompletionTime_;
@@ -2981,6 +3012,7 @@ public final class ClusterSimulationProtos {
             numJobs_ = 0L;
             numJobsScheduled_ = 0L;
             numJobsFullyScheduled_ = 0L;
+            numJobsTimedOutScheduling_ = 0L;
             jobThinkTimes90Percentile_ = 0D;
             avgJobQueueTimesTillFirstScheduled_ = 0D;
             avgJobQueueTimesTillFullyScheduled_ = 0D;
@@ -3018,37 +3050,40 @@ public final class ClusterSimulationProtos {
               output.writeInt64(4, numJobsFullyScheduled_);
             }
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
-              output.writeDouble(5, jobThinkTimes90Percentile_);
+              output.writeInt64(5, numJobsTimedOutScheduling_);
             }
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
-              output.writeDouble(6, avgJobQueueTimesTillFirstScheduled_);
+              output.writeDouble(6, jobThinkTimes90Percentile_);
             }
             if (((bitField0_ & 0x00000040) == 0x00000040)) {
-              output.writeDouble(7, avgJobQueueTimesTillFullyScheduled_);
+              output.writeDouble(7, avgJobQueueTimesTillFirstScheduled_);
             }
             if (((bitField0_ & 0x00000080) == 0x00000080)) {
-              output.writeDouble(8, jobQueueTimeTillFirstScheduled90Percentile_);
+              output.writeDouble(8, avgJobQueueTimesTillFullyScheduled_);
             }
             if (((bitField0_ & 0x00000100) == 0x00000100)) {
-              output.writeDouble(9, jobQueueTimeTillFullyScheduled90Percentile_);
+              output.writeDouble(9, jobQueueTimeTillFirstScheduled90Percentile_);
             }
             if (((bitField0_ & 0x00000200) == 0x00000200)) {
-              output.writeDouble(10, numSchedulingAttempts90Percentile_);
+              output.writeDouble(10, jobQueueTimeTillFullyScheduled90Percentile_);
             }
             if (((bitField0_ & 0x00000400) == 0x00000400)) {
-              output.writeDouble(11, numSchedulingAttempts99Percentile_);
+              output.writeDouble(11, numSchedulingAttempts90Percentile_);
             }
             if (((bitField0_ & 0x00000800) == 0x00000800)) {
-              output.writeDouble(12, numTaskSchedulingAttempts90Percentile_);
+              output.writeDouble(12, numSchedulingAttempts99Percentile_);
             }
             if (((bitField0_ & 0x00001000) == 0x00001000)) {
-              output.writeDouble(13, numTaskSchedulingAttempts99Percentile_);
+              output.writeDouble(13, numTaskSchedulingAttempts90Percentile_);
             }
             if (((bitField0_ & 0x00002000) == 0x00002000)) {
-              output.writeDouble(14, avgJobExecutionTime_);
+              output.writeDouble(14, numTaskSchedulingAttempts99Percentile_);
             }
             if (((bitField0_ & 0x00004000) == 0x00004000)) {
-              output.writeDouble(15, avgJobCompletionTime_);
+              output.writeDouble(15, avgJobExecutionTime_);
+            }
+            if (((bitField0_ & 0x00008000) == 0x00008000)) {
+              output.writeDouble(16, avgJobCompletionTime_);
             }
             getUnknownFields().writeTo(output);
           }
@@ -3077,47 +3112,51 @@ public final class ClusterSimulationProtos {
             }
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(5, jobThinkTimes90Percentile_);
+                .computeInt64Size(5, numJobsTimedOutScheduling_);
             }
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(6, avgJobQueueTimesTillFirstScheduled_);
+                .computeDoubleSize(6, jobThinkTimes90Percentile_);
             }
             if (((bitField0_ & 0x00000040) == 0x00000040)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(7, avgJobQueueTimesTillFullyScheduled_);
+                .computeDoubleSize(7, avgJobQueueTimesTillFirstScheduled_);
             }
             if (((bitField0_ & 0x00000080) == 0x00000080)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(8, jobQueueTimeTillFirstScheduled90Percentile_);
+                .computeDoubleSize(8, avgJobQueueTimesTillFullyScheduled_);
             }
             if (((bitField0_ & 0x00000100) == 0x00000100)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(9, jobQueueTimeTillFullyScheduled90Percentile_);
+                .computeDoubleSize(9, jobQueueTimeTillFirstScheduled90Percentile_);
             }
             if (((bitField0_ & 0x00000200) == 0x00000200)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(10, numSchedulingAttempts90Percentile_);
+                .computeDoubleSize(10, jobQueueTimeTillFullyScheduled90Percentile_);
             }
             if (((bitField0_ & 0x00000400) == 0x00000400)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(11, numSchedulingAttempts99Percentile_);
+                .computeDoubleSize(11, numSchedulingAttempts90Percentile_);
             }
             if (((bitField0_ & 0x00000800) == 0x00000800)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(12, numTaskSchedulingAttempts90Percentile_);
+                .computeDoubleSize(12, numSchedulingAttempts99Percentile_);
             }
             if (((bitField0_ & 0x00001000) == 0x00001000)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(13, numTaskSchedulingAttempts99Percentile_);
+                .computeDoubleSize(13, numTaskSchedulingAttempts90Percentile_);
             }
             if (((bitField0_ & 0x00002000) == 0x00002000)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(14, avgJobExecutionTime_);
+                .computeDoubleSize(14, numTaskSchedulingAttempts99Percentile_);
             }
             if (((bitField0_ & 0x00004000) == 0x00004000)) {
               size += com.google.protobuf.CodedOutputStream
-                .computeDoubleSize(15, avgJobCompletionTime_);
+                .computeDoubleSize(15, avgJobExecutionTime_);
+            }
+            if (((bitField0_ & 0x00008000) == 0x00008000)) {
+              size += com.google.protobuf.CodedOutputStream
+                .computeDoubleSize(16, avgJobCompletionTime_);
             }
             size += getUnknownFields().getSerializedSize();
             memoizedSerializedSize = size;
@@ -3247,28 +3286,30 @@ public final class ClusterSimulationProtos {
               bitField0_ = (bitField0_ & ~0x00000004);
               numJobsFullyScheduled_ = 0L;
               bitField0_ = (bitField0_ & ~0x00000008);
-              jobThinkTimes90Percentile_ = 0D;
+              numJobsTimedOutScheduling_ = 0L;
               bitField0_ = (bitField0_ & ~0x00000010);
-              avgJobQueueTimesTillFirstScheduled_ = 0D;
+              jobThinkTimes90Percentile_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000020);
-              avgJobQueueTimesTillFullyScheduled_ = 0D;
+              avgJobQueueTimesTillFirstScheduled_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000040);
-              jobQueueTimeTillFirstScheduled90Percentile_ = 0D;
+              avgJobQueueTimesTillFullyScheduled_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000080);
-              jobQueueTimeTillFullyScheduled90Percentile_ = 0D;
+              jobQueueTimeTillFirstScheduled90Percentile_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000100);
-              numSchedulingAttempts90Percentile_ = 0D;
+              jobQueueTimeTillFullyScheduled90Percentile_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000200);
-              numSchedulingAttempts99Percentile_ = 0D;
+              numSchedulingAttempts90Percentile_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000400);
-              numTaskSchedulingAttempts90Percentile_ = 0D;
+              numSchedulingAttempts99Percentile_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000800);
-              numTaskSchedulingAttempts99Percentile_ = 0D;
+              numTaskSchedulingAttempts90Percentile_ = 0D;
               bitField0_ = (bitField0_ & ~0x00001000);
-              avgJobExecutionTime_ = 0D;
+              numTaskSchedulingAttempts99Percentile_ = 0D;
               bitField0_ = (bitField0_ & ~0x00002000);
-              avgJobCompletionTime_ = 0D;
+              avgJobExecutionTime_ = 0D;
               bitField0_ = (bitField0_ & ~0x00004000);
+              avgJobCompletionTime_ = 0D;
+              bitField0_ = (bitField0_ & ~0x00008000);
               return this;
             }
 
@@ -3316,45 +3357,49 @@ public final class ClusterSimulationProtos {
               if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
                 to_bitField0_ |= 0x00000010;
               }
-              result.jobThinkTimes90Percentile_ = jobThinkTimes90Percentile_;
+              result.numJobsTimedOutScheduling_ = numJobsTimedOutScheduling_;
               if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
                 to_bitField0_ |= 0x00000020;
               }
-              result.avgJobQueueTimesTillFirstScheduled_ = avgJobQueueTimesTillFirstScheduled_;
+              result.jobThinkTimes90Percentile_ = jobThinkTimes90Percentile_;
               if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
                 to_bitField0_ |= 0x00000040;
               }
-              result.avgJobQueueTimesTillFullyScheduled_ = avgJobQueueTimesTillFullyScheduled_;
+              result.avgJobQueueTimesTillFirstScheduled_ = avgJobQueueTimesTillFirstScheduled_;
               if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
                 to_bitField0_ |= 0x00000080;
               }
-              result.jobQueueTimeTillFirstScheduled90Percentile_ = jobQueueTimeTillFirstScheduled90Percentile_;
+              result.avgJobQueueTimesTillFullyScheduled_ = avgJobQueueTimesTillFullyScheduled_;
               if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
                 to_bitField0_ |= 0x00000100;
               }
-              result.jobQueueTimeTillFullyScheduled90Percentile_ = jobQueueTimeTillFullyScheduled90Percentile_;
+              result.jobQueueTimeTillFirstScheduled90Percentile_ = jobQueueTimeTillFirstScheduled90Percentile_;
               if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
                 to_bitField0_ |= 0x00000200;
               }
-              result.numSchedulingAttempts90Percentile_ = numSchedulingAttempts90Percentile_;
+              result.jobQueueTimeTillFullyScheduled90Percentile_ = jobQueueTimeTillFullyScheduled90Percentile_;
               if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
                 to_bitField0_ |= 0x00000400;
               }
-              result.numSchedulingAttempts99Percentile_ = numSchedulingAttempts99Percentile_;
+              result.numSchedulingAttempts90Percentile_ = numSchedulingAttempts90Percentile_;
               if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
                 to_bitField0_ |= 0x00000800;
               }
-              result.numTaskSchedulingAttempts90Percentile_ = numTaskSchedulingAttempts90Percentile_;
+              result.numSchedulingAttempts99Percentile_ = numSchedulingAttempts99Percentile_;
               if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
                 to_bitField0_ |= 0x00001000;
               }
-              result.numTaskSchedulingAttempts99Percentile_ = numTaskSchedulingAttempts99Percentile_;
+              result.numTaskSchedulingAttempts90Percentile_ = numTaskSchedulingAttempts90Percentile_;
               if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
                 to_bitField0_ |= 0x00002000;
               }
-              result.avgJobExecutionTime_ = avgJobExecutionTime_;
+              result.numTaskSchedulingAttempts99Percentile_ = numTaskSchedulingAttempts99Percentile_;
               if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
                 to_bitField0_ |= 0x00004000;
+              }
+              result.avgJobExecutionTime_ = avgJobExecutionTime_;
+              if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+                to_bitField0_ |= 0x00008000;
               }
               result.avgJobCompletionTime_ = avgJobCompletionTime_;
               result.bitField0_ = to_bitField0_;
@@ -3386,6 +3431,9 @@ public final class ClusterSimulationProtos {
               }
               if (other.hasNumJobsFullyScheduled()) {
                 setNumJobsFullyScheduled(other.getNumJobsFullyScheduled());
+              }
+              if (other.hasNumJobsTimedOutScheduling()) {
+                setNumJobsTimedOutScheduling(other.getNumJobsTimedOutScheduling());
               }
               if (other.hasJobThinkTimes90Percentile()) {
                 setJobThinkTimes90Percentile(other.getJobThinkTimes90Percentile());
@@ -3620,364 +3668,397 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double job_think_times_90_percentile = 5;
-            private double jobThinkTimes90Percentile_ ;
+            // optional int64 num_jobs_timed_out_scheduling = 5;
+            private long numJobsTimedOutScheduling_ ;
             /**
-             * <code>optional double job_think_times_90_percentile = 5;</code>
+             * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
              */
-            public boolean hasJobThinkTimes90Percentile() {
+            public boolean hasNumJobsTimedOutScheduling() {
               return ((bitField0_ & 0x00000010) == 0x00000010);
             }
             /**
-             * <code>optional double job_think_times_90_percentile = 5;</code>
+             * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
+             */
+            public long getNumJobsTimedOutScheduling() {
+              return numJobsTimedOutScheduling_;
+            }
+            /**
+             * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
+             */
+            public Builder setNumJobsTimedOutScheduling(long value) {
+              bitField0_ |= 0x00000010;
+              numJobsTimedOutScheduling_ = value;
+              onChanged();
+              return this;
+            }
+            /**
+             * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
+             */
+            public Builder clearNumJobsTimedOutScheduling() {
+              bitField0_ = (bitField0_ & ~0x00000010);
+              numJobsTimedOutScheduling_ = 0L;
+              onChanged();
+              return this;
+            }
+
+            // optional double job_think_times_90_percentile = 6;
+            private double jobThinkTimes90Percentile_ ;
+            /**
+             * <code>optional double job_think_times_90_percentile = 6;</code>
+             */
+            public boolean hasJobThinkTimes90Percentile() {
+              return ((bitField0_ & 0x00000020) == 0x00000020);
+            }
+            /**
+             * <code>optional double job_think_times_90_percentile = 6;</code>
              */
             public double getJobThinkTimes90Percentile() {
               return jobThinkTimes90Percentile_;
             }
             /**
-             * <code>optional double job_think_times_90_percentile = 5;</code>
+             * <code>optional double job_think_times_90_percentile = 6;</code>
              */
             public Builder setJobThinkTimes90Percentile(double value) {
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000020;
               jobThinkTimes90Percentile_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double job_think_times_90_percentile = 5;</code>
+             * <code>optional double job_think_times_90_percentile = 6;</code>
              */
             public Builder clearJobThinkTimes90Percentile() {
-              bitField0_ = (bitField0_ & ~0x00000010);
+              bitField0_ = (bitField0_ & ~0x00000020);
               jobThinkTimes90Percentile_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double avg_job_queue_times_till_first_scheduled = 6;
+            // optional double avg_job_queue_times_till_first_scheduled = 7;
             private double avgJobQueueTimesTillFirstScheduled_ ;
             /**
-             * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+             * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
              */
             public boolean hasAvgJobQueueTimesTillFirstScheduled() {
-              return ((bitField0_ & 0x00000020) == 0x00000020);
+              return ((bitField0_ & 0x00000040) == 0x00000040);
             }
             /**
-             * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+             * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
              */
             public double getAvgJobQueueTimesTillFirstScheduled() {
               return avgJobQueueTimesTillFirstScheduled_;
             }
             /**
-             * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+             * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
              */
             public Builder setAvgJobQueueTimesTillFirstScheduled(double value) {
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000040;
               avgJobQueueTimesTillFirstScheduled_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double avg_job_queue_times_till_first_scheduled = 6;</code>
+             * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
              */
             public Builder clearAvgJobQueueTimesTillFirstScheduled() {
-              bitField0_ = (bitField0_ & ~0x00000020);
+              bitField0_ = (bitField0_ & ~0x00000040);
               avgJobQueueTimesTillFirstScheduled_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double avg_job_queue_times_till_fully_scheduled = 7;
+            // optional double avg_job_queue_times_till_fully_scheduled = 8;
             private double avgJobQueueTimesTillFullyScheduled_ ;
             /**
-             * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+             * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
              */
             public boolean hasAvgJobQueueTimesTillFullyScheduled() {
-              return ((bitField0_ & 0x00000040) == 0x00000040);
+              return ((bitField0_ & 0x00000080) == 0x00000080);
             }
             /**
-             * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+             * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
              */
             public double getAvgJobQueueTimesTillFullyScheduled() {
               return avgJobQueueTimesTillFullyScheduled_;
             }
             /**
-             * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+             * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
              */
             public Builder setAvgJobQueueTimesTillFullyScheduled(double value) {
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000080;
               avgJobQueueTimesTillFullyScheduled_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double avg_job_queue_times_till_fully_scheduled = 7;</code>
+             * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
              */
             public Builder clearAvgJobQueueTimesTillFullyScheduled() {
-              bitField0_ = (bitField0_ & ~0x00000040);
+              bitField0_ = (bitField0_ & ~0x00000080);
               avgJobQueueTimesTillFullyScheduled_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double job_queue_time_till_first_scheduled_90_percentile = 8;
+            // optional double job_queue_time_till_first_scheduled_90_percentile = 9;
             private double jobQueueTimeTillFirstScheduled90Percentile_ ;
             /**
-             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
              */
             public boolean hasJobQueueTimeTillFirstScheduled90Percentile() {
-              return ((bitField0_ & 0x00000080) == 0x00000080);
+              return ((bitField0_ & 0x00000100) == 0x00000100);
             }
             /**
-             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
              */
             public double getJobQueueTimeTillFirstScheduled90Percentile() {
               return jobQueueTimeTillFirstScheduled90Percentile_;
             }
             /**
-             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
              */
             public Builder setJobQueueTimeTillFirstScheduled90Percentile(double value) {
-              bitField0_ |= 0x00000080;
+              bitField0_ |= 0x00000100;
               jobQueueTimeTillFirstScheduled90Percentile_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 8;</code>
+             * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
              */
             public Builder clearJobQueueTimeTillFirstScheduled90Percentile() {
-              bitField0_ = (bitField0_ & ~0x00000080);
+              bitField0_ = (bitField0_ & ~0x00000100);
               jobQueueTimeTillFirstScheduled90Percentile_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double job_queue_time_till_fully_scheduled_90_percentile = 9;
+            // optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
             private double jobQueueTimeTillFullyScheduled90Percentile_ ;
             /**
-             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
              */
             public boolean hasJobQueueTimeTillFullyScheduled90Percentile() {
-              return ((bitField0_ & 0x00000100) == 0x00000100);
+              return ((bitField0_ & 0x00000200) == 0x00000200);
             }
             /**
-             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
              */
             public double getJobQueueTimeTillFullyScheduled90Percentile() {
               return jobQueueTimeTillFullyScheduled90Percentile_;
             }
             /**
-             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
              */
             public Builder setJobQueueTimeTillFullyScheduled90Percentile(double value) {
-              bitField0_ |= 0x00000100;
+              bitField0_ |= 0x00000200;
               jobQueueTimeTillFullyScheduled90Percentile_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 9;</code>
+             * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
              */
             public Builder clearJobQueueTimeTillFullyScheduled90Percentile() {
-              bitField0_ = (bitField0_ & ~0x00000100);
+              bitField0_ = (bitField0_ & ~0x00000200);
               jobQueueTimeTillFullyScheduled90Percentile_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double num_scheduling_attempts_90_percentile = 10;
+            // optional double num_scheduling_attempts_90_percentile = 11;
             private double numSchedulingAttempts90Percentile_ ;
             /**
-             * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+             * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
              */
             public boolean hasNumSchedulingAttempts90Percentile() {
-              return ((bitField0_ & 0x00000200) == 0x00000200);
+              return ((bitField0_ & 0x00000400) == 0x00000400);
             }
             /**
-             * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+             * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
              */
             public double getNumSchedulingAttempts90Percentile() {
               return numSchedulingAttempts90Percentile_;
             }
             /**
-             * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+             * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
              */
             public Builder setNumSchedulingAttempts90Percentile(double value) {
-              bitField0_ |= 0x00000200;
+              bitField0_ |= 0x00000400;
               numSchedulingAttempts90Percentile_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double num_scheduling_attempts_90_percentile = 10;</code>
+             * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
              */
             public Builder clearNumSchedulingAttempts90Percentile() {
-              bitField0_ = (bitField0_ & ~0x00000200);
+              bitField0_ = (bitField0_ & ~0x00000400);
               numSchedulingAttempts90Percentile_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double num_scheduling_attempts_99_percentile = 11;
+            // optional double num_scheduling_attempts_99_percentile = 12;
             private double numSchedulingAttempts99Percentile_ ;
             /**
-             * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+             * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
              */
             public boolean hasNumSchedulingAttempts99Percentile() {
-              return ((bitField0_ & 0x00000400) == 0x00000400);
+              return ((bitField0_ & 0x00000800) == 0x00000800);
             }
             /**
-             * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+             * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
              */
             public double getNumSchedulingAttempts99Percentile() {
               return numSchedulingAttempts99Percentile_;
             }
             /**
-             * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+             * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
              */
             public Builder setNumSchedulingAttempts99Percentile(double value) {
-              bitField0_ |= 0x00000400;
+              bitField0_ |= 0x00000800;
               numSchedulingAttempts99Percentile_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double num_scheduling_attempts_99_percentile = 11;</code>
+             * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
              */
             public Builder clearNumSchedulingAttempts99Percentile() {
-              bitField0_ = (bitField0_ & ~0x00000400);
+              bitField0_ = (bitField0_ & ~0x00000800);
               numSchedulingAttempts99Percentile_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double num_task_scheduling_attempts_90_percentile = 12;
+            // optional double num_task_scheduling_attempts_90_percentile = 13;
             private double numTaskSchedulingAttempts90Percentile_ ;
             /**
-             * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+             * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
              */
             public boolean hasNumTaskSchedulingAttempts90Percentile() {
-              return ((bitField0_ & 0x00000800) == 0x00000800);
+              return ((bitField0_ & 0x00001000) == 0x00001000);
             }
             /**
-             * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+             * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
              */
             public double getNumTaskSchedulingAttempts90Percentile() {
               return numTaskSchedulingAttempts90Percentile_;
             }
             /**
-             * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+             * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
              */
             public Builder setNumTaskSchedulingAttempts90Percentile(double value) {
-              bitField0_ |= 0x00000800;
+              bitField0_ |= 0x00001000;
               numTaskSchedulingAttempts90Percentile_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double num_task_scheduling_attempts_90_percentile = 12;</code>
+             * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
              */
             public Builder clearNumTaskSchedulingAttempts90Percentile() {
-              bitField0_ = (bitField0_ & ~0x00000800);
+              bitField0_ = (bitField0_ & ~0x00001000);
               numTaskSchedulingAttempts90Percentile_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double num_task_scheduling_attempts_99_percentile = 13;
+            // optional double num_task_scheduling_attempts_99_percentile = 14;
             private double numTaskSchedulingAttempts99Percentile_ ;
             /**
-             * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+             * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
              */
             public boolean hasNumTaskSchedulingAttempts99Percentile() {
-              return ((bitField0_ & 0x00001000) == 0x00001000);
+              return ((bitField0_ & 0x00002000) == 0x00002000);
             }
             /**
-             * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+             * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
              */
             public double getNumTaskSchedulingAttempts99Percentile() {
               return numTaskSchedulingAttempts99Percentile_;
             }
             /**
-             * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+             * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
              */
             public Builder setNumTaskSchedulingAttempts99Percentile(double value) {
-              bitField0_ |= 0x00001000;
+              bitField0_ |= 0x00002000;
               numTaskSchedulingAttempts99Percentile_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double num_task_scheduling_attempts_99_percentile = 13;</code>
+             * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
              */
             public Builder clearNumTaskSchedulingAttempts99Percentile() {
-              bitField0_ = (bitField0_ & ~0x00001000);
+              bitField0_ = (bitField0_ & ~0x00002000);
               numTaskSchedulingAttempts99Percentile_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double avg_job_execution_time = 14;
+            // optional double avg_job_execution_time = 15;
             private double avgJobExecutionTime_ ;
             /**
-             * <code>optional double avg_job_execution_time = 14;</code>
+             * <code>optional double avg_job_execution_time = 15;</code>
              */
             public boolean hasAvgJobExecutionTime() {
-              return ((bitField0_ & 0x00002000) == 0x00002000);
+              return ((bitField0_ & 0x00004000) == 0x00004000);
             }
             /**
-             * <code>optional double avg_job_execution_time = 14;</code>
+             * <code>optional double avg_job_execution_time = 15;</code>
              */
             public double getAvgJobExecutionTime() {
               return avgJobExecutionTime_;
             }
             /**
-             * <code>optional double avg_job_execution_time = 14;</code>
+             * <code>optional double avg_job_execution_time = 15;</code>
              */
             public Builder setAvgJobExecutionTime(double value) {
-              bitField0_ |= 0x00002000;
+              bitField0_ |= 0x00004000;
               avgJobExecutionTime_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double avg_job_execution_time = 14;</code>
+             * <code>optional double avg_job_execution_time = 15;</code>
              */
             public Builder clearAvgJobExecutionTime() {
-              bitField0_ = (bitField0_ & ~0x00002000);
+              bitField0_ = (bitField0_ & ~0x00004000);
               avgJobExecutionTime_ = 0D;
               onChanged();
               return this;
             }
 
-            // optional double avg_job_completion_time = 15;
+            // optional double avg_job_completion_time = 16;
             private double avgJobCompletionTime_ ;
             /**
-             * <code>optional double avg_job_completion_time = 15;</code>
+             * <code>optional double avg_job_completion_time = 16;</code>
              */
             public boolean hasAvgJobCompletionTime() {
-              return ((bitField0_ & 0x00004000) == 0x00004000);
+              return ((bitField0_ & 0x00008000) == 0x00008000);
             }
             /**
-             * <code>optional double avg_job_completion_time = 15;</code>
+             * <code>optional double avg_job_completion_time = 16;</code>
              */
             public double getAvgJobCompletionTime() {
               return avgJobCompletionTime_;
             }
             /**
-             * <code>optional double avg_job_completion_time = 15;</code>
+             * <code>optional double avg_job_completion_time = 16;</code>
              */
             public Builder setAvgJobCompletionTime(double value) {
-              bitField0_ |= 0x00004000;
+              bitField0_ |= 0x00008000;
               avgJobCompletionTime_ = value;
               onChanged();
               return this;
             }
             /**
-             * <code>optional double avg_job_completion_time = 15;</code>
+             * <code>optional double avg_job_completion_time = 16;</code>
              */
             public Builder clearAvgJobCompletionTime() {
-              bitField0_ = (bitField0_ & ~0x00004000);
+              bitField0_ = (bitField0_ & ~0x00008000);
               avgJobCompletionTime_ = 0D;
               onChanged();
               return this;
@@ -12438,10 +12519,10 @@ public final class ClusterSimulationProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\037cluster_simulation_protos.proto\022\033Clust" +
-      "erSchedulingSimulation\"\207\030\n\023ExperimentRes" +
+      "erSchedulingSimulation\"\256\030\n\023ExperimentRes" +
       "ultSet\022V\n\016experiment_env\030\001 \003(\0132>.Cluster" +
       "SchedulingSimulation.ExperimentResultSet" +
-      ".ExperimentEnv\032\227\027\n\rExperimentEnv\022\021\n\tcell" +
+      ".ExperimentEnv\032\276\027\n\rExperimentEnv\022\021\n\tcell" +
       "_name\030\001 \001(\t\022\033\n\023workload_split_type\030\002 \001(\t" +
       "\022\020\n\010run_time\030\003 \001(\001\022j\n\021experiment_result\030" +
       "\004 \003(\0132O.ClusterSchedulingSimulation.Expe" +
@@ -12456,7 +12537,7 @@ public final class ClusterSimulationProtos {
       ".CommonWorkloadStats.JobStats\032l\n\010JobStat" +
       "s\022\n\n\002id\030\001 \001(\003\022\021\n\tnum_tasks\030\002 \001(\005\022\024\n\014mem_" +
       "per_task\030\003 \001(\001\022\024\n\014cpu_per_task\030\004 \001(\001\022\025\n\r" +
-      "task_duration\030\005 \001(\001\032\272\022\n\020ExperimentResult",
+      "task_duration\030\005 \001(\001\032\341\022\n\020ExperimentResult",
       "\022&\n\036cell_state_avg_cpu_utilization\030\001 \001(\001" +
       "\022&\n\036cell_state_avg_mem_utilization\030\002 \001(\001" +
       "\022!\n\031cell_state_avg_cpu_locked\030\003 \001(\001\022!\n\031c" +
@@ -12473,49 +12554,50 @@ public final class ClusterSimulationProtos {
       "imentResultSet.ExperimentEnv.ExperimentR" +
       "esult.SchedulerWorkload\022\033\n\023constant_thin" +
       "k_time\030\n \001(\001\022\033\n\023per_task_think_time\030\013 \001(" +
-      "\001\032\376\004\n\rWorkloadStats\022\025\n\rworkload_name\030\001 \001" +
+      "\001\032\245\005\n\rWorkloadStats\022\025\n\rworkload_name\030\001 \001" +
       "(\t\022\020\n\010num_jobs\030\002 \001(\003\022\032\n\022num_jobs_schedul" +
       "ed\030\003 \001(\003\022 \n\030num_jobs_fully_scheduled\030\004 \001" +
-      "(\003\022%\n\035job_think_times_90_percentile\030\005 \001(",
-      "\001\0220\n(avg_job_queue_times_till_first_sche" +
-      "duled\030\006 \001(\001\0220\n(avg_job_queue_times_till_" +
-      "fully_scheduled\030\007 \001(\001\0229\n1job_queue_time_" +
-      "till_first_scheduled_90_percentile\030\010 \001(\001" +
-      "\0229\n1job_queue_time_till_fully_scheduled_" +
-      "90_percentile\030\t \001(\001\022-\n%num_scheduling_at" +
-      "tempts_90_percentile\030\n \001(\001\022-\n%num_schedu" +
-      "ling_attempts_99_percentile\030\013 \001(\001\0222\n*num" +
-      "_task_scheduling_attempts_90_percentile\030" +
-      "\014 \001(\001\0222\n*num_task_scheduling_attempts_99",
-      "_percentile\030\r \001(\001\022\036\n\026avg_job_execution_t" +
-      "ime\030\016 \001(\001\022\037\n\027avg_job_completion_time\030\017 \001" +
-      "(\001\032\341\007\n\016SchedulerStats\022\026\n\016scheduler_name\030" +
-      "\001 \001(\t\022\030\n\020useful_busy_time\030\002 \001(\001\022\030\n\020waste" +
-      "d_busy_time\030\003 \001(\001\022\201\001\n\rper_day_stats\030\004 \003(" +
-      "\0132j.ClusterSchedulingSimulation.Experime" +
-      "ntResultSet.ExperimentEnv.ExperimentResu" +
-      "lt.SchedulerStats.PerDayStats\022\222\001\n\026per_wo" +
-      "rkload_busy_time\030\005 \003(\0132r.ClusterScheduli" +
-      "ngSimulation.ExperimentResultSet.Experim",
-      "entEnv.ExperimentResult.SchedulerStats.P" +
-      "erWorkloadBusyTime\022#\n\033num_successful_tra" +
-      "nsactions\030\006 \001(\003\022\037\n\027num_failed_transactio" +
-      "ns\030\007 \001(\003\0222\n*num_no_resources_found_sched" +
-      "uling_attempts\030\010 \001(\003\022 \n\030num_retried_tran" +
-      "sactions\030\t \001(\003\022%\n\035num_jobs_timed_out_sch" +
-      "eduling\030\n \001(\003\022(\n num_successful_task_tra" +
-      "nsactions\030\013 \001(\003\022$\n\034num_failed_task_trans" +
-      "actions\030\014 \001(\003\022\025\n\ris_multi_path\030\r \001(\010\022\036\n\026" +
-      "num_jobs_left_in_queue\030\016 \001(\003\022#\n\033failed_f",
-      "ind_victim_attempts\030\017 \001(\003\032\230\001\n\013PerDayStat" +
-      "s\022\017\n\007day_num\030\001 \001(\003\022\030\n\020useful_busy_time\030\002" +
-      " \001(\001\022\030\n\020wasted_busy_time\030\003 \001(\001\022#\n\033num_su" +
-      "ccessful_transactions\030\004 \001(\003\022\037\n\027num_faile" +
-      "d_transactions\030\005 \001(\003\032`\n\023PerWorkloadBusyT" +
-      "ime\022\025\n\rworkload_name\030\001 \001(\t\022\030\n\020useful_bus" +
-      "y_time\030\002 \001(\001\022\030\n\020wasted_busy_time\030\003 \001(\001\032@" +
-      "\n\021SchedulerWorkload\022\025\n\rschedulerName\030\001 \001" +
-      "(\t\022\024\n\014workloadName\030\002 \001(\t"
+      "(\003\022%\n\035num_jobs_timed_out_scheduling\030\005 \001(",
+      "\003\022%\n\035job_think_times_90_percentile\030\006 \001(\001" +
+      "\0220\n(avg_job_queue_times_till_first_sched" +
+      "uled\030\007 \001(\001\0220\n(avg_job_queue_times_till_f" +
+      "ully_scheduled\030\010 \001(\001\0229\n1job_queue_time_t" +
+      "ill_first_scheduled_90_percentile\030\t \001(\001\022" +
+      "9\n1job_queue_time_till_fully_scheduled_9" +
+      "0_percentile\030\n \001(\001\022-\n%num_scheduling_att" +
+      "empts_90_percentile\030\013 \001(\001\022-\n%num_schedul" +
+      "ing_attempts_99_percentile\030\014 \001(\001\0222\n*num_" +
+      "task_scheduling_attempts_90_percentile\030\r",
+      " \001(\001\0222\n*num_task_scheduling_attempts_99_" +
+      "percentile\030\016 \001(\001\022\036\n\026avg_job_execution_ti" +
+      "me\030\017 \001(\001\022\037\n\027avg_job_completion_time\030\020 \001(" +
+      "\001\032\341\007\n\016SchedulerStats\022\026\n\016scheduler_name\030\001" +
+      " \001(\t\022\030\n\020useful_busy_time\030\002 \001(\001\022\030\n\020wasted" +
+      "_busy_time\030\003 \001(\001\022\201\001\n\rper_day_stats\030\004 \003(\013" +
+      "2j.ClusterSchedulingSimulation.Experimen" +
+      "tResultSet.ExperimentEnv.ExperimentResul" +
+      "t.SchedulerStats.PerDayStats\022\222\001\n\026per_wor" +
+      "kload_busy_time\030\005 \003(\0132r.ClusterSchedulin",
+      "gSimulation.ExperimentResultSet.Experime" +
+      "ntEnv.ExperimentResult.SchedulerStats.Pe" +
+      "rWorkloadBusyTime\022#\n\033num_successful_tran" +
+      "sactions\030\006 \001(\003\022\037\n\027num_failed_transaction" +
+      "s\030\007 \001(\003\0222\n*num_no_resources_found_schedu" +
+      "ling_attempts\030\010 \001(\003\022 \n\030num_retried_trans" +
+      "actions\030\t \001(\003\022%\n\035num_jobs_timed_out_sche" +
+      "duling\030\n \001(\003\022(\n num_successful_task_tran" +
+      "sactions\030\013 \001(\003\022$\n\034num_failed_task_transa" +
+      "ctions\030\014 \001(\003\022\025\n\ris_multi_path\030\r \001(\010\022\036\n\026n",
+      "um_jobs_left_in_queue\030\016 \001(\003\022#\n\033failed_fi" +
+      "nd_victim_attempts\030\017 \001(\003\032\230\001\n\013PerDayStats" +
+      "\022\017\n\007day_num\030\001 \001(\003\022\030\n\020useful_busy_time\030\002 " +
+      "\001(\001\022\030\n\020wasted_busy_time\030\003 \001(\001\022#\n\033num_suc" +
+      "cessful_transactions\030\004 \001(\003\022\037\n\027num_failed" +
+      "_transactions\030\005 \001(\003\032`\n\023PerWorkloadBusyTi" +
+      "me\022\025\n\rworkload_name\030\001 \001(\t\022\030\n\020useful_busy" +
+      "_time\030\002 \001(\001\022\030\n\020wasted_busy_time\030\003 \001(\001\032@\n" +
+      "\021SchedulerWorkload\022\025\n\rschedulerName\030\001 \001(" +
+      "\t\022\024\n\014workloadName\030\002 \001(\t"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -12557,7 +12639,7 @@ public final class ClusterSimulationProtos {
           internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_descriptor,
-              new java.lang.String[] { "WorkloadName", "NumJobs", "NumJobsScheduled", "NumJobsFullyScheduled", "JobThinkTimes90Percentile", "AvgJobQueueTimesTillFirstScheduled", "AvgJobQueueTimesTillFullyScheduled", "JobQueueTimeTillFirstScheduled90Percentile", "JobQueueTimeTillFullyScheduled90Percentile", "NumSchedulingAttempts90Percentile", "NumSchedulingAttempts99Percentile", "NumTaskSchedulingAttempts90Percentile", "NumTaskSchedulingAttempts99Percentile", "AvgJobExecutionTime", "AvgJobCompletionTime", });
+              new java.lang.String[] { "WorkloadName", "NumJobs", "NumJobsScheduled", "NumJobsFullyScheduled", "NumJobsTimedOutScheduling", "JobThinkTimes90Percentile", "AvgJobQueueTimesTillFirstScheduled", "AvgJobQueueTimesTillFullyScheduled", "JobQueueTimeTillFirstScheduled90Percentile", "JobQueueTimeTillFullyScheduled90Percentile", "NumSchedulingAttempts90Percentile", "NumSchedulingAttempts99Percentile", "NumTaskSchedulingAttempts90Percentile", "NumTaskSchedulingAttempts99Percentile", "AvgJobExecutionTime", "AvgJobCompletionTime", });
           internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor =
             internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor.getNestedTypes().get(1);
           internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_fieldAccessorTable = new

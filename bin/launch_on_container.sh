@@ -2,7 +2,7 @@
 
 ############# User Variables #################################
 SWARM_IP="192.168.45.252:2380"
-CONTAINER_NAME="cluster-scheduler-simulator"
+CONTAINER_NAME="cluster-scheduler-simulator1"
 CONTAINER_IMAGE="192.168.45.252:5000/pacerepo/pace-container"
 TO_MAIL="francesco.pace@eurecom.fr"
 ##############################################################

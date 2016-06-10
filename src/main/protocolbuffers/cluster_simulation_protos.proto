@@ -80,18 +80,18 @@ message ExperimentResultSet {
         optional int64 num_jobs = 2;
         optional int64 num_jobs_scheduled = 3;
         optional int64 num_jobs_fully_scheduled = 4;
-        optional double job_think_times_90_percentile = 5;
-        optional double avg_job_queue_times_till_first_scheduled = 6;
-        optional double avg_job_queue_times_till_fully_scheduled = 7;
-        optional double job_queue_time_till_first_scheduled_90_percentile = 8;
-        optional double job_queue_time_till_fully_scheduled_90_percentile = 9;
-        optional double num_scheduling_attempts_90_percentile = 10;
-        optional double num_scheduling_attempts_99_percentile = 11;
-        optional double num_task_scheduling_attempts_90_percentile = 12;
-        optional double num_task_scheduling_attempts_99_percentile = 13;
-        optional double avg_job_execution_time = 14;
-        optional double avg_job_completion_time = 15;
-
+        optional int64 num_jobs_timed_out_scheduling = 5;
+        optional double job_think_times_90_percentile = 6;
+        optional double avg_job_queue_times_till_first_scheduled = 7;
+        optional double avg_job_queue_times_till_fully_scheduled = 8;
+        optional double job_queue_time_till_first_scheduled_90_percentile = 9;
+        optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
+        optional double num_scheduling_attempts_90_percentile = 11;
+        optional double num_scheduling_attempts_99_percentile = 12;
+        optional double num_task_scheduling_attempts_90_percentile = 13;
+        optional double num_task_scheduling_attempts_99_percentile = 14;
+        optional double avg_job_execution_time = 15;
+        optional double avg_job_completion_time = 16;
       }
 
       message SchedulerStats {

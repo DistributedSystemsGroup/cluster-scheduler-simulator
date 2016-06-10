@@ -134,7 +134,7 @@ object Workloads {
   // A workload based on traces of interarrival times, tasks-per-job,
   // and job duration. Task shapes now based on pre-fill traces.
   val workloadGeneratorTraceAllBatch =
-    new TraceAllZoeWLGenerator(
+    new TraceAllWLGenerator(
       "Batch".intern(),
       interarrivalTraceFileName,
       numTasksTraceFileName,
@@ -144,7 +144,7 @@ object Workloads {
       maxMemPerTask = globalMaxMemPerTask) // Machines in example cluster have 16GB mem.
 
   val workloadGeneratorTraceAllService =
-    new TraceAllZoeWLGenerator(
+    new TraceAllWLGenerator(
       "Service".intern(),
       interarrivalTraceFileName,
       numTasksTraceFileName,

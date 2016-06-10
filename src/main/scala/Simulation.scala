@@ -33,7 +33,7 @@ import schedulers.{ZoeSimulatorDesc, _}
 import ca.zmatrix.utils._
 import org.apache.log4j.Logger
 
-import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object Simulation{
   val logger = Logger.getLogger(this.getClass.getName)
@@ -142,6 +142,8 @@ object Simulation{
     val sweepPickiness = false
     val sweepLambda = true
 
+    val allocationModes = List[AllocationModes.Value](AllocationModes.Incremental)//, "all")
+
     val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd-HH-mm-ss")
     /**
       * End Config Variables
@@ -233,9 +235,10 @@ object Simulation{
       /**
         * Set up a simulatorDesc-s.
         */
-      val monolithicSimulatorDesc =
-        new MonolithicSimulatorDesc(Array(monolithicSchedulerDesc),
-          globalRunTime)
+      val monolithicSimulatorDescs: ListBuffer[MonolithicSimulatorDesc] = ListBuffer[MonolithicSimulatorDesc]()
+      allocationModes.foreach(allocationMode =>{
+        monolithicSimulatorDescs += new MonolithicSimulatorDesc(Array(monolithicSchedulerDesc), globalRunTime, allocationMode)
+      })
 
       /**
         * Set up a run of experiments.
@@ -248,96 +251,98 @@ object Simulation{
         ("multi", Map("Monolithic" -> List("Service", "Batch")))
       List(singlePathSetup, multiPathSetup).foreach {
         case (multiOrSingle, schedulerWorkloadsMap) =>
-          if (sweepC) {
-            allExperiments ::= new Experiment(
-              name = "google-monolithic-%s_path-vary_c"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = constantRange,
-              perTaskThinkTimeRange = 0.005 :: Nil,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
-              simulatorDesc = monolithicSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+          monolithicSimulatorDescs.foreach(monolithicSimulatorDesc => {
+            if (sweepC) {
+              allExperiments ::= new Experiment(
+                name = "google-monolithic-%s_path-vary_c-allocation_%s"
+                  .format(multiOrSingle, monolithicSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = constantRange,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
+                simulatorDesc = monolithicSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepCL) {
-            allExperiments ::= new Experiment(
-              name = "google-monolithic-%s_path-vary_cl"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = constantRange,
-              perTaskThinkTimeRange = perTaskRange,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
-              simulatorDesc = monolithicSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepCL) {
+              allExperiments ::= new Experiment(
+                name = "google-monolithic-%s_path-vary_cl-allocation_%s"
+                  .format(multiOrSingle, monolithicSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = constantRange,
+                perTaskThinkTimeRange = perTaskRange,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
+                simulatorDesc = monolithicSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepL) {
-            allExperiments ::= new Experiment(
-              name = "google-monolithic-%s_path-vary_l"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = 0.1 :: Nil,
-              perTaskThinkTimeRange = perTaskRange,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
-              simulatorDesc = monolithicSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepL) {
+              allExperiments ::= new Experiment(
+                name = "google-monolithic-%s_path-vary_l-allocation_%s"
+                  .format(multiOrSingle, monolithicSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = perTaskRange,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
+                simulatorDesc = monolithicSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepPickiness) {
-            allExperiments ::= new Experiment(
-              name = "google-monolithic-%s_path-vary_pickiness"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = 0.1 :: Nil,
-              perTaskThinkTimeRange = 0.005 :: Nil,
-              blackListPercentRange = pickinessRange,
-              schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
-              simulatorDesc = monolithicSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepPickiness) {
+              allExperiments ::= new Experiment(
+                name = "google-monolithic-%s_path-vary_pickiness-allocation_%s"
+                  .format(multiOrSingle, monolithicSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = pickinessRange,
+                schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
+                simulatorDesc = monolithicSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepLambda) {
-            allExperiments ::= new Experiment(
-              name = "google-monolithic-%s_path-vary_lambda"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
-              constantThinkTimeRange = 0.1 :: Nil,
-              perTaskThinkTimeRange = 0.005 :: Nil,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
-              simulatorDesc = monolithicSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepLambda) {
+              allExperiments ::= new Experiment(
+                name = "google-monolithic-%s_path-vary_lambda-allocation_%s"
+                  .format(multiOrSingle, monolithicSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = monolithicSchedulerWorkloadMap,
+                simulatorDesc = monolithicSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
+          })
       }
     }
 
@@ -379,8 +384,8 @@ object Simulation{
         case (multiOrSingle, schedulerWorkloadsMap) =>
           if (sweepC) {
             allExperiments ::= new Experiment(
-              name = "google-spark-%s_path-vary_c"
-                .format(multiOrSingle),
+              name = "google-spark-%s_path-vary_c-allocation_%s"
+                .format(multiOrSingle, sparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -397,8 +402,8 @@ object Simulation{
 
           if (sweepCL) {
             allExperiments ::= new Experiment(
-              name = "google-spark-%s_path-vary_cl"
-                .format(multiOrSingle),
+              name = "google-spark-%s_path-vary_cl-allocation_%s"
+                .format(multiOrSingle, sparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -415,8 +420,8 @@ object Simulation{
 
           if (sweepL) {
             allExperiments ::= new Experiment(
-              name = "google-spark-%s_path-vary_l"
-                .format(multiOrSingle),
+              name = "google-spark-%s_path-vary_l-allocation_%s"
+                .format(multiOrSingle, sparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -433,8 +438,8 @@ object Simulation{
 
           if (sweepPickiness) {
             allExperiments ::= new Experiment(
-              name = "google-spark-%s_path-vary_pickiness"
-                .format(multiOrSingle),
+              name = "google-spark-%s_path-vary_pickiness-allocation_%s"
+                .format(multiOrSingle, sparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -451,8 +456,8 @@ object Simulation{
 
           if (sweepLambda) {
             allExperiments ::= new Experiment(
-              name = "google-spark-%s_path-vary_lambda"
-                .format(multiOrSingle),
+              name = "google-spark-%s_path-vary_lambda-allocation_%s"
+                .format(multiOrSingle, sparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -508,8 +513,8 @@ object Simulation{
         case (multiOrSingle, schedulerWorkloadsMap) =>
           if (sweepC) {
             allExperiments ::= new Experiment(
-              name = "google-newspark-%s_path-vary_c"
-                .format(multiOrSingle),
+              name = "google-newspark-%s_path-vary_c-allocation_%s"
+                .format(multiOrSingle, newsparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -526,8 +531,8 @@ object Simulation{
 
           if (sweepCL) {
             allExperiments ::= new Experiment(
-              name = "google-newspark-%s_path-vary_cl"
-                .format(multiOrSingle),
+              name = "google-newspark-%s_path-vary_cl-allocation_%s"
+                .format(multiOrSingle, newsparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -544,8 +549,8 @@ object Simulation{
 
           if (sweepL) {
             allExperiments ::= new Experiment(
-              name = "google-newspark-%s_path-vary_l"
-                .format(multiOrSingle),
+              name = "google-newspark-%s_path-vary_l-allocation_%s"
+                .format(multiOrSingle, newsparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -562,8 +567,8 @@ object Simulation{
 
           if (sweepPickiness) {
             allExperiments ::= new Experiment(
-              name = "google-newspark-%s_path-vary_pickiness"
-                .format(multiOrSingle),
+              name = "google-newspark-%s_path-vary_pickiness-allocation_%s"
+                .format(multiOrSingle, newsparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -580,8 +585,8 @@ object Simulation{
 
           if (sweepLambda) {
             allExperiments ::= new Experiment(
-              name = "google-newspark-%s_path-vary_lambda"
-                .format(multiOrSingle),
+              name = "google-newspark-%s_path-vary_lambda-allocation_%s"
+                .format(multiOrSingle, newsparkSimulatorDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -654,23 +659,22 @@ object Simulation{
       /**
         * Set up a simulatorDesc-s.
         */
-      // Mesos simulator with 1 batch schedulers
-      val mesosSimulator1BatchDesc =
-        new MesosSimulatorDesc(mesosSchedulerDescs,
-          runTime = globalRunTime,
-          allocatorConstantThinkTime = 0.001)
-      // Mesos simulator with 4 batch schedulers
-      //      val mesosSimulator4BatchDesc =
-      //              new MesosSimulatorDesc(mesos4BatchSchedulerDescs,
-      //                runTime = globalRunTime,
-      //                allocatorConstantThinkTime = 0.001)
+      val mesosSimulatorDescs: ListBuffer[MesosSimulatorDesc] = ListBuffer[MesosSimulatorDesc]()
+      allocationModes.foreach(allocationMode => {
+        // Mesos simulator with 1 batch schedulers
+        mesosSimulatorDescs += new MesosSimulatorDesc(mesosSchedulerDescs,
+            runTime = globalRunTime,
+            allocatorConstantThinkTime = 0.001, allocationMode)
+        // Mesos simulator with 4 batch schedulers
+        //      mesosSimulatorDescs +=
+        //              new MesosSimulatorDesc(mesos4BatchSchedulerDescs,
+        //                runTime = globalRunTime,
+        //                allocatorConstantThinkTime = 0.001, allocationMode)
+      })
 
       /**
         * Set up a run of experiments.
         */
-      // val mesosSimulatorDesc = mesosSimulator4BatchDesc
-      val mesosSimulatorDesc = mesosSimulator1BatchDesc
-
       // val mesosSchedulerWorkloadMap = mesos4BatchSchedulerWorkloadMap
       val mesosSchedulerWorkloadMap = mesos1BatchSchedulerWorkloadMap
 
@@ -683,92 +687,94 @@ object Simulation{
       // val mesosWorkloadToSweep = "Batch"
       val mesosWorkloadToSweep = "Service"
 
-      if (sweepC) {
-        allExperiments ::= new Experiment(
-          name = "google-mesos-single_path-vary_c",
-          workloadToSweepOver = mesosWorkloadToSweep,
-          workloadDescs = wlDescs,
-          schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
-          // constantThinkTimeRange = (0.1 :: Nil),
-          constantThinkTimeRange = constantRange,
-          perTaskThinkTimeRange = 0.005 :: Nil,
-          blackListPercentRange = 0.0 :: Nil,
-          schedulerWorkloadMap = mesosSchedulerWorkloadMap,
-          simulatorDesc = mesosSimulatorDesc,
-          logging = doLogging,
-          outputDirectory = outputDirName,
-          prefillCpuLimits = prefillCpuLim,
-          simulationTimeout = timeout)
-      }
+      mesosSimulatorDescs.foreach(mesosSimulatorDesc => {
+        if (sweepC) {
+          allExperiments ::= new Experiment(
+            name = "google-mesos-single_path-vary_c-allocation_%s".format(mesosSimulatorDesc.allocationMode),
+            workloadToSweepOver = mesosWorkloadToSweep,
+            workloadDescs = wlDescs,
+            schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
+            // constantThinkTimeRange = (0.1 :: Nil),
+            constantThinkTimeRange = constantRange,
+            perTaskThinkTimeRange = 0.005 :: Nil,
+            blackListPercentRange = 0.0 :: Nil,
+            schedulerWorkloadMap = mesosSchedulerWorkloadMap,
+            simulatorDesc = mesosSimulatorDesc,
+            logging = doLogging,
+            outputDirectory = outputDirName,
+            prefillCpuLimits = prefillCpuLim,
+            simulationTimeout = timeout)
+        }
 
-      if (sweepCL) {
-        allExperiments ::= new Experiment(
-          name = "google-mesos-single_path-vary_cl",
-          workloadToSweepOver = mesosWorkloadToSweep,
-          workloadDescs = wlDescs,
-          schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
-          constantThinkTimeRange = constantRange,
-          perTaskThinkTimeRange = perTaskRange,
-          blackListPercentRange = 0.0 :: Nil,
-          schedulerWorkloadMap = mesosSchedulerWorkloadMap,
-          simulatorDesc = mesosSimulatorDesc,
-          logging = doLogging,
-          outputDirectory = outputDirName,
-          prefillCpuLimits = prefillCpuLim,
-          simulationTimeout = timeout)
-      }
+        if (sweepCL) {
+          allExperiments ::= new Experiment(
+            name = "google-mesos-single_path-vary_cl-allocation_%s".format(mesosSimulatorDesc.allocationMode),
+            workloadToSweepOver = mesosWorkloadToSweep,
+            workloadDescs = wlDescs,
+            schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
+            constantThinkTimeRange = constantRange,
+            perTaskThinkTimeRange = perTaskRange,
+            blackListPercentRange = 0.0 :: Nil,
+            schedulerWorkloadMap = mesosSchedulerWorkloadMap,
+            simulatorDesc = mesosSimulatorDesc,
+            logging = doLogging,
+            outputDirectory = outputDirName,
+            prefillCpuLimits = prefillCpuLim,
+            simulationTimeout = timeout)
+        }
 
-      if (sweepL) {
-        allExperiments ::= new Experiment(
-          name = "google-mesos-single_path-vary_l",
-          workloadToSweepOver = mesosWorkloadToSweep,
-          workloadDescs = wlDescs,
-          schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
-          constantThinkTimeRange = 0.1 :: Nil,
-          perTaskThinkTimeRange = perTaskRange,
-          blackListPercentRange = 0.0 :: Nil,
-          schedulerWorkloadMap = mesosSchedulerWorkloadMap,
-          simulatorDesc = mesosSimulatorDesc,
-          logging = doLogging,
-          outputDirectory = outputDirName,
-          prefillCpuLimits = prefillCpuLim,
-          simulationTimeout = timeout)
-      }
+        if (sweepL) {
+          allExperiments ::= new Experiment(
+            name = "google-mesos-single_path-vary_l-allocation_%s".format(mesosSimulatorDesc.allocationMode),
+            workloadToSweepOver = mesosWorkloadToSweep,
+            workloadDescs = wlDescs,
+            schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
+            constantThinkTimeRange = 0.1 :: Nil,
+            perTaskThinkTimeRange = perTaskRange,
+            blackListPercentRange = 0.0 :: Nil,
+            schedulerWorkloadMap = mesosSchedulerWorkloadMap,
+            simulatorDesc = mesosSimulatorDesc,
+            logging = doLogging,
+            outputDirectory = outputDirName,
+            prefillCpuLimits = prefillCpuLim,
+            simulationTimeout = timeout)
+        }
 
-      if (sweepPickiness) {
-        allExperiments ::= new Experiment(
-          name = "google-mesos-single_path-vary_pickiness",
-          workloadToSweepOver = mesosWorkloadToSweep,
-          workloadDescs = wlDescs,
-          schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
-          constantThinkTimeRange = 0.1 :: Nil,
-          perTaskThinkTimeRange = 0.005 :: Nil,
-          blackListPercentRange = pickinessRange,
-          schedulerWorkloadMap = mesosSchedulerWorkloadMap,
-          simulatorDesc = mesosSimulatorDesc,
-          logging = doLogging,
-          outputDirectory = outputDirName,
-          prefillCpuLimits = prefillCpuLim,
-          simulationTimeout = timeout)
-      }
+        if (sweepPickiness) {
+          allExperiments ::= new Experiment(
+            name = "google-mesos-single_path-vary_pickiness-allocation_%s".format(mesosSimulatorDesc.allocationMode),
+            workloadToSweepOver = mesosWorkloadToSweep,
+            workloadDescs = wlDescs,
+            schedulerWorkloadsToSweepOver = mesosSchedWorkloadsToSweep,
+            constantThinkTimeRange = 0.1 :: Nil,
+            perTaskThinkTimeRange = 0.005 :: Nil,
+            blackListPercentRange = pickinessRange,
+            schedulerWorkloadMap = mesosSchedulerWorkloadMap,
+            simulatorDesc = mesosSimulatorDesc,
+            logging = doLogging,
+            outputDirectory = outputDirName,
+            prefillCpuLimits = prefillCpuLim,
+            simulationTimeout = timeout)
+        }
 
-      if (sweepLambda) {
-        allExperiments ::= new Experiment(
-          name = "google-mesos-single_path-vary_lambda",
-          workloadToSweepOver = "Service",
-          workloadDescs = wlDescs,
-          schedulerWorkloadsToSweepOver = Map("MesosService" -> List("Service")),
-          avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
-          constantThinkTimeRange = 0.1 :: Nil,
-          perTaskThinkTimeRange = 0.005 :: Nil,
-          blackListPercentRange = 0.0 :: Nil,
-          schedulerWorkloadMap = mesosSchedulerWorkloadMap,
-          simulatorDesc = mesosSimulatorDesc,
-          logging = doLogging,
-          outputDirectory = outputDirName,
-          prefillCpuLimits = prefillCpuLim,
-          simulationTimeout = timeout)
-      }
+        if (sweepLambda) {
+          allExperiments ::= new Experiment(
+            name = "google-mesos-single_path-vary_lambda-allocation_%s".format(mesosSimulatorDesc.allocationMode),
+            workloadToSweepOver = "Service",
+            workloadDescs = wlDescs,
+            schedulerWorkloadsToSweepOver = Map("MesosService" -> List("Service")),
+            avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
+            constantThinkTimeRange = 0.1 :: Nil,
+            perTaskThinkTimeRange = 0.005 :: Nil,
+            blackListPercentRange = 0.0 :: Nil,
+            schedulerWorkloadMap = mesosSchedulerWorkloadMap,
+            simulatorDesc = mesosSimulatorDesc,
+            logging = doLogging,
+            outputDirectory = outputDirName,
+            prefillCpuLimits = prefillCpuLim,
+            simulationTimeout = timeout)
+        }
+      })
     }
 
     // Omega
@@ -864,13 +870,13 @@ object Simulation{
           // SchedulerWorkloadMap and SchedulerWorkloadToSweep.
           val omegaSimulatorDescs = for(
             conflictMode <- Seq("sequence-numbers", "resource-fit");
-            transactionMode <- Seq("all-or-nothing", "incremental")) yield {
+            transactionMode <- Seq("all-or-nothing", "incremental");
+            allocationMode <- allocationModes) yield {
             new OmegaSimulatorDesc(
-              generateOmegaSchedulerDescs(numOmegaServiceScheds,
-                numOmegaBatchScheds),
+              generateOmegaSchedulerDescs(numOmegaServiceScheds, numOmegaBatchScheds),
               runTime = globalRunTime,
               conflictMode,
-              transactionMode)
+              transactionMode, allocationMode)
           }
 
           val omegaSchedulerWorkloadMap =
@@ -893,11 +899,13 @@ object Simulation{
             simDesc.schedulerDescs.count(_.name.contains("Batch"))
           if (sweepC) {
             allExperiments ::= new Experiment(
-              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_c"
+              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_c-allocation_%s"
                 .format(simDesc.conflictMode,
                   simDesc.transactionMode,
                   numServiceScheds,
-                  numBatchScheds),
+                  numBatchScheds,
+                  simDesc.allocationMode
+                ),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedWLToSweep,
@@ -914,11 +922,12 @@ object Simulation{
 
           if (sweepCL) {
             allExperiments ::= new Experiment(
-              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_cl"
+              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_cl-allocation_%s"
                 .format(simDesc.conflictMode,
                   simDesc.transactionMode,
                   numServiceScheds,
-                  numBatchScheds),
+                  numBatchScheds,
+                  simDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedWLToSweep,
@@ -935,11 +944,12 @@ object Simulation{
 
           if (sweepL) {
             allExperiments ::= new Experiment(
-              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_l"
+              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_l-allocation_%s"
                 .format(simDesc.conflictMode,
                   simDesc.transactionMode,
                   numServiceScheds,
-                  numBatchScheds),
+                  numBatchScheds,
+                  simDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedWLToSweep,
@@ -956,11 +966,12 @@ object Simulation{
 
           if (sweepPickiness) {
             allExperiments ::= new Experiment(
-              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_pickiness"
+              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_pickiness-allocation_%s"
                 .format(simDesc.conflictMode,
                   simDesc.transactionMode,
                   numServiceScheds,
-                  numBatchScheds),
+                  numBatchScheds,
+                  simDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedWLToSweep,
@@ -977,11 +988,12 @@ object Simulation{
 
           if (sweepLambda) {
             allExperiments ::= new Experiment(
-              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_lambda"
+              name = "google-omega-%s-%s-%d_service-%d_batch-single_path-vary_lambda-allocation_%s"
                 .format(simDesc.conflictMode,
                   simDesc.transactionMode,
                   numServiceScheds,
-                  numBatchScheds),
+                  numBatchScheds,
+                  simDesc.allocationMode),
               workloadToSweepOver = "Service",
               workloadDescs = wlDescs,
               schedulerWorkloadsToSweepOver = schedWLToSweep,
@@ -1021,9 +1033,11 @@ object Simulation{
       /**
         * Set up a simulatorDesc-s.
         */
-      val zoeSimulatorDesc =
-        new ZoeSimulatorDesc(Array(zoeSchedulerDesc),
-          globalRunTime)
+      val zoeSimulatorDescs: ListBuffer[ZoeSimulatorDesc] = ListBuffer[ZoeSimulatorDesc]()
+      allocationModes.foreach(allocationMode => {
+        zoeSimulatorDescs += new ZoeSimulatorDesc(Array(zoeSchedulerDesc),
+          globalRunTime, allocationMode)
+      })
 
       /**
         * Set up a run of experiments.
@@ -1036,96 +1050,99 @@ object Simulation{
         ("multi", Map("Zoe" -> List("Service", "Batch")))
       List(singlePathSetup, multiPathSetup).foreach {
         case (multiOrSingle, schedulerWorkloadsMap) =>
-          if (sweepC) {
-            allExperiments ::= new Experiment(
-              name = "google-zoe-%s_path-vary_c"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = constantRange,
-              perTaskThinkTimeRange = 0.005 :: Nil,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = zoeSchedulerWorkloadMap,
-              simulatorDesc = zoeSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+          zoeSimulatorDescs.foreach(zoeSimulatorDesc => {
+            if (sweepC) {
+              allExperiments ::= new Experiment(
+                name = "google-zoe-%s_path-vary_c-allocation_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = constantRange,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoeSchedulerWorkloadMap,
+                simulatorDesc = zoeSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepCL) {
-            allExperiments ::= new Experiment(
-              name = "google-zoe-%s_path-vary_cl"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = constantRange,
-              perTaskThinkTimeRange = perTaskRange,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = zoeSchedulerWorkloadMap,
-              simulatorDesc = zoeSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepCL) {
+              allExperiments ::= new Experiment(
+                name = "google-zoe-%s_path-vary_cl-allocation_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = constantRange,
+                perTaskThinkTimeRange = perTaskRange,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoeSchedulerWorkloadMap,
+                simulatorDesc = zoeSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepL) {
-            allExperiments ::= new Experiment(
-              name = "google-zoe-%s_path-vary_l"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = 0.1 :: Nil,
-              perTaskThinkTimeRange = perTaskRange,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = zoeSchedulerWorkloadMap,
-              simulatorDesc = zoeSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepL) {
+              allExperiments ::= new Experiment(
+                name = "google-zoe-%s_path-vary_l-allocation_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = perTaskRange,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoeSchedulerWorkloadMap,
+                simulatorDesc = zoeSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepPickiness) {
-            allExperiments ::= new Experiment(
-              name = "google-zoe-%s_path-vary_pickiness"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              constantThinkTimeRange = 0.1 :: Nil,
-              perTaskThinkTimeRange = 0.005 :: Nil,
-              blackListPercentRange = pickinessRange,
-              schedulerWorkloadMap = zoeSchedulerWorkloadMap,
-              simulatorDesc = zoeSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepPickiness) {
+              allExperiments ::= new Experiment(
+                name = "google-zoe-%s_path-vary_pickiness-allocation_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = pickinessRange,
+                schedulerWorkloadMap = zoeSchedulerWorkloadMap,
+                simulatorDesc = zoeSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
 
-          if (sweepLambda) {
-            allExperiments ::= new Experiment(
-              name = "google-zoe-%s_path-vary_lambda"
-                .format(multiOrSingle),
-              workloadToSweepOver = "Service",
-              workloadDescs = wlDescs,
-              schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
-              avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
-              constantThinkTimeRange = 0.1 :: Nil,
-              perTaskThinkTimeRange = 0.005 :: Nil,
-              blackListPercentRange = 0.0 :: Nil,
-              schedulerWorkloadMap = zoeSchedulerWorkloadMap,
-              simulatorDesc = zoeSimulatorDesc,
-              logging = doLogging,
-              outputDirectory = outputDirName,
-              prefillCpuLimits = prefillCpuLim,
-              simulationTimeout = timeout)
-          }
+            if (sweepLambda) {
+              allExperiments ::= new Experiment(
+                name = "google-zoe-%s_path-vary_lambda-allocation_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoeSchedulerWorkloadMap,
+                simulatorDesc = zoeSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
+          })
+
       }
     }
 
