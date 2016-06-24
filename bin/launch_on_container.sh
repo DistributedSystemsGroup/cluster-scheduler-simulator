@@ -2,8 +2,8 @@
 
 ############# User Variables #################################
 SWARM_IP="192.168.45.252:2380"
-CONTAINER_NAME="cluster-scheduler-simulator1"
-CONTAINER_IMAGE="192.168.45.252:5000/pacerepo/pace-container"
+CONTAINER_NAME="cluster-scheduler-simulator"
+CONTAINER_IMAGE="192.168.45.252:5000/pacerepo/cluster-scheduler-simulator"
 TO_MAIL="francesco.pace@eurecom.fr"
 ##############################################################
 
@@ -55,6 +55,7 @@ function run_container(){
     if [ "${container_exist_code}" == "0" ];then
         ${docker} cp "${CONTAINER_NAME}:${remote_dir}/experiment_results" "${project_dir}/"
         sudo chown -R ${USER}:${USER} "${project_dir}/experiment_results"
+        ${docker} rm -f ${CONTAINER_NAME}
     fi
     return ${container_exist_code}
 }
@@ -114,6 +115,6 @@ else
     ret=$?
     send_mail ${ret}
 fi
-echo "It took $(($(date +%s) - ${START_TIME})) seconds to complete task ${task}..."
+echo "It took $(($(date +%s) - ${START_TIME})) seconds to complete task ${task}."
 
 #################

@@ -31,6 +31,11 @@ import org.apache.log4j.{Level, Logger}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
+
+object EventTypes extends Enumeration {
+  val Remove, Trigger = Value
+}
+
 /**
  * A simple, generic, discrete event simulator. A modified version of the
  * basic discrete event simulator code from Programming In Scala, pg 398,
@@ -43,32 +48,48 @@ abstract class Simulator(logging: Boolean = false){
   if(!logging)
     logger.setLevel(Level.ERROR)
 
-  case class WorkItem(time: Double, action: Action)
+  case class WorkItem(time: Double, action: Action, eventType: EventTypes.Value, itemId: Long)
   implicit object WorkItemOrdering extends Ordering[WorkItem] {
     def compare(a: WorkItem, b: WorkItem) = {
-      if (a.time < b.time) 1
-      else if (a.time > b.time) -1
-      else 0
+//      if (a.time < b.time) 1
+//      else if (a.time > b.time) -1
+//      else 0
+      a.time.compare(b.time)
     }
   }
 
   protected var curtime: Double = 0.0 // simulation time, in seconds
-  protected var agenda = new collection.mutable.PriorityQueue[WorkItem]()
+  private[this] var _agenda = new collection.mutable.ListBuffer[WorkItem]()
 
-  def agendaSize = agenda.size
+  protected def agenda = _agenda
+
   def currentTime: Double = curtime
 
-  def afterDelay(delay: Double)(block: => Unit) {
-    logger.trace("afterDelay() called. delay is %f".format(delay))
-    val item = WorkItem(currentTime + delay, () => block)
-    agenda.enqueue(item)
+  def afterDelay(delay: Double, eventType: EventTypes.Value = null, itemId: Long = 0)(block: => Unit) {
+    logger.trace("afterDelay() called. delay is %f.".format(delay))
+    val item = WorkItem(currentTime + delay, () => block, eventType, itemId)
+    _agenda += item
+   _agenda = _agenda.sorted
     // log("inserted new WorkItem into agenda to run at time " + (currentTime + delay))
   }
 
+  def removeIf(p: WorkItem => Boolean): Unit ={
+    _agenda --= _agenda.filter(p)
+  }
+
+  def deqeue(): WorkItem = {
+    val item = _agenda.head
+    _agenda -= item
+    item
+  }
+
+
   private def next(): Double = {
     logger.trace("next() called.")
-    val item = agenda.dequeue()
+    val item = deqeue()
     curtime = item.time
+    if (curtime < 0)
+      curtime = 0
     item.action()
     curtime
   }
@@ -84,7 +105,7 @@ abstract class Simulator(logging: Boolean = false){
   def run(runTime:Option[Double] = None,
           wallClockTimeout:Option[Double] = None): Boolean = {
     
-    afterDelay(0) {
+    afterDelay(-1) {
       logger.info("*** Simulation started, time = "+ currentTime +". ***")
     }
     // Record wall clock time at beginning of simulation run.
@@ -100,9 +121,9 @@ abstract class Simulator(logging: Boolean = false){
     }
 
     def run_(time: Double): Double = {
-      if (agenda.isEmpty || runTime.exists(_ <= time) || timedOut){
+      if (_agenda.isEmpty || runTime.exists(_ <= time) || timedOut){
         logger.trace("run_() called. agenda.isEmpty = %s , runTime.exists(_ > time) = %s , timedOut = %s"
-          .format(agenda.isEmpty, runTime.exists(_ > time), timedOut))
+          .format(_agenda.isEmpty, runTime.exists(_ > time), timedOut))
         time
       } else
           run_(next())
@@ -162,8 +183,8 @@ class ClusterSimulator(val cellState: CellState,
 
   assert(allocationMode == AllocationModes.Incremental ||
     allocationMode == AllocationModes.All,
-    "allocationMode must be one of: {%s, %s}, " +
-      "but it was %s.".format(AllocationModes.Incremental, AllocationModes.All, allocationMode))
+    ("allocationMode must be one of: {%s, %s}, " +
+      "but it was %s.").format(AllocationModes.Incremental, AllocationModes.All, allocationMode))
 
   def getAllocationMode: AllocationModes.Value = allocationMode
 
@@ -295,10 +316,9 @@ class ClusterSimulator(val cellState: CellState,
     sumMemUtilization += (cellState.totalOccupiedMem / cellState.totalMem)
     sumCpuLocked += cellState.totalLockedCpus
     sumMemLocked += cellState.totalLockedMem
-    logger.info("Avg cpu utilization (adding measurement %d of %f): %f."
+    logger.debug("Adding measurement %d. Avg cpu: %f. Avg mem: %f"
         .format(numMonitoringMeasurements,
-                cellState.totalOccupiedCpus,
-                avgCpuUtilization))
+          avgCpuUtilization, avgMemUtilization))
     //Temporary: print utilization throughout the day.
     // if (numMonitoringMeasurements % 1000 == 0) {
     //   println("%f - Current cluster utilization: %f %f cpu , %f %f mem"
@@ -315,7 +335,7 @@ class ClusterSimulator(val cellState: CellState,
     //                    cellState.totalLockedMem,
     //                    cellState.totalLockedMem / cellState.totalMem))
     // }
-    logger.info("Avg mem utilization: %f.".format(avgMemUtilization))
+
     // Only schedule a monitoring event if the simulator has
     // more (non-monitoring) events to play. Else this will cause
     // the simulator to run forever just to keep monitoring.
@@ -337,7 +357,7 @@ class ClusterSimulator(val cellState: CellState,
     })
     // Optionally, start the utilization monitoring loop.
     if (monitorUtilization) {
-      afterDelay(0.0) {
+      afterDelay(-1) {
         measureUtilization()
       }
     }
@@ -379,7 +399,9 @@ abstract class Scheduler(val name: String,
                          numMachinesToBlackList: Double) {
   assert(constantThinkTimes.size == perTaskThinkTimes.size)
   assert(numMachinesToBlackList >= 0)
-  protected var pendingQueue = new collection.mutable.Queue[Job]
+
+  protected val pendingQueue: collection.mutable.Queue[Job] = collection.mutable.Queue[Job]()
+
   // This gets set when this scheduler is added to a Simulator.
   // TODO(andyk): eliminate this pointer and make the scheduler
   //              more functional.
@@ -435,7 +457,7 @@ abstract class Scheduler(val name: String,
   def addJob(job: Job): Unit = {
     checkRegistered()
 
-    assert(job.getUnscheduledTasks > 0, "A job must have at least one unscheduled task.")
+    assert(job.unscheduledTasks > 0, "A job must have at least one unscheduled task.")
     // Make sure the perWorkloadTimeScheduling Map has a key for this job's
     // workload type, so that we still print something for statistics about
     // that workload type for this scheduler, even if this scheduler never
@@ -497,25 +519,26 @@ abstract class Scheduler(val name: String,
    *         be played on some other cellstate if desired.
    */
   def scheduleJob(job: Job,
-                  cellState: CellState): Seq[ClaimDelta] = {
+                  cellState: CellState,
+                  elastic:Boolean = false): Seq[ClaimDelta] = {
     assert(simulator != null)
     assert(cellState != null)
     assert(job.cpusPerTask <= cellState.cpusPerMachine,
-           "Looking for machine with %f cpus, but machines only have %f cpus."
-           .format(job.cpusPerTask, cellState.cpusPerMachine))
+      "Looking for machine with %f cpus, but machines only have %f cpus."
+        .format(job.cpusPerTask, cellState.cpusPerMachine))
     assert(job.memPerTask <= cellState.memPerMachine,
-           "Looking for machine with %f mem, but machines only have %f mem."
-           .format(job.memPerTask, cellState.memPerMachine))
+      "Looking for machine with %f mem, but machines only have %f mem."
+        .format(job.memPerTask, cellState.memPerMachine))
     val claimDeltas = collection.mutable.ListBuffer[ClaimDelta]()
 
     // Cache candidate pools in this scheduler for performance improvements.
     val candidatePool =
-        candidatePoolCache.getOrElseUpdate(cellState.numMachines,
-                                           Array.range(0, cellState.numMachines))
+      candidatePoolCache.getOrElseUpdate(cellState.numMachines,
+        Array.range(0, cellState.numMachines))
 
-    var numRemainingTasks = job.getUnscheduledTasks
+    var numRemainingTasks = if(!elastic) job.unscheduledTasks else job.elasticTasksUnscheduled
     var remainingCandidates =
-        math.max(0, cellState.numMachines - numMachinesToBlackList).toInt
+      math.max(0, cellState.numMachines - numMachinesToBlackList).toInt
     while(numRemainingTasks > 0 && remainingCandidates > 0) {
       // Pick a random machine out of the remaining pool, i.e., out of the set
       // of machineIDs in the first remainingCandidate slots of the candidate
@@ -526,14 +549,14 @@ abstract class Scheduler(val name: String,
       // If one of this job's tasks will fit on this machine, then assign
       // to it by creating a claimDelta and leave it in the candidate pool.
       if (cellState.availableCpusPerMachine(currMachID) >= job.cpusPerTask &&
-          cellState.availableMemPerMachine(currMachID) >= job.memPerTask) {
+        cellState.availableMemPerMachine(currMachID) >= job.memPerTask) {
         assert(currMachID >= 0 && currMachID < cellState.machineSeqNums.length)
         val claimDelta = new ClaimDelta(this,
-                                        currMachID,
-                                        cellState.machineSeqNums(currMachID),
-                                        job.taskDuration,
-                                        job.cpusPerTask,
-                                        job.memPerTask)
+          currMachID,
+          cellState.machineSeqNums(currMachID),
+          job.taskDuration,
+          job.cpusPerTask,
+          job.memPerTask)
         claimDelta.apply(cellState = cellState, locked = false)
         claimDeltas += claimDelta
         numRemainingTasks -= 1
@@ -547,34 +570,25 @@ abstract class Scheduler(val name: String,
         candidatePool(remainingCandidates - 1) = currMachID
         remainingCandidates -= 1
         simulator.logger.debug(
-           ("%s in scheduling algorithm, tried machine %d, but " +
+          ("%s in scheduling algorithm, tried machine %d, but " +
             "%f cpus and %f mem are required, and it only " +
             "has %f cpus and %f mem available.")
             .format(name,
-                    currMachID,
-                    job.cpusPerTask,
-                    job.memPerTask,
-                    cellState.availableCpusPerMachine(currMachID),
-                    cellState.availableMemPerMachine(currMachID)))
+              currMachID,
+              job.cpusPerTask,
+              job.memPerTask,
+              cellState.availableCpusPerMachine(currMachID),
+              cellState.availableMemPerMachine(currMachID)))
       }
     }
     claimDeltas
-  }
-
-  def isAllocationSuccessfully(claimDeltas: Seq[ClaimDelta], job: Job): Boolean = {
-    if(simulator.allocationMode == AllocationModes.Incremental)
-      claimDeltas.nonEmpty
-    else if(simulator.allocationMode == AllocationModes.All)
-      claimDeltas.length == job.getNumTasks
-    else
-      false
   }
 
   // Give up on a job if (a) it hasn't scheduled a single task in
   // 100 tries or (b) it hasn't finished scheduling after 1000 tries.
   def giveUpSchedulingJob(job: Job): Boolean = {
     if(simulator.allocationMode == AllocationModes.Incremental)
-      (job.numSchedulingAttempts > 100 && job.getUnscheduledTasks == job.getNumTasks) || job.numSchedulingAttempts > 1000
+      (job.numSchedulingAttempts > 100 && job.unscheduledTasks == job.moldableTasks) || job.numSchedulingAttempts > 1000
     else if(simulator.allocationMode == AllocationModes.All)
       job.numSchedulingAttempts > 1000
     else
@@ -605,12 +619,14 @@ abstract class Scheduler(val name: String,
     if (isFirstSchedAttempt) {
       firstAttemptUsefulTimeScheduling += timeScheduling
     }
-    simulator.logger.info("Recorded %f seconds of %s useful think time, total now: %f."
+    simulator.logger.debug("Recorded %f seconds of %s useful think time, total now: %f."
                   .format(timeScheduling, name, totalUsefulTimeScheduling))
+
     // Job/workload level stats.
     job.usefulTimeScheduling += timeScheduling
-    simulator.logger.info("Recorded %f seconds of job %s useful think time, total now: %f."
+    simulator.logger.debug("Recorded %f seconds of job %s useful think time, total now: %f."
                   .format(timeScheduling, job.id, simulator.workloads.filter(_.name == job.workloadName).head.totalJobUsefulThinkTimes))
+
     // Also track per-path (i.e., per workload) scheduling times
     perWorkloadUsefulTimeScheduling(job.workloadName) =
         perWorkloadUsefulTimeScheduling.getOrElse(job.workloadName,0.0) +
@@ -628,8 +644,14 @@ abstract class Scheduler(val name: String,
     if (isFirstSchedAttempt) {
       firstAttemptWastedTimeScheduling += timeScheduling
     }
+    simulator.logger.debug("Recorded %f seconds of %s wasted think time, total now: %f."
+      .format(timeScheduling, name, totalWastedTimeScheduling))
+
     // Job/workload level stats.
     job.wastedTimeScheduling += timeScheduling
+    simulator.logger.debug("Recorded %f seconds of job %s wasted think time, total now: %f."
+      .format(timeScheduling, job.id, simulator.workloads.filter(_.name == job.workloadName).head.totalJobWastedThinkTimes))
+
     // Also track per-path (i.e., per workload) scheduling times
     perWorkloadWastedTimeScheduling(job.workloadName) =
         perWorkloadWastedTimeScheduling.getOrElse(job.workloadName,0.0) +
@@ -646,7 +668,21 @@ abstract class Scheduler(val name: String,
     assert(constantThinkTimes.contains(job.workloadName))
     assert(perTaskThinkTimes.contains(job.workloadName))
     constantThinkTimes(job.workloadName) +
-        perTaskThinkTimes(job.workloadName) * job.getUnscheduledTasks.toFloat
+        perTaskThinkTimes(job.workloadName) * job.unscheduledTasks.toFloat
+  }
+
+  /**
+    * Computes the time, in seconds, this scheduler requires to make
+    * a scheduling decision for `@code job`.
+    *
+    * @param job the job to determine this schedulers think time for
+    * @param unscheduledTask  the number of tasks left to be scheduled
+    */
+  def getThinkTime(job: Job, unscheduledTask: Int): Double = {
+    assert(constantThinkTimes.contains(job.workloadName))
+    assert(perTaskThinkTimes.contains(job.workloadName))
+    constantThinkTimes(job.workloadName) +
+      perTaskThinkTimes(job.workloadName) * unscheduledTask.toFloat
   }
 }
 
@@ -934,12 +970,24 @@ class CellState(val numMachines: Int,
     new CommitResult(appliedDeltas, conflictDeltas)
   }
 
-  // Create an end event for each delta provided. The end event will
-  // free the resources used by the task represented by the ClaimDelta.
-  def scheduleEndEvents(claimDeltas: Seq[ClaimDelta]) {
+  //
+  /**
+    * Create an end event for each delta provided. The end event will
+    * free the resources used by the task represented by the ClaimDelta.
+    * We also calculate the highest delay after which the resources are
+    * free and we return that value
+    *
+    * @param claimDeltas The resources that were busy
+    * @param delay Set the delay at which the end events should occur.
+    *              if value is -1 use the duration of the task
+    * @param jobId The id of the job which this deltas belong to
+    * @return The higher delay after which the resources are free
+    */
+  def scheduleEndEvents(claimDeltas: Seq[ClaimDelta], delay: Double = -1, jobId: Long = 0): Unit = {
     assert(simulator != null, "Simulator must be non-null in CellState.")
     claimDeltas.foreach(appliedDelta => {
-      simulator.afterDelay(appliedDelta.duration) {
+      simulator.afterDelay(if(delay == -1) appliedDelta.duration else delay,
+        eventType = EventTypes.Remove , itemId = jobId) {
         appliedDelta.unApply(simulator.cellState)
         simulator.logger.info(("A task started by scheduler %s finished. " +
                        "Freeing %f cpus, %f mem. Available: %f cpus, %f mem.")
@@ -1017,7 +1065,8 @@ case class Job(id: Long,
                workloadName: String,
                cpusPerTask: Double,
                memPerTask: Double,
-               isRigid: Boolean = false) {
+               isRigid: Boolean = false,
+               moldableTaskPercentage: Option[Int] = None) {
   val logger = Logger.getLogger(this.getClass.getName)
   logger.trace("New Job. numTasks: %d, cpusPerTask: %f, memPerTask: %f".format(numTasks, cpusPerTask, memPerTask))
 
@@ -1025,13 +1074,22 @@ case class Job(id: Long,
   assert(!cpusPerTask.isNaN, "cpusPerTask for job %d is %f".format(id, cpusPerTask))
   assert(!memPerTask.isNaN, "memPerTask for job %d is %f".format(id, memPerTask))
 
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: Job => that.id == this.id
+      case _ => false
+    }
+
   var requestedCores: Double = Int.MaxValue
 
-  var unscheduledTasks: Int = numTasks
+  private[this] var _unscheduledTasks: Int = numTasks
   var finalStatus = JobStates.Not_Scheduled
+
   // Time, in seconds, this job spent waiting in its scheduler's queue
-  var timeInQueueTillFirstScheduled: Double = 0.0
-  var timeInQueueTillFullyScheduled: Double = 0.0
+  private[this] var _firstScheduled: Boolean = true
+  private[this] var _timeInQueueTillFirstScheduled: Double = 0.0
+  private[this] var _timeInQueueTillFullyScheduled: Double = 0.0
+
   // Timestamp last inserted into scheduler's queue, used to compute timeInQueue.
   var lastEnqueued: Double = 0.0
   var lastSchedulingStartTime: Double = 0.0
@@ -1051,65 +1109,106 @@ case class Job(id: Long,
   var jobFinishedWorking: Double = 0.0
 
   // Zoe Applications variables
-  var isZoeApp: Boolean = false
-  var moldableTasks: Int = 0
-  var elasticTasks: Int = 0
-  var moldableTasksUnschedule: Int = 0
-  var elasticTasksUnschedule: Int = 0
+  private[this] var _isZoeApp: Boolean = false
+  private[this] var _moldableTasks: Int = 0
+  private[this] var _elasticTasks: Int = 0
+  private[this] var _moldableTasksUnscheduled: Int = 0
+  private[this] var _elasticTasksUnscheduled: Int = 0
 
-  // We return the unscheduled tasks depending of the type of Job
-  def getUnscheduledTasks: Int = {
-    if(isZoeApp)
-      moldableTasksUnschedule
-    else
-      unscheduledTasks
+  private[this] var _jobDuration: Double = 0
+  private[this] var _elasticTaskSpeedUpContribution: Double = 0
+
+  var claimDeltas: collection.mutable.ListBuffer[ClaimDelta] = collection.mutable.ListBuffer[ClaimDelta]()
+
+  // Some getter and Setter
+  def timeInQueueTillFirstScheduled: Double = _timeInQueueTillFirstScheduled
+  def timeInQueueTillFirstScheduled_=(value: Double): Unit = {
+    _timeInQueueTillFirstScheduled = value
   }
 
-  def setUnscheduleTasks(unscheduleTasks: Int): Unit = {
-    if(isZoeApp)
-      this.moldableTasksUnschedule = unscheduleTasks
-    else
-      this.unscheduledTasks = unscheduleTasks
+  def timeInQueueTillFullyScheduled: Double = _timeInQueueTillFullyScheduled
+  def timeInQueueTillFullyScheduled_=(value: Double): Unit = {
+    _timeInQueueTillFullyScheduled = value
   }
 
-  def getNumTasks: Int = {
-    if(isZoeApp)
-      moldableTasks
-    else
-      numTasks
+  def firstScheduled: Boolean = _firstScheduled
+  def firstScheduled_=(value: Boolean): Unit = {
+    _firstScheduled = value
+  }
+
+  def unscheduledTasks: Int = {
+    if(_isZoeApp) _moldableTasksUnscheduled else _unscheduledTasks
+  }
+  def unscheduledTasks_=(value:Int): Unit = {
+    if(_isZoeApp) _moldableTasksUnscheduled = value else _unscheduledTasks = value
+  }
+
+  def elasticTasksUnscheduled: Int = _elasticTasksUnscheduled
+  def elasticTasksUnscheduled_=(value: Int): Unit = {
+    _elasticTasksUnscheduled = value
+  }
+  def elasticTasks: Int = _elasticTasks
+  def elasticTasks_=(value: Int): Unit = {
+    _elasticTasks = value
+  }
+  def jobDuration: Double = _jobDuration
+  def jobDuration_=(value: Double): Unit = {
+    _jobDuration = value
+  }
+
+  def elasticTaskSpeedUpContribution: Double = _elasticTaskSpeedUpContribution
+  def elasticTaskSpeedUpContribution_=(value: Double): Unit = {
+    _elasticTaskSpeedUpContribution = value
+  }
+
+  /**
+    * It will return the moldable component of this job.
+    * The moldable component is the tasks set that are required to be deployed before the job can start to
+    * produce some work.
+    * Currently only a Zoe Application support this knowledge.
+    * For this reason this function abstract the type of Job (normal job or Zoe Application) to the scheduler simulators.
+    *
+    * @return The number of tasks
+    */
+  def moldableTasks: Int = {
+    if(_isZoeApp) _moldableTasks else numTasks
   }
 
   def isScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled || finalStatus == JobStates.Fully_Scheduled ||
-    (finalStatus == JobStates.TimedOut && getUnscheduledTasks != getNumTasks)
+    (finalStatus == JobStates.TimedOut && unscheduledTasks != moldableTasks)
   def isFullyScheduled: Boolean = finalStatus == JobStates.Fully_Scheduled
   def isPartiallyScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled
   def isTimedOut: Boolean = finalStatus == JobStates.TimedOut
   def isNotScheduled: Boolean = finalStatus == JobStates.Not_Scheduled
 
-  /**
+
+  /*
     * We set the number of moldable tasks that compose the Zoe Applications
     * remember that at least one moldable service must exist
     * a Zoe Application cannot be composed by just elastic services
-    *
-    * @param moldableTasksPercentage The percentage of moldable tasks
     */
-  def setMoldableTasksPercentage(moldableTasksPercentage:Int): Unit ={
-    this.isZoeApp = true
-    this.moldableTasks = Math.ceil(numTasks * moldableTasksPercentage / 100.0).toInt
-    if(this.moldableTasks == 0)
-      this.moldableTasks = 1
-    this.elasticTasks = numTasks - moldableTasks
-    this.moldableTasksUnschedule = this.moldableTasks
-    this.elasticTasksUnschedule = this.elasticTasks
+  moldableTaskPercentage match {
+    case Some(param) =>
+      _isZoeApp = true
+      _moldableTasks = Math.ceil(numTasks * param / 100.0).toInt
+      if(_moldableTasks == 0)
+        _moldableTasks = 1
+      elasticTasks = numTasks - _moldableTasks
+      unscheduledTasks = _moldableTasks
+      elasticTasksUnscheduled = _elasticTasks
+      jobDuration = Math.ceil(numTasks / _moldableTasks.toFloat) * taskDuration
+      elasticTaskSpeedUpContribution = (jobDuration - taskDuration) / elasticTasks
+    case None => None
   }
 
+  def scheduledTasks = moldableTasks - unscheduledTasks
+
   // For Spark
-  def scheduledTasks = getNumTasks - getUnscheduledTasks
   def coresGranted = cpusPerTask * scheduledTasks
   def coresLeft = math.max(0, requestedCores - coresGranted)
 
-  def cpusStillNeeded: Double = cpusPerTask * getUnscheduledTasks
-  def memStillNeeded: Double = memPerTask * getUnscheduledTasks
+  def cpusStillNeeded: Double = cpusPerTask * unscheduledTasks
+  def memStillNeeded: Double = memPerTask * unscheduledTasks
 
   // Calculate the maximum number of this jobs tasks that can fit into
   // the specified resources
@@ -1123,9 +1222,17 @@ case class Job(id: Long,
       val maxTasksThatWillFitByMem = math.round(memChoppedToTaskSize / memPerTask)
       val maxTasksThatWillFit = math.min(maxTasksThatWillFitByCpu,
                                          maxTasksThatWillFitByMem)
-      math.min(getUnscheduledTasks, maxTasksThatWillFit.toInt)
+      math.min(unscheduledTasks, maxTasksThatWillFit.toInt)
     }
   }
+
+  // We cannot use this function for the Zoe Scheduler due to the fact that
+  // jobs are not removed from the queue and then re-queued, thus the value
+  // in timeInQueueTillFullyScheduled and timeInQueueTillFirstScheduled will
+  // be uncorrect.
+  // Notherless, using numSchedulingAttempts to check if the first task has been
+  // scheduled is wrong, since a schedulingAttempts might not schedule any tasks
+  // at all
   def updateTimeInQueueStats(currentTime: Double) = {
     // Every time part of this job is partially scheduled, add to
     // the counter tracking how long it spends in the queue till
@@ -1220,6 +1327,17 @@ class Workload(val name: String,
     val scheduledJobs = jobs.filter(_.isFullyScheduled)
     if (scheduledJobs.nonEmpty) {
       val queueTimes = scheduledJobs.map(_.timeInQueueTillFullyScheduled).sum
+      queueTimes / scheduledJobs.length
+    } else {
+      -1.0
+    }
+  }
+
+  def avgJobRampUpTime: Double = {
+    // println("Computing avgJobRampUpTime.")
+    val scheduledJobs = jobs.filter(_.isFullyScheduled)
+    if (scheduledJobs.nonEmpty) {
+      val queueTimes = scheduledJobs.map(job => job.timeInQueueTillFullyScheduled - job.timeInQueueTillFirstScheduled).sum
       queueTimes / scheduledJobs.length
     } else {
       -1.0
@@ -1362,18 +1480,6 @@ trait WorkloadGenerator {
                   maxMem: Option[Double] = None,
                   updatedAvgJobInterarrivalTime: Option[Double] = None)
                  : Workload
-
-  /**
-  * Update the jobs inside the workloads with the new interarrival time
-  *
-  * @param workload The workload to update
-  * @param timeWindow The simulation run time (window of the workload)
-  * @param updatedAvgJobInterarrivalTime The new job interarrival time
-  */
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit
 }
 
 /**

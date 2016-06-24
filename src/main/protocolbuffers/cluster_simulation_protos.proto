@@ -49,6 +49,7 @@ message ExperimentResultSet {
         optional double mem_per_task = 3;
         optional double cpu_per_task = 4;
         optional double task_duration = 5;
+        optional double num_tasks_moldable = 6;
       }
     }
 
@@ -92,6 +93,7 @@ message ExperimentResultSet {
         optional double num_task_scheduling_attempts_99_percentile = 14;
         optional double avg_job_execution_time = 15;
         optional double avg_job_completion_time = 16;
+        optional double avg_job_ramp_up_time = 17;
       }
 
       message SchedulerStats {

@@ -27,7 +27,6 @@
 bin_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CLUSTER_SIM_HOME="${bin_dir}/.."
 echo "CLUSTER_SIM_HOME is ${CLUSTER_SIM_HOME}"
-cd ${CLUSTER_SIM_HOME}/src/main/python/graphing-scripts
 
 function usage
 {
@@ -41,6 +40,7 @@ if [ $# -eq 0 ]; then
 fi
 
 input_dir=$1
+
 shift
 echo "input_dir set as ${input_dir}"
 # do_png should be "" or "png"
@@ -99,7 +99,7 @@ function graph_experiment() {
     if [[ ${mode} -eq 1 ]]; then
       out_dir="${input_dir}/graphs/paper"
     else
-      out_dir="${input_dir}/graphs"
+      out_dir="${input_dir}/"
     fi
 
     # Figure out which simulator type this protobuff came from.
@@ -146,7 +146,7 @@ function graph_experiment() {
       echo Allocation Mode is ${allocation_mode}.
 
       for envs_to_plot in ${env_sets_to_plot}; do
-        complete_out_dir=${out_dir}/${sim}/${pathness}/${allocation_mode}/${envs_to_plot}/${num_service_scheds}_service-${num_batch_scheds}_batch
+        complete_out_dir=${out_dir}/${sim}_${pathness}_${allocation_mode}_${envs_to_plot}_${num_service_scheds}_service-${num_batch_scheds}_batch
         mkdir -p ${complete_out_dir}
 #        echo 'PYTHONPATH=$PYTHONPATH:.. '"python ${plotting_script}" \
 #           "${complete_out_dir}"                                       \
@@ -162,6 +162,7 @@ function graph_experiment() {
   done
 }
 
+cd ${CLUSTER_SIM_HOME}/src/main/python/graphing-scripts
 PROTO_LIST=''
 echo capturing: ls ${input_dir}|grep protobuf
 ls ${input_dir} | grep protobuf

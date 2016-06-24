@@ -31,6 +31,7 @@ while getopts ":hr:v:ps:" opt; do
           ;;
         s)
           SWARM_PULL=1
+          SWARM_IP=$OPTARG
           ;;
     esac
 done

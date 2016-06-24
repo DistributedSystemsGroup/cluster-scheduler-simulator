@@ -14,8 +14,7 @@ class PrefillPbbTraceWorkloadGenerator(val workloadName: String,
                                        traceFileName: String)
   extends WorkloadGenerator {
   val logger = Logger.getLogger(this.getClass.getName)
-  assert(workloadName.equals("PrefillBatch") ||
-    workloadName.equals("PrefillService") ||
+  assert(workloadName.equals("PrefillBatch") || workloadName.equals("PrefillService") ||
     workloadName.equals("PrefillBatchService"))
 
   def newWorkload(timeWindow: Double,
@@ -61,13 +60,6 @@ class PrefillPbbTraceWorkloadGenerator(val workloadName: String,
           j.numTasks * j.memPerTask
         }).sum))
     workload
-  }
-
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit = this.synchronized {
-    //TODO(pace): implement the method
   }
 }
 
@@ -140,13 +132,6 @@ class ExpExpExpWorkloadGenerator(val workloadName: String,
       nextJobSubmissionTime += interarrivalTimeGenerator.sample()
     }
     workload
-  }
-
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit = this.synchronized {
-    //TODO(pace): implement the method
   }
 }
 
@@ -246,13 +231,6 @@ class InterarrivalTimeTraceExpExpWLGenerator(val workloadName: String,
     }
     assert(numJobs == workload.numJobs)
     workload
-  }
-
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit = this.synchronized {
-    //TODO(pace): implement the method
   }
 }
 
@@ -360,13 +338,6 @@ class TraceWLGenerator(val workloadName: String,
     }
     assert(numJobs == workload.numJobs)
     workload
-  }
-
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit = this.synchronized {
-    //TODO(pace): implement the method
   }
 }
 
@@ -504,42 +475,12 @@ class TraceAllWLGenerator(val workloadName: String,
     workload
   }
 
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit = this.synchronized {
-    // Reset the randomNumberGenerator using the global seed so that
-    // the same workload will be generated each time newWorkload is
-    // called with the same parameters. This will ensure that
-    // Experiments run in different threads will get the same
-    // workloads and be a bit more fair to compare to each other.
-    randomNumberGenerator.setSeed(Seed())
-    // update the list of jobs for the experiment runTime window
-    // using the current WorkloadGenerator.
-    var nextJobSubmissionTime = getQuantile(interarrivalDist,
-      randomNumberGenerator.nextFloat)
-    for(job <- workload.getJobs) {
-      if (nextJobSubmissionTime < timeWindow) {
-        job.submitted = nextJobSubmissionTime
-      }
-      // For this type of WorkloadGenerator in which interarrival rate is
-      // sampled from an empirical distribution, the
-      // updatedAvgJobInterarrivalTime parameter represents a scaling factor
-      // for the value sampled from the distribution.
-      val newinterArrivalTime = updatedAvgJobInterarrivalTime.getOrElse(1.0) *
-        getQuantile(interarrivalDist,
-          randomNumberGenerator.nextFloat)
-      if (newinterArrivalTime + nextJobSubmissionTime < timeWindow)
-        nextJobSubmissionTime += newinterArrivalTime
-    }
-  }
-
   logger.info("Done generating %s Workload.\n".format(workloadName))
 }
 
 /**
-* Generates jobs at a uniform rate, of a uniform size.
-*/
+  * Generates jobs at a uniform rate, of a uniform size.
+  */
 class UniformWorkloadGenerator(val workloadName: String,
                                initJobInterarrivalTime: Double,
                                tasksPerJob: Int,
@@ -576,13 +517,6 @@ class UniformWorkloadGenerator(val workloadName: String,
     }
     workload
   }
-
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit = this.synchronized {
-    //TODO(pace): implement the method
-  }
 }
 
 /**
@@ -604,7 +538,7 @@ class TraceAllZoeWLGenerator(val workloadName: String,
                              prefillTraceFileName: String,
                              maxCpusPerTask: Double,
                              maxMemPerTask: Double,
-                             maxJobsPerWorkload: Int = 10000)
+                             jobsPerWorkload: Int = 10000)
   extends WorkloadGenerator {
   val logger = Logger.getLogger(this.getClass.getName)
   logger.info("Generating %s Workload...".format(workloadName))
@@ -613,12 +547,8 @@ class TraceAllZoeWLGenerator(val workloadName: String,
   // use to generate random job interarrival times.
   var interarrivalDist: Array[Double] =
     DistCache.getDistribution(workloadName, interarrivalTraceFileName)
-
   var tasksPerJobDist: Array[Double] =
     DistCache.getDistribution(workloadName, tasksPerJobTraceFileName)
-
-  //  var tasksPerJobDist: Array[Double] =
-  //      (1 until Workloads.maxTasksPerJob).toArray.map(_.toDouble)
 
 
   var jobDurationDist: Array[Double] =
@@ -649,42 +579,34 @@ class TraceAllZoeWLGenerator(val workloadName: String,
     }
   }
 
-  def newJob(submissionTime: Double): Job = {
+  def newJob(submissionTime: Double, moldableTaskPercentage: Int): Job = {
     // Don't allow jobs with duration 0.
     var dur = 0.0
     while (dur <= 0.0)
       dur = getQuantile(jobDurationDist, randomNumberGenerator.nextFloat)
     // Use ceil to avoid jobs with 0 tasks.
-    val numTasks = math.ceil(getQuantile(tasksPerJobDist,
-      randomNumberGenerator.nextFloat).toFloat).toInt
+    val numTasks = math.ceil(getQuantile(tasksPerJobDist, randomNumberGenerator.nextFloat).toFloat).toInt
     assert(numTasks != 0, "Jobs must have at least one task.")
     // Sample from the empirical distribution until we get task
     // cpu and mem sizes that are small enough.
-    var cpusPerTask = 0.7 * getQuantile(cpusPerTaskDist,
-      randomNumberGenerator.nextFloat).toFloat
+    var cpusPerTask = 0.7 * getQuantile(cpusPerTaskDist, randomNumberGenerator.nextFloat).toFloat
     while (cpusPerTask.isNaN || cpusPerTask >= maxCpusPerTask) {
-      cpusPerTask = 0.7 * getQuantile(cpusPerTaskDist,
-        randomNumberGenerator.nextFloat).toFloat
+      cpusPerTask = 0.7 * getQuantile(cpusPerTaskDist, randomNumberGenerator.nextFloat).toFloat
     }
-    var memPerTask = 0.7 * getQuantile(memPerTaskDist,
-      randomNumberGenerator.nextFloat).toFloat
+    var memPerTask = 0.7 * getQuantile(memPerTaskDist, randomNumberGenerator.nextFloat).toFloat
     while (memPerTask.isNaN || memPerTask >= maxMemPerTask) {
-      memPerTask = 0.7 * getQuantile(memPerTaskDist,
-        randomNumberGenerator.nextFloat).toFloat
+      memPerTask = 0.7 * getQuantile(memPerTaskDist, randomNumberGenerator.nextFloat).toFloat
     }
     logger.debug("New Job with %f cpusPerTask and %f memPerTask".format(cpusPerTask, memPerTask))
-    val job = Job(UniqueIDGenerator.getUniqueID,
+    Job(UniqueIDGenerator.getUniqueID,
       submissionTime,
       numTasks,
       dur,
       workloadName,
       cpusPerTask,
-      memPerTask)
-
-    // We set the number of moldable tasks that compose the Zoe Applications
-    job.setMoldableTasksPercentage(randomNumberGenerator.nextInt(100))
-
-    job
+      memPerTask,
+      moldableTaskPercentage = Option(moldableTaskPercentage)
+    )
   }
 
   def newWorkload(timeWindow: Double,
@@ -704,12 +626,12 @@ class TraceAllZoeWLGenerator(val workloadName: String,
     val workload = new Workload(workloadName)
     // create a new list of jobs for the experiment runTime window
     // using the current WorkloadGenerator.
-    var nextJobSubmissionTime = getQuantile(interarrivalDist,
-      randomNumberGenerator.nextFloat)
+    var nextJobSubmissionTime = getQuantile(interarrivalDist, randomNumberGenerator.nextFloat)
     var numJobs = 0
-    while (numJobs < maxJobsPerWorkload) {
+    // We will fill the workload with the number of job asked
+    while (numJobs < jobsPerWorkload) {
       if (nextJobSubmissionTime < timeWindow) {
-        val job = newJob(nextJobSubmissionTime)
+        val job = newJob(nextJobSubmissionTime, randomNumberGenerator.nextInt(101))
         assert(job.workloadName == workload.name)
         workload.addJob(job)
         numJobs += 1
@@ -719,8 +641,7 @@ class TraceAllZoeWLGenerator(val workloadName: String,
       // updatedAvgJobInterarrivalTime parameter represents a scaling factor
       // for the value sampled from the distribution.
       val newinterArrivalTime = updatedAvgJobInterarrivalTime.getOrElse(1.0) *
-        getQuantile(interarrivalDist,
-          randomNumberGenerator.nextFloat)
+        getQuantile(interarrivalDist, randomNumberGenerator.nextFloat)
       if (newinterArrivalTime + nextJobSubmissionTime < timeWindow)
         nextJobSubmissionTime += newinterArrivalTime
     }
@@ -728,34 +649,62 @@ class TraceAllZoeWLGenerator(val workloadName: String,
     workload
   }
 
-  def updateJobsArrivalTime(workload: Workload,
-                            timeWindow: Double,
-                            updatedAvgJobInterarrivalTime: Option[Double] = None
-                           ): Unit = this.synchronized {
-    // Reset the randomNumberGenerator using the global seed so that
-    // the same workload will be generated each time newWorkload is
-    // called with the same parameters. This will ensure that
-    // Experiments run in different threads will get the same
-    // workloads and be a bit more fair to compare to each other.
-    randomNumberGenerator.setSeed(Seed())
-    // update the list of jobs for the experiment runTime window
-    // using the current WorkloadGenerator.
-    var nextJobSubmissionTime = getQuantile(interarrivalDist,
-      randomNumberGenerator.nextFloat)
-    for(job <- workload.getJobs) {
-      if (nextJobSubmissionTime < timeWindow) {
-        job.submitted = nextJobSubmissionTime
-      }
-      // For this type of WorkloadGenerator in which interarrival rate is
-      // sampled from an empirical distribution, the
-      // updatedAvgJobInterarrivalTime parameter represents a scaling factor
-      // for the value sampled from the distribution.
-      val newinterArrivalTime = updatedAvgJobInterarrivalTime.getOrElse(1.0) *
-        getQuantile(interarrivalDist,
-          randomNumberGenerator.nextFloat)
-      if (newinterArrivalTime + nextJobSubmissionTime < timeWindow)
-        nextJobSubmissionTime += newinterArrivalTime
+  logger.info("Done generating %s Workload.\n".format(workloadName))
+}
+
+/**
+  * Generates jobs at a uniform rate, of a uniform size.
+  */
+class UniformZoeWorkloadGenerator(
+                                   val workloadName: String,
+                                   initJobInterarrivalTime: Double,
+                                   tasksPerJob: Int,
+                                   jobDuration: Double,
+                                   cpusPerTask: Double,
+                                   memPerTask: Double,
+                                   moldableTaskPercentage: Int,
+                                   jobsPerWorkload: Int = 10000,
+                                   isRigid: Boolean = false)
+  extends WorkloadGenerator {
+
+  val logger = Logger.getLogger(this.getClass.getName)
+  logger.info("Generating %s Workload...".format(workloadName))
+
+  def newJob(submissionTime: Double): Job = {
+    Job(UniqueIDGenerator.getUniqueID,
+      submissionTime,
+      tasksPerJob,
+      jobDuration,
+      workloadName,
+      cpusPerTask,
+      memPerTask,
+      isRigid = isRigid,
+      moldableTaskPercentage = Option(moldableTaskPercentage)
+    )
+  }
+
+  def newWorkload(timeWindow: Double,
+                  maxCpus: Option[Double] = None,
+                  maxMem: Option[Double] = None,
+                  updatedAvgJobInterarrivalTime: Option[Double] = None): Workload = this.synchronized {
+    assert(timeWindow >= 0)
+    val jobInterArrivalTime = updatedAvgJobInterarrivalTime.getOrElse(1.0) * initJobInterarrivalTime
+    val workload = new Workload(workloadName)
+    var nextJobSubmissionTime = 0.0
+    var numJobs = 0
+    while (numJobs < jobsPerWorkload && nextJobSubmissionTime < timeWindow) {
+      val job = newJob(nextJobSubmissionTime)
+      assert(job.workloadName == workload.name)
+      workload.addJob(job)
+      numJobs += 1
+      nextJobSubmissionTime += jobInterArrivalTime
     }
+
+    if(numJobs < jobsPerWorkload)
+      logger.warn(("The number of job generated for workload %s is lower (%d) than asked (%d)." +
+        "The time windows for the simulation is not large enough. Job inter-arrival time was set to %f.")
+        .format(workload.name, numJobs, jobsPerWorkload, jobInterArrivalTime))
+    workload
   }
 
   logger.info("Done generating %s Workload.\n".format(workloadName))

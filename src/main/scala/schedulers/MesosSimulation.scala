@@ -156,6 +156,7 @@ class MesosScheduler(name: String,
       hashCode(),
       constantThinkTimes.mkString(";"),
       perTaskThinkTimes.mkString(";")))
+
   // TODO(andyk): Clean up these <subclass>Simulator classes
   //              by templatizing the Scheduler class and having only
   //              one simulator of the correct type, instead of one

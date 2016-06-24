@@ -66,56 +66,13 @@ object Workloads {
     globalMemPerMachine)
 
 
-  /**
-    * Set up WorkloadDescs, containing generators of workloads and
-    * pre-fill workloads based on measurements of cells/workloads.
-    */
-//  val workloadGeneratorBatch =
-//    new ExpExpExpWorkloadGenerator(workloadName = "Batch".intern(),
-//      initAvgJobInterarrivalTime = 10.0,
-//      avgTasksPerJob = 100.0,
-//      avgJobDuration = 100.0,
-//      avgCpusPerTask = 1.0,
-//      avgMemPerTask = 2.0)
-//  val workloadGeneratorService =
-//    new ExpExpExpWorkloadGenerator(workloadName = "Service".intern(),
-//      initAvgJobInterarrivalTime = 20.0,
-//      avgTasksPerJob = 10.0,
-//      avgJobDuration = 500.0,
-//      avgCpusPerTask = 1.0,
-//      avgMemPerTask = 2.0)
-//  val workloadDesc = WorkloadDesc(cell = "example",
-//    assignmentPolicy = "CMB_PBB",
-//    workloadGenerators =
-//      workloadGeneratorBatch :: workloadGeneratorService :: Nil,
-//    cellStateDesc = cellStateDesc)
-
-
   // example pre-fill workload generators.
   val prefillTraceFileName = "traces/init-cluster-state.log"
   assert(new File(prefillTraceFileName).exists(), "File " + prefillTraceFileName + " does not exist.")
 
-  //  val batchPrefillTraceWLGenerator =
-  //      new PrefillPbbTraceWorkloadGenerator("PrefillBatch",
-  //        prefillTraceFileName)
-  //  val servicePrefillTraceWLGenerator =
-  //      new PrefillPbbTraceWorkloadGenerator("PrefillService",
-  //        prefillTraceFileName)
-  val batchServicePrefillTraceWLGenerator =
-    new PrefillPbbTraceWorkloadGenerator("PrefillBatchService",
-      prefillTraceFileName)
-//
-//  val workloadPrefillDesc =
-//    WorkloadDesc(cell = "example",
-//      assignmentPolicy = "CMB_PBB",
-//      workloadGenerators =
-//        workloadGeneratorBatch ::
-//          workloadGeneratorService ::
-//          Nil,
-//      cellStateDesc = cellStateDesc,
-//      prefillWorkloadGenerators =
-//        List(batchServicePrefillTraceWLGenerator))
 
+  val batchServicePrefillTraceWLGenerator =
+    new PrefillPbbTraceWorkloadGenerator("PrefillBatchService", prefillTraceFileName)
 
 
 
@@ -134,17 +91,17 @@ object Workloads {
   // A workload based on traces of interarrival times, tasks-per-job,
   // and job duration. Task shapes now based on pre-fill traces.
   val workloadGeneratorTraceAllBatch =
-    new TraceAllWLGenerator(
+    new TraceAllZoeWLGenerator(
       "Batch".intern(),
       interarrivalTraceFileName,
       numTasksTraceFileName,
       jobDurationTraceFileName,
       prefillTraceFileName,
-      maxCpusPerTask = globalMaxCpusPerTask, // Machines in example cluster have 4 CPUs.
-      maxMemPerTask = globalMaxMemPerTask) // Machines in example cluster have 16GB mem.
+      maxCpusPerTask = globalMaxCpusPerTask,
+      maxMemPerTask = globalMaxMemPerTask)
 
   val workloadGeneratorTraceAllService =
-    new TraceAllWLGenerator(
+    new TraceAllZoeWLGenerator(
       "Service".intern(),
       interarrivalTraceFileName,
       numTasksTraceFileName,
@@ -152,6 +109,28 @@ object Workloads {
       prefillTraceFileName,
       maxCpusPerTask = globalMaxCpusPerTask,
       maxMemPerTask = globalMaxMemPerTask)
+
+//  val workloadGeneratorTraceAllBatch =
+//    new UniformZoeWorkloadGenerator(
+//      "Batch".intern(),
+//      initJobInterarrivalTime = 1,
+//      tasksPerJob = 50,
+//      jobDuration = 200,
+//      cpusPerTask = 2,
+//      memPerTask = 16,
+//      moldableTaskPercentage = 40,
+//      jobsPerWorkload = 100)
+//
+//  val workloadGeneratorTraceAllService =
+//    new UniformZoeWorkloadGenerator(
+//      "Service".intern(),
+//      initJobInterarrivalTime = 1,
+//      tasksPerJob = 10,
+//      jobDuration = 2000,
+//      cpusPerTask = 2,
+//      memPerTask = 16,
+//      moldableTaskPercentage = 100,
+//      jobsPerWorkload = 100)
 
   val eurecomCellTraceAllWorkloadPrefillDesc =
     WorkloadDesc(
@@ -161,9 +140,10 @@ object Workloads {
         workloadGeneratorTraceAllBatch ::
           workloadGeneratorTraceAllService ::
           Nil,
-      cellStateDesc = eurecomCellStateDesc,
+      cellStateDesc = eurecomCellStateDesc ,
       prefillWorkloadGenerators =
-        List(batchServicePrefillTraceWLGenerator))
+        List(batchServicePrefillTraceWLGenerator)
+    )
 
   val tenEurecomCellTraceAllWorkloadPrefillDesc =
     WorkloadDesc(

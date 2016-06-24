@@ -126,6 +126,8 @@ object Simulation{
 
     val pickinessRange = fullPickinessRange
     val lambdaRange = fullLambdaRange
+//    val lambdaRange = 0.01 :: 0.02 :: Nil
+//    val lambdaRange = 1.0 :: Nil
 
 //    val interArrivalScaleRange = 0.009 :: 0.01 :: 0.02 :: 0.1 :: 0.2 :: 1.0 :: Nil
     val interArrivalScaleRange = lambdaRange.map(1/_)
@@ -142,7 +144,7 @@ object Simulation{
     val sweepPickiness = false
     val sweepLambda = true
 
-    val allocationModes = List[AllocationModes.Value](AllocationModes.Incremental)//, "all")
+    val allocationModes = List[AllocationModes.Value](AllocationModes.All) //, AllocationModes.Incremental)
 
     val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd-HH-mm-ss")
     /**
@@ -1048,7 +1050,8 @@ object Simulation{
       val singlePathSetup = ("single", Map("Zoe" -> List("Service")))
       val multiPathSetup =
         ("multi", Map("Zoe" -> List("Service", "Batch")))
-      List(singlePathSetup, multiPathSetup).foreach {
+//      List(singlePathSetup, multiPathSetup).foreach {
+      List(multiPathSetup).foreach{
         case (multiOrSingle, schedulerWorkloadsMap) =>
           zoeSimulatorDescs.foreach(zoeSimulatorDesc => {
             if (sweepC) {

@@ -22,14 +22,31 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import errno
+import os
+
 from matplotlib import use, rc
 
 use('Agg')
 import matplotlib.pyplot as plt
 
 
+def mkdir_p(path):
+    path = path.replace(" ", "_")
+    dir_path = os.path.dirname(path)
+    try:
+        os.makedirs(dir_path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(dir_path):
+            pass
+        else:
+            raise
+    return path
+
+
 # plot saving utility function
 def writeout(filename_base, formats=['pdf']):
+    mkdir_p(os.path.dirname(filename_base))
     for fmt in formats:
         plt.savefig("%s.%s" % (filename_base, fmt), format=fmt, bbox_inches='tight')
 

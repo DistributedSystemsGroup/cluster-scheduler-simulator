@@ -8,10 +8,10 @@ public final class ClusterSimulationProtos {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
-  public interface ExperimentResultSetOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
+  public interface ExperimentResultSetOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet)
+      com.google.protobuf.MessageOrBuilder {
 
-    // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv experiment_env = 1;
     /**
      * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv experiment_env = 1;</code>
      */
@@ -40,8 +40,9 @@ public final class ClusterSimulationProtos {
    * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet}
    */
   public static final class ExperimentResultSet extends
-      com.google.protobuf.GeneratedMessage
-      implements ExperimentResultSetOrBuilder {
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet)
+      ExperimentResultSetOrBuilder {
     // Use ExperimentResultSet.newBuilder() to construct.
     private ExperimentResultSet(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
@@ -137,10 +138,10 @@ public final class ClusterSimulationProtos {
       return PARSER;
     }
 
-    public interface ExperimentEnvOrBuilder
-        extends com.google.protobuf.MessageOrBuilder {
+    public interface ExperimentEnvOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv)
+        com.google.protobuf.MessageOrBuilder {
 
-      // optional string cell_name = 1;
       /**
        * <code>optional string cell_name = 1;</code>
        */
@@ -155,7 +156,6 @@ public final class ClusterSimulationProtos {
       com.google.protobuf.ByteString
           getCellNameBytes();
 
-      // optional string workload_split_type = 2;
       /**
        * <code>optional string workload_split_type = 2;</code>
        */
@@ -170,7 +170,6 @@ public final class ClusterSimulationProtos {
       com.google.protobuf.ByteString
           getWorkloadSplitTypeBytes();
 
-      // optional double run_time = 3;
       /**
        * <code>optional double run_time = 3;</code>
        */
@@ -180,7 +179,6 @@ public final class ClusterSimulationProtos {
        */
       double getRunTime();
 
-      // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult experiment_result = 4;
       /**
        * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult experiment_result = 4;</code>
        */
@@ -205,7 +203,6 @@ public final class ClusterSimulationProtos {
       ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResultOrBuilder getExperimentResultOrBuilder(
           int index);
 
-      // optional bool is_prefilled = 5 [default = false];
       /**
        * <code>optional bool is_prefilled = 5 [default = false];</code>
        */
@@ -215,7 +212,6 @@ public final class ClusterSimulationProtos {
        */
       boolean getIsPrefilled();
 
-      // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats common_workload_stats = 6;
       /**
        * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats common_workload_stats = 6;</code>
        *
@@ -268,8 +264,9 @@ public final class ClusterSimulationProtos {
      * </pre>
      */
     public static final class ExperimentEnv extends
-        com.google.protobuf.GeneratedMessage
-        implements ExperimentEnvOrBuilder {
+        com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv)
+        ExperimentEnvOrBuilder {
       // Use ExperimentEnv.newBuilder() to construct.
       private ExperimentEnv(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
         super(builder);
@@ -316,13 +313,15 @@ public final class ClusterSimulationProtos {
                 break;
               }
               case 10: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000001;
-                cellName_ = input.readBytes();
+                cellName_ = bs;
                 break;
               }
               case 18: {
+                com.google.protobuf.ByteString bs = input.readBytes();
                 bitField0_ |= 0x00000002;
-                workloadSplitType_ = input.readBytes();
+                workloadSplitType_ = bs;
                 break;
               }
               case 25: {
@@ -396,10 +395,10 @@ public final class ClusterSimulationProtos {
         return PARSER;
       }
 
-      public interface CommonWorkloadStatsOrBuilder
-          extends com.google.protobuf.MessageOrBuilder {
+      public interface CommonWorkloadStatsOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats)
+          com.google.protobuf.MessageOrBuilder {
 
-        // optional string workload_name = 1;
         /**
          * <code>optional string workload_name = 1;</code>
          */
@@ -414,7 +413,6 @@ public final class ClusterSimulationProtos {
         com.google.protobuf.ByteString
             getWorkloadNameBytes();
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats job_stats = 2;
         /**
          * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats job_stats = 2;</code>
          */
@@ -443,8 +441,9 @@ public final class ClusterSimulationProtos {
        * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats}
        */
       public static final class CommonWorkloadStats extends
-          com.google.protobuf.GeneratedMessage
-          implements CommonWorkloadStatsOrBuilder {
+          com.google.protobuf.GeneratedMessage implements
+          // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats)
+          CommonWorkloadStatsOrBuilder {
         // Use CommonWorkloadStats.newBuilder() to construct.
         private CommonWorkloadStats(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
           super(builder);
@@ -491,8 +490,9 @@ public final class ClusterSimulationProtos {
                   break;
                 }
                 case 10: {
+                  com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000001;
-                  workloadName_ = input.readBytes();
+                  workloadName_ = bs;
                   break;
                 }
                 case 18: {
@@ -545,10 +545,10 @@ public final class ClusterSimulationProtos {
           return PARSER;
         }
 
-        public interface JobStatsOrBuilder
-            extends com.google.protobuf.MessageOrBuilder {
+        public interface JobStatsOrBuilder extends
+            // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats)
+            com.google.protobuf.MessageOrBuilder {
 
-          // optional int64 id = 1;
           /**
            * <code>optional int64 id = 1;</code>
            */
@@ -558,7 +558,6 @@ public final class ClusterSimulationProtos {
            */
           long getId();
 
-          // optional int32 num_tasks = 2;
           /**
            * <code>optional int32 num_tasks = 2;</code>
            */
@@ -568,7 +567,6 @@ public final class ClusterSimulationProtos {
            */
           int getNumTasks();
 
-          // optional double mem_per_task = 3;
           /**
            * <code>optional double mem_per_task = 3;</code>
            */
@@ -578,7 +576,6 @@ public final class ClusterSimulationProtos {
            */
           double getMemPerTask();
 
-          // optional double cpu_per_task = 4;
           /**
            * <code>optional double cpu_per_task = 4;</code>
            */
@@ -588,7 +585,6 @@ public final class ClusterSimulationProtos {
            */
           double getCpuPerTask();
 
-          // optional double task_duration = 5;
           /**
            * <code>optional double task_duration = 5;</code>
            */
@@ -597,6 +593,15 @@ public final class ClusterSimulationProtos {
            * <code>optional double task_duration = 5;</code>
            */
           double getTaskDuration();
+
+          /**
+           * <code>optional double num_tasks_moldable = 6;</code>
+           */
+          boolean hasNumTasksMoldable();
+          /**
+           * <code>optional double num_tasks_moldable = 6;</code>
+           */
+          double getNumTasksMoldable();
         }
         /**
          * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats}
@@ -606,8 +611,9 @@ public final class ClusterSimulationProtos {
          * </pre>
          */
         public static final class JobStats extends
-            com.google.protobuf.GeneratedMessage
-            implements JobStatsOrBuilder {
+            com.google.protobuf.GeneratedMessage implements
+            // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats)
+            JobStatsOrBuilder {
           // Use JobStats.newBuilder() to construct.
           private JobStats(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -678,6 +684,11 @@ public final class ClusterSimulationProtos {
                     taskDuration_ = input.readDouble();
                     break;
                   }
+                  case 49: {
+                    bitField0_ |= 0x00000020;
+                    numTasksMoldable_ = input.readDouble();
+                    break;
+                  }
                 }
               }
             } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -718,7 +729,6 @@ public final class ClusterSimulationProtos {
           }
 
           private int bitField0_;
-          // optional int64 id = 1;
           public static final int ID_FIELD_NUMBER = 1;
           private long id_;
           /**
@@ -734,7 +744,6 @@ public final class ClusterSimulationProtos {
             return id_;
           }
 
-          // optional int32 num_tasks = 2;
           public static final int NUM_TASKS_FIELD_NUMBER = 2;
           private int numTasks_;
           /**
@@ -750,7 +759,6 @@ public final class ClusterSimulationProtos {
             return numTasks_;
           }
 
-          // optional double mem_per_task = 3;
           public static final int MEM_PER_TASK_FIELD_NUMBER = 3;
           private double memPerTask_;
           /**
@@ -766,7 +774,6 @@ public final class ClusterSimulationProtos {
             return memPerTask_;
           }
 
-          // optional double cpu_per_task = 4;
           public static final int CPU_PER_TASK_FIELD_NUMBER = 4;
           private double cpuPerTask_;
           /**
@@ -782,7 +789,6 @@ public final class ClusterSimulationProtos {
             return cpuPerTask_;
           }
 
-          // optional double task_duration = 5;
           public static final int TASK_DURATION_FIELD_NUMBER = 5;
           private double taskDuration_;
           /**
@@ -798,17 +804,34 @@ public final class ClusterSimulationProtos {
             return taskDuration_;
           }
 
+          public static final int NUM_TASKS_MOLDABLE_FIELD_NUMBER = 6;
+          private double numTasksMoldable_;
+          /**
+           * <code>optional double num_tasks_moldable = 6;</code>
+           */
+          public boolean hasNumTasksMoldable() {
+            return ((bitField0_ & 0x00000020) == 0x00000020);
+          }
+          /**
+           * <code>optional double num_tasks_moldable = 6;</code>
+           */
+          public double getNumTasksMoldable() {
+            return numTasksMoldable_;
+          }
+
           private void initFields() {
             id_ = 0L;
             numTasks_ = 0;
             memPerTask_ = 0D;
             cpuPerTask_ = 0D;
             taskDuration_ = 0D;
+            numTasksMoldable_ = 0D;
           }
           private byte memoizedIsInitialized = -1;
           public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1) return isInitialized == 1;
+            if (isInitialized == 1) return true;
+            if (isInitialized == 0) return false;
 
             memoizedIsInitialized = 1;
             return true;
@@ -831,6 +854,9 @@ public final class ClusterSimulationProtos {
             }
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
               output.writeDouble(5, taskDuration_);
+            }
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
+              output.writeDouble(6, numTasksMoldable_);
             }
             getUnknownFields().writeTo(output);
           }
@@ -860,6 +886,10 @@ public final class ClusterSimulationProtos {
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
               size += com.google.protobuf.CodedOutputStream
                 .computeDoubleSize(5, taskDuration_);
+            }
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
+              size += com.google.protobuf.CodedOutputStream
+                .computeDoubleSize(6, numTasksMoldable_);
             }
             size += getUnknownFields().getSerializedSize();
             memoizedSerializedSize = size;
@@ -947,8 +977,9 @@ public final class ClusterSimulationProtos {
            * </pre>
            */
           public static final class Builder extends
-              com.google.protobuf.GeneratedMessage.Builder<Builder>
-             implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStatsOrBuilder {
+              com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+              // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats)
+              ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStatsOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor
                 getDescriptor() {
               return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_descriptor;
@@ -991,6 +1022,8 @@ public final class ClusterSimulationProtos {
               bitField0_ = (bitField0_ & ~0x00000008);
               taskDuration_ = 0D;
               bitField0_ = (bitField0_ & ~0x00000010);
+              numTasksMoldable_ = 0D;
+              bitField0_ = (bitField0_ & ~0x00000020);
               return this;
             }
 
@@ -1039,6 +1072,10 @@ public final class ClusterSimulationProtos {
                 to_bitField0_ |= 0x00000010;
               }
               result.taskDuration_ = taskDuration_;
+              if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+                to_bitField0_ |= 0x00000020;
+              }
+              result.numTasksMoldable_ = numTasksMoldable_;
               result.bitField0_ = to_bitField0_;
               onBuilt();
               return result;
@@ -1070,6 +1107,9 @@ public final class ClusterSimulationProtos {
               if (other.hasTaskDuration()) {
                 setTaskDuration(other.getTaskDuration());
               }
+              if (other.hasNumTasksMoldable()) {
+                setNumTasksMoldable(other.getNumTasksMoldable());
+              }
               this.mergeUnknownFields(other.getUnknownFields());
               return this;
             }
@@ -1097,7 +1137,6 @@ public final class ClusterSimulationProtos {
             }
             private int bitField0_;
 
-            // optional int64 id = 1;
             private long id_ ;
             /**
              * <code>optional int64 id = 1;</code>
@@ -1130,7 +1169,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int32 num_tasks = 2;
             private int numTasks_ ;
             /**
              * <code>optional int32 num_tasks = 2;</code>
@@ -1163,7 +1201,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double mem_per_task = 3;
             private double memPerTask_ ;
             /**
              * <code>optional double mem_per_task = 3;</code>
@@ -1196,7 +1233,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double cpu_per_task = 4;
             private double cpuPerTask_ ;
             /**
              * <code>optional double cpu_per_task = 4;</code>
@@ -1229,7 +1265,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double task_duration = 5;
             private double taskDuration_ ;
             /**
              * <code>optional double task_duration = 5;</code>
@@ -1262,6 +1297,38 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
+            private double numTasksMoldable_ ;
+            /**
+             * <code>optional double num_tasks_moldable = 6;</code>
+             */
+            public boolean hasNumTasksMoldable() {
+              return ((bitField0_ & 0x00000020) == 0x00000020);
+            }
+            /**
+             * <code>optional double num_tasks_moldable = 6;</code>
+             */
+            public double getNumTasksMoldable() {
+              return numTasksMoldable_;
+            }
+            /**
+             * <code>optional double num_tasks_moldable = 6;</code>
+             */
+            public Builder setNumTasksMoldable(double value) {
+              bitField0_ |= 0x00000020;
+              numTasksMoldable_ = value;
+              onChanged();
+              return this;
+            }
+            /**
+             * <code>optional double num_tasks_moldable = 6;</code>
+             */
+            public Builder clearNumTasksMoldable() {
+              bitField0_ = (bitField0_ & ~0x00000020);
+              numTasksMoldable_ = 0D;
+              onChanged();
+              return this;
+            }
+
             // @@protoc_insertion_point(builder_scope:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats)
           }
 
@@ -1274,7 +1341,6 @@ public final class ClusterSimulationProtos {
         }
 
         private int bitField0_;
-        // optional string workload_name = 1;
         public static final int WORKLOAD_NAME_FIELD_NUMBER = 1;
         private java.lang.Object workloadName_;
         /**
@@ -1317,7 +1383,6 @@ public final class ClusterSimulationProtos {
           }
         }
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats job_stats = 2;
         public static final int JOB_STATS_FIELD_NUMBER = 2;
         private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats> jobStats_;
         /**
@@ -1360,7 +1425,8 @@ public final class ClusterSimulationProtos {
         private byte memoizedIsInitialized = -1;
         public final boolean isInitialized() {
           byte isInitialized = memoizedIsInitialized;
-          if (isInitialized != -1) return isInitialized == 1;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
 
           memoizedIsInitialized = 1;
           return true;
@@ -1474,8 +1540,9 @@ public final class ClusterSimulationProtos {
          * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats}
          */
         public static final class Builder extends
-            com.google.protobuf.GeneratedMessage.Builder<Builder>
-           implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStatsOrBuilder {
+            com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats)
+            ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStatsOrBuilder {
           public static final com.google.protobuf.Descriptors.Descriptor
               getDescriptor() {
             return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor;
@@ -1632,7 +1699,6 @@ public final class ClusterSimulationProtos {
           }
           private int bitField0_;
 
-          // optional string workload_name = 1;
           private java.lang.Object workloadName_ = "";
           /**
            * <code>optional string workload_name = 1;</code>
@@ -1646,9 +1712,12 @@ public final class ClusterSimulationProtos {
           public java.lang.String getWorkloadName() {
             java.lang.Object ref = workloadName_;
             if (!(ref instanceof java.lang.String)) {
-              java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                  .toStringUtf8();
-              workloadName_ = s;
+              com.google.protobuf.ByteString bs =
+                  (com.google.protobuf.ByteString) ref;
+              java.lang.String s = bs.toStringUtf8();
+              if (bs.isValidUtf8()) {
+                workloadName_ = s;
+              }
               return s;
             } else {
               return (java.lang.String) ref;
@@ -1706,7 +1775,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats job_stats = 2;
           private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats> jobStats_ =
             java.util.Collections.emptyList();
           private void ensureJobStatsIsMutable() {
@@ -1848,7 +1916,8 @@ public final class ClusterSimulationProtos {
               java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats.JobStats> values) {
             if (jobStatsBuilder_ == null) {
               ensureJobStatsIsMutable();
-              super.addAll(values, jobStats_);
+              com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                  values, jobStats_);
               onChanged();
             } else {
               jobStatsBuilder_.addAllMessages(values);
@@ -1957,10 +2026,10 @@ public final class ClusterSimulationProtos {
         // @@protoc_insertion_point(class_scope:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats)
       }
 
-      public interface ExperimentResultOrBuilder
-          extends com.google.protobuf.MessageOrBuilder {
+      public interface ExperimentResultOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult)
+          com.google.protobuf.MessageOrBuilder {
 
-        // optional double cell_state_avg_cpu_utilization = 1;
         /**
          * <code>optional double cell_state_avg_cpu_utilization = 1;</code>
          *
@@ -1978,7 +2047,6 @@ public final class ClusterSimulationProtos {
          */
         double getCellStateAvgCpuUtilization();
 
-        // optional double cell_state_avg_mem_utilization = 2;
         /**
          * <code>optional double cell_state_avg_mem_utilization = 2;</code>
          */
@@ -1988,7 +2056,6 @@ public final class ClusterSimulationProtos {
          */
         double getCellStateAvgMemUtilization();
 
-        // optional double cell_state_avg_cpu_locked = 3;
         /**
          * <code>optional double cell_state_avg_cpu_locked = 3;</code>
          *
@@ -2008,7 +2075,6 @@ public final class ClusterSimulationProtos {
          */
         double getCellStateAvgCpuLocked();
 
-        // optional double cell_state_avg_mem_locked = 4;
         /**
          * <code>optional double cell_state_avg_mem_locked = 4;</code>
          */
@@ -2018,7 +2084,6 @@ public final class ClusterSimulationProtos {
          */
         double getCellStateAvgMemLocked();
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats workload_stats = 5;
         /**
          * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats workload_stats = 5;</code>
          *
@@ -2063,7 +2128,6 @@ public final class ClusterSimulationProtos {
         ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStatsOrBuilder getWorkloadStatsOrBuilder(
             int index);
 
-        // optional string sweep_workload = 6;
         /**
          * <code>optional string sweep_workload = 6;</code>
          *
@@ -2090,7 +2154,6 @@ public final class ClusterSimulationProtos {
         com.google.protobuf.ByteString
             getSweepWorkloadBytes();
 
-        // optional double avg_job_interarrival_time = 7;
         /**
          * <code>optional double avg_job_interarrival_time = 7;</code>
          */
@@ -2100,7 +2163,6 @@ public final class ClusterSimulationProtos {
          */
         double getAvgJobInterarrivalTime();
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats scheduler_stats = 8;
         /**
          * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats scheduler_stats = 8;</code>
          *
@@ -2145,7 +2207,6 @@ public final class ClusterSimulationProtos {
         ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStatsOrBuilder getSchedulerStatsOrBuilder(
             int index);
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload sweep_scheduler_workload = 9;
         /**
          * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload sweep_scheduler_workload = 9;</code>
          *
@@ -2190,7 +2251,6 @@ public final class ClusterSimulationProtos {
         ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkloadOrBuilder getSweepSchedulerWorkloadOrBuilder(
             int index);
 
-        // optional double constant_think_time = 10;
         /**
          * <code>optional double constant_think_time = 10;</code>
          */
@@ -2200,7 +2260,6 @@ public final class ClusterSimulationProtos {
          */
         double getConstantThinkTime();
 
-        // optional double per_task_think_time = 11;
         /**
          * <code>optional double per_task_think_time = 11;</code>
          *
@@ -2222,8 +2281,9 @@ public final class ClusterSimulationProtos {
        * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult}
        */
       public static final class ExperimentResult extends
-          com.google.protobuf.GeneratedMessage
-          implements ExperimentResultOrBuilder {
+          com.google.protobuf.GeneratedMessage implements
+          // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult)
+          ExperimentResultOrBuilder {
         // Use ExperimentResult.newBuilder() to construct.
         private ExperimentResult(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
           super(builder);
@@ -2298,8 +2358,9 @@ public final class ClusterSimulationProtos {
                   break;
                 }
                 case 50: {
+                  com.google.protobuf.ByteString bs = input.readBytes();
                   bitField0_ |= 0x00000010;
-                  sweepWorkload_ = input.readBytes();
+                  sweepWorkload_ = bs;
                   break;
                 }
                 case 57: {
@@ -2381,10 +2442,10 @@ public final class ClusterSimulationProtos {
           return PARSER;
         }
 
-        public interface WorkloadStatsOrBuilder
-            extends com.google.protobuf.MessageOrBuilder {
+        public interface WorkloadStatsOrBuilder extends
+            // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats)
+            com.google.protobuf.MessageOrBuilder {
 
-          // optional string workload_name = 1;
           /**
            * <code>optional string workload_name = 1;</code>
            */
@@ -2399,7 +2460,6 @@ public final class ClusterSimulationProtos {
           com.google.protobuf.ByteString
               getWorkloadNameBytes();
 
-          // optional int64 num_jobs = 2;
           /**
            * <code>optional int64 num_jobs = 2;</code>
            */
@@ -2409,7 +2469,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumJobs();
 
-          // optional int64 num_jobs_scheduled = 3;
           /**
            * <code>optional int64 num_jobs_scheduled = 3;</code>
            */
@@ -2419,7 +2478,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumJobsScheduled();
 
-          // optional int64 num_jobs_fully_scheduled = 4;
           /**
            * <code>optional int64 num_jobs_fully_scheduled = 4;</code>
            */
@@ -2429,7 +2487,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumJobsFullyScheduled();
 
-          // optional int64 num_jobs_timed_out_scheduling = 5;
           /**
            * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
            */
@@ -2439,7 +2496,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumJobsTimedOutScheduling();
 
-          // optional double job_think_times_90_percentile = 6;
           /**
            * <code>optional double job_think_times_90_percentile = 6;</code>
            */
@@ -2449,7 +2505,6 @@ public final class ClusterSimulationProtos {
            */
           double getJobThinkTimes90Percentile();
 
-          // optional double avg_job_queue_times_till_first_scheduled = 7;
           /**
            * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
            */
@@ -2459,7 +2514,6 @@ public final class ClusterSimulationProtos {
            */
           double getAvgJobQueueTimesTillFirstScheduled();
 
-          // optional double avg_job_queue_times_till_fully_scheduled = 8;
           /**
            * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
            */
@@ -2469,7 +2523,6 @@ public final class ClusterSimulationProtos {
            */
           double getAvgJobQueueTimesTillFullyScheduled();
 
-          // optional double job_queue_time_till_first_scheduled_90_percentile = 9;
           /**
            * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
            */
@@ -2479,7 +2532,6 @@ public final class ClusterSimulationProtos {
            */
           double getJobQueueTimeTillFirstScheduled90Percentile();
 
-          // optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
           /**
            * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
            */
@@ -2489,7 +2541,6 @@ public final class ClusterSimulationProtos {
            */
           double getJobQueueTimeTillFullyScheduled90Percentile();
 
-          // optional double num_scheduling_attempts_90_percentile = 11;
           /**
            * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
            */
@@ -2499,7 +2550,6 @@ public final class ClusterSimulationProtos {
            */
           double getNumSchedulingAttempts90Percentile();
 
-          // optional double num_scheduling_attempts_99_percentile = 12;
           /**
            * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
            */
@@ -2509,7 +2559,6 @@ public final class ClusterSimulationProtos {
            */
           double getNumSchedulingAttempts99Percentile();
 
-          // optional double num_task_scheduling_attempts_90_percentile = 13;
           /**
            * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
            */
@@ -2519,7 +2568,6 @@ public final class ClusterSimulationProtos {
            */
           double getNumTaskSchedulingAttempts90Percentile();
 
-          // optional double num_task_scheduling_attempts_99_percentile = 14;
           /**
            * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
            */
@@ -2529,7 +2577,6 @@ public final class ClusterSimulationProtos {
            */
           double getNumTaskSchedulingAttempts99Percentile();
 
-          // optional double avg_job_execution_time = 15;
           /**
            * <code>optional double avg_job_execution_time = 15;</code>
            */
@@ -2539,7 +2586,6 @@ public final class ClusterSimulationProtos {
            */
           double getAvgJobExecutionTime();
 
-          // optional double avg_job_completion_time = 16;
           /**
            * <code>optional double avg_job_completion_time = 16;</code>
            */
@@ -2548,6 +2594,15 @@ public final class ClusterSimulationProtos {
            * <code>optional double avg_job_completion_time = 16;</code>
            */
           double getAvgJobCompletionTime();
+
+          /**
+           * <code>optional double avg_job_ramp_up_time = 17;</code>
+           */
+          boolean hasAvgJobRampUpTime();
+          /**
+           * <code>optional double avg_job_ramp_up_time = 17;</code>
+           */
+          double getAvgJobRampUpTime();
         }
         /**
          * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats}
@@ -2557,8 +2612,9 @@ public final class ClusterSimulationProtos {
          * </pre>
          */
         public static final class WorkloadStats extends
-            com.google.protobuf.GeneratedMessage
-            implements WorkloadStatsOrBuilder {
+            com.google.protobuf.GeneratedMessage implements
+            // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats)
+            WorkloadStatsOrBuilder {
           // Use WorkloadStats.newBuilder() to construct.
           private WorkloadStats(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -2605,8 +2661,9 @@ public final class ClusterSimulationProtos {
                     break;
                   }
                   case 10: {
+                    com.google.protobuf.ByteString bs = input.readBytes();
                     bitField0_ |= 0x00000001;
-                    workloadName_ = input.readBytes();
+                    workloadName_ = bs;
                     break;
                   }
                   case 16: {
@@ -2684,6 +2741,11 @@ public final class ClusterSimulationProtos {
                     avgJobCompletionTime_ = input.readDouble();
                     break;
                   }
+                  case 137: {
+                    bitField0_ |= 0x00010000;
+                    avgJobRampUpTime_ = input.readDouble();
+                    break;
+                  }
                 }
               }
             } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2724,7 +2786,6 @@ public final class ClusterSimulationProtos {
           }
 
           private int bitField0_;
-          // optional string workload_name = 1;
           public static final int WORKLOAD_NAME_FIELD_NUMBER = 1;
           private java.lang.Object workloadName_;
           /**
@@ -2767,7 +2828,6 @@ public final class ClusterSimulationProtos {
             }
           }
 
-          // optional int64 num_jobs = 2;
           public static final int NUM_JOBS_FIELD_NUMBER = 2;
           private long numJobs_;
           /**
@@ -2783,7 +2843,6 @@ public final class ClusterSimulationProtos {
             return numJobs_;
           }
 
-          // optional int64 num_jobs_scheduled = 3;
           public static final int NUM_JOBS_SCHEDULED_FIELD_NUMBER = 3;
           private long numJobsScheduled_;
           /**
@@ -2799,7 +2858,6 @@ public final class ClusterSimulationProtos {
             return numJobsScheduled_;
           }
 
-          // optional int64 num_jobs_fully_scheduled = 4;
           public static final int NUM_JOBS_FULLY_SCHEDULED_FIELD_NUMBER = 4;
           private long numJobsFullyScheduled_;
           /**
@@ -2815,7 +2873,6 @@ public final class ClusterSimulationProtos {
             return numJobsFullyScheduled_;
           }
 
-          // optional int64 num_jobs_timed_out_scheduling = 5;
           public static final int NUM_JOBS_TIMED_OUT_SCHEDULING_FIELD_NUMBER = 5;
           private long numJobsTimedOutScheduling_;
           /**
@@ -2831,7 +2888,6 @@ public final class ClusterSimulationProtos {
             return numJobsTimedOutScheduling_;
           }
 
-          // optional double job_think_times_90_percentile = 6;
           public static final int JOB_THINK_TIMES_90_PERCENTILE_FIELD_NUMBER = 6;
           private double jobThinkTimes90Percentile_;
           /**
@@ -2847,7 +2903,6 @@ public final class ClusterSimulationProtos {
             return jobThinkTimes90Percentile_;
           }
 
-          // optional double avg_job_queue_times_till_first_scheduled = 7;
           public static final int AVG_JOB_QUEUE_TIMES_TILL_FIRST_SCHEDULED_FIELD_NUMBER = 7;
           private double avgJobQueueTimesTillFirstScheduled_;
           /**
@@ -2863,7 +2918,6 @@ public final class ClusterSimulationProtos {
             return avgJobQueueTimesTillFirstScheduled_;
           }
 
-          // optional double avg_job_queue_times_till_fully_scheduled = 8;
           public static final int AVG_JOB_QUEUE_TIMES_TILL_FULLY_SCHEDULED_FIELD_NUMBER = 8;
           private double avgJobQueueTimesTillFullyScheduled_;
           /**
@@ -2879,7 +2933,6 @@ public final class ClusterSimulationProtos {
             return avgJobQueueTimesTillFullyScheduled_;
           }
 
-          // optional double job_queue_time_till_first_scheduled_90_percentile = 9;
           public static final int JOB_QUEUE_TIME_TILL_FIRST_SCHEDULED_90_PERCENTILE_FIELD_NUMBER = 9;
           private double jobQueueTimeTillFirstScheduled90Percentile_;
           /**
@@ -2895,7 +2948,6 @@ public final class ClusterSimulationProtos {
             return jobQueueTimeTillFirstScheduled90Percentile_;
           }
 
-          // optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
           public static final int JOB_QUEUE_TIME_TILL_FULLY_SCHEDULED_90_PERCENTILE_FIELD_NUMBER = 10;
           private double jobQueueTimeTillFullyScheduled90Percentile_;
           /**
@@ -2911,7 +2963,6 @@ public final class ClusterSimulationProtos {
             return jobQueueTimeTillFullyScheduled90Percentile_;
           }
 
-          // optional double num_scheduling_attempts_90_percentile = 11;
           public static final int NUM_SCHEDULING_ATTEMPTS_90_PERCENTILE_FIELD_NUMBER = 11;
           private double numSchedulingAttempts90Percentile_;
           /**
@@ -2927,7 +2978,6 @@ public final class ClusterSimulationProtos {
             return numSchedulingAttempts90Percentile_;
           }
 
-          // optional double num_scheduling_attempts_99_percentile = 12;
           public static final int NUM_SCHEDULING_ATTEMPTS_99_PERCENTILE_FIELD_NUMBER = 12;
           private double numSchedulingAttempts99Percentile_;
           /**
@@ -2943,7 +2993,6 @@ public final class ClusterSimulationProtos {
             return numSchedulingAttempts99Percentile_;
           }
 
-          // optional double num_task_scheduling_attempts_90_percentile = 13;
           public static final int NUM_TASK_SCHEDULING_ATTEMPTS_90_PERCENTILE_FIELD_NUMBER = 13;
           private double numTaskSchedulingAttempts90Percentile_;
           /**
@@ -2959,7 +3008,6 @@ public final class ClusterSimulationProtos {
             return numTaskSchedulingAttempts90Percentile_;
           }
 
-          // optional double num_task_scheduling_attempts_99_percentile = 14;
           public static final int NUM_TASK_SCHEDULING_ATTEMPTS_99_PERCENTILE_FIELD_NUMBER = 14;
           private double numTaskSchedulingAttempts99Percentile_;
           /**
@@ -2975,7 +3023,6 @@ public final class ClusterSimulationProtos {
             return numTaskSchedulingAttempts99Percentile_;
           }
 
-          // optional double avg_job_execution_time = 15;
           public static final int AVG_JOB_EXECUTION_TIME_FIELD_NUMBER = 15;
           private double avgJobExecutionTime_;
           /**
@@ -2991,7 +3038,6 @@ public final class ClusterSimulationProtos {
             return avgJobExecutionTime_;
           }
 
-          // optional double avg_job_completion_time = 16;
           public static final int AVG_JOB_COMPLETION_TIME_FIELD_NUMBER = 16;
           private double avgJobCompletionTime_;
           /**
@@ -3005,6 +3051,21 @@ public final class ClusterSimulationProtos {
            */
           public double getAvgJobCompletionTime() {
             return avgJobCompletionTime_;
+          }
+
+          public static final int AVG_JOB_RAMP_UP_TIME_FIELD_NUMBER = 17;
+          private double avgJobRampUpTime_;
+          /**
+           * <code>optional double avg_job_ramp_up_time = 17;</code>
+           */
+          public boolean hasAvgJobRampUpTime() {
+            return ((bitField0_ & 0x00010000) == 0x00010000);
+          }
+          /**
+           * <code>optional double avg_job_ramp_up_time = 17;</code>
+           */
+          public double getAvgJobRampUpTime() {
+            return avgJobRampUpTime_;
           }
 
           private void initFields() {
@@ -3024,11 +3085,13 @@ public final class ClusterSimulationProtos {
             numTaskSchedulingAttempts99Percentile_ = 0D;
             avgJobExecutionTime_ = 0D;
             avgJobCompletionTime_ = 0D;
+            avgJobRampUpTime_ = 0D;
           }
           private byte memoizedIsInitialized = -1;
           public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1) return isInitialized == 1;
+            if (isInitialized == 1) return true;
+            if (isInitialized == 0) return false;
 
             memoizedIsInitialized = 1;
             return true;
@@ -3084,6 +3147,9 @@ public final class ClusterSimulationProtos {
             }
             if (((bitField0_ & 0x00008000) == 0x00008000)) {
               output.writeDouble(16, avgJobCompletionTime_);
+            }
+            if (((bitField0_ & 0x00010000) == 0x00010000)) {
+              output.writeDouble(17, avgJobRampUpTime_);
             }
             getUnknownFields().writeTo(output);
           }
@@ -3157,6 +3223,10 @@ public final class ClusterSimulationProtos {
             if (((bitField0_ & 0x00008000) == 0x00008000)) {
               size += com.google.protobuf.CodedOutputStream
                 .computeDoubleSize(16, avgJobCompletionTime_);
+            }
+            if (((bitField0_ & 0x00010000) == 0x00010000)) {
+              size += com.google.protobuf.CodedOutputStream
+                .computeDoubleSize(17, avgJobRampUpTime_);
             }
             size += getUnknownFields().getSerializedSize();
             memoizedSerializedSize = size;
@@ -3244,8 +3314,9 @@ public final class ClusterSimulationProtos {
            * </pre>
            */
           public static final class Builder extends
-              com.google.protobuf.GeneratedMessage.Builder<Builder>
-             implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStatsOrBuilder {
+              com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+              // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats)
+              ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStatsOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor
                 getDescriptor() {
               return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_descriptor;
@@ -3310,6 +3381,8 @@ public final class ClusterSimulationProtos {
               bitField0_ = (bitField0_ & ~0x00004000);
               avgJobCompletionTime_ = 0D;
               bitField0_ = (bitField0_ & ~0x00008000);
+              avgJobRampUpTime_ = 0D;
+              bitField0_ = (bitField0_ & ~0x00010000);
               return this;
             }
 
@@ -3402,6 +3475,10 @@ public final class ClusterSimulationProtos {
                 to_bitField0_ |= 0x00008000;
               }
               result.avgJobCompletionTime_ = avgJobCompletionTime_;
+              if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+                to_bitField0_ |= 0x00010000;
+              }
+              result.avgJobRampUpTime_ = avgJobRampUpTime_;
               result.bitField0_ = to_bitField0_;
               onBuilt();
               return result;
@@ -3468,6 +3545,9 @@ public final class ClusterSimulationProtos {
               if (other.hasAvgJobCompletionTime()) {
                 setAvgJobCompletionTime(other.getAvgJobCompletionTime());
               }
+              if (other.hasAvgJobRampUpTime()) {
+                setAvgJobRampUpTime(other.getAvgJobRampUpTime());
+              }
               this.mergeUnknownFields(other.getUnknownFields());
               return this;
             }
@@ -3495,7 +3575,6 @@ public final class ClusterSimulationProtos {
             }
             private int bitField0_;
 
-            // optional string workload_name = 1;
             private java.lang.Object workloadName_ = "";
             /**
              * <code>optional string workload_name = 1;</code>
@@ -3509,9 +3588,12 @@ public final class ClusterSimulationProtos {
             public java.lang.String getWorkloadName() {
               java.lang.Object ref = workloadName_;
               if (!(ref instanceof java.lang.String)) {
-                java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                    .toStringUtf8();
-                workloadName_ = s;
+                com.google.protobuf.ByteString bs =
+                    (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                if (bs.isValidUtf8()) {
+                  workloadName_ = s;
+                }
                 return s;
               } else {
                 return (java.lang.String) ref;
@@ -3569,7 +3651,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_jobs = 2;
             private long numJobs_ ;
             /**
              * <code>optional int64 num_jobs = 2;</code>
@@ -3602,7 +3683,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_jobs_scheduled = 3;
             private long numJobsScheduled_ ;
             /**
              * <code>optional int64 num_jobs_scheduled = 3;</code>
@@ -3635,7 +3715,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_jobs_fully_scheduled = 4;
             private long numJobsFullyScheduled_ ;
             /**
              * <code>optional int64 num_jobs_fully_scheduled = 4;</code>
@@ -3668,7 +3747,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_jobs_timed_out_scheduling = 5;
             private long numJobsTimedOutScheduling_ ;
             /**
              * <code>optional int64 num_jobs_timed_out_scheduling = 5;</code>
@@ -3701,7 +3779,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double job_think_times_90_percentile = 6;
             private double jobThinkTimes90Percentile_ ;
             /**
              * <code>optional double job_think_times_90_percentile = 6;</code>
@@ -3734,7 +3811,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double avg_job_queue_times_till_first_scheduled = 7;
             private double avgJobQueueTimesTillFirstScheduled_ ;
             /**
              * <code>optional double avg_job_queue_times_till_first_scheduled = 7;</code>
@@ -3767,7 +3843,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double avg_job_queue_times_till_fully_scheduled = 8;
             private double avgJobQueueTimesTillFullyScheduled_ ;
             /**
              * <code>optional double avg_job_queue_times_till_fully_scheduled = 8;</code>
@@ -3800,7 +3875,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double job_queue_time_till_first_scheduled_90_percentile = 9;
             private double jobQueueTimeTillFirstScheduled90Percentile_ ;
             /**
              * <code>optional double job_queue_time_till_first_scheduled_90_percentile = 9;</code>
@@ -3833,7 +3907,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
             private double jobQueueTimeTillFullyScheduled90Percentile_ ;
             /**
              * <code>optional double job_queue_time_till_fully_scheduled_90_percentile = 10;</code>
@@ -3866,7 +3939,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double num_scheduling_attempts_90_percentile = 11;
             private double numSchedulingAttempts90Percentile_ ;
             /**
              * <code>optional double num_scheduling_attempts_90_percentile = 11;</code>
@@ -3899,7 +3971,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double num_scheduling_attempts_99_percentile = 12;
             private double numSchedulingAttempts99Percentile_ ;
             /**
              * <code>optional double num_scheduling_attempts_99_percentile = 12;</code>
@@ -3932,7 +4003,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double num_task_scheduling_attempts_90_percentile = 13;
             private double numTaskSchedulingAttempts90Percentile_ ;
             /**
              * <code>optional double num_task_scheduling_attempts_90_percentile = 13;</code>
@@ -3965,7 +4035,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double num_task_scheduling_attempts_99_percentile = 14;
             private double numTaskSchedulingAttempts99Percentile_ ;
             /**
              * <code>optional double num_task_scheduling_attempts_99_percentile = 14;</code>
@@ -3998,7 +4067,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double avg_job_execution_time = 15;
             private double avgJobExecutionTime_ ;
             /**
              * <code>optional double avg_job_execution_time = 15;</code>
@@ -4031,7 +4099,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double avg_job_completion_time = 16;
             private double avgJobCompletionTime_ ;
             /**
              * <code>optional double avg_job_completion_time = 16;</code>
@@ -4064,6 +4131,38 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
+            private double avgJobRampUpTime_ ;
+            /**
+             * <code>optional double avg_job_ramp_up_time = 17;</code>
+             */
+            public boolean hasAvgJobRampUpTime() {
+              return ((bitField0_ & 0x00010000) == 0x00010000);
+            }
+            /**
+             * <code>optional double avg_job_ramp_up_time = 17;</code>
+             */
+            public double getAvgJobRampUpTime() {
+              return avgJobRampUpTime_;
+            }
+            /**
+             * <code>optional double avg_job_ramp_up_time = 17;</code>
+             */
+            public Builder setAvgJobRampUpTime(double value) {
+              bitField0_ |= 0x00010000;
+              avgJobRampUpTime_ = value;
+              onChanged();
+              return this;
+            }
+            /**
+             * <code>optional double avg_job_ramp_up_time = 17;</code>
+             */
+            public Builder clearAvgJobRampUpTime() {
+              bitField0_ = (bitField0_ & ~0x00010000);
+              avgJobRampUpTime_ = 0D;
+              onChanged();
+              return this;
+            }
+
             // @@protoc_insertion_point(builder_scope:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats)
           }
 
@@ -4075,10 +4174,10 @@ public final class ClusterSimulationProtos {
           // @@protoc_insertion_point(class_scope:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats)
         }
 
-        public interface SchedulerStatsOrBuilder
-            extends com.google.protobuf.MessageOrBuilder {
+        public interface SchedulerStatsOrBuilder extends
+            // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats)
+            com.google.protobuf.MessageOrBuilder {
 
-          // optional string scheduler_name = 1;
           /**
            * <code>optional string scheduler_name = 1;</code>
            */
@@ -4093,7 +4192,6 @@ public final class ClusterSimulationProtos {
           com.google.protobuf.ByteString
               getSchedulerNameBytes();
 
-          // optional double useful_busy_time = 2;
           /**
            * <code>optional double useful_busy_time = 2;</code>
            */
@@ -4103,7 +4201,6 @@ public final class ClusterSimulationProtos {
            */
           double getUsefulBusyTime();
 
-          // optional double wasted_busy_time = 3;
           /**
            * <code>optional double wasted_busy_time = 3;</code>
            */
@@ -4113,7 +4210,6 @@ public final class ClusterSimulationProtos {
            */
           double getWastedBusyTime();
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats per_day_stats = 4;
           /**
            * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats per_day_stats = 4;</code>
            */
@@ -4138,7 +4234,6 @@ public final class ClusterSimulationProtos {
           ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStatsOrBuilder getPerDayStatsOrBuilder(
               int index);
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime per_workload_busy_time = 5;
           /**
            * <code>repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime per_workload_busy_time = 5;</code>
            */
@@ -4163,7 +4258,6 @@ public final class ClusterSimulationProtos {
           ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTimeOrBuilder getPerWorkloadBusyTimeOrBuilder(
               int index);
 
-          // optional int64 num_successful_transactions = 6;
           /**
            * <code>optional int64 num_successful_transactions = 6;</code>
            *
@@ -4183,7 +4277,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumSuccessfulTransactions();
 
-          // optional int64 num_failed_transactions = 7;
           /**
            * <code>optional int64 num_failed_transactions = 7;</code>
            */
@@ -4193,7 +4286,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumFailedTransactions();
 
-          // optional int64 num_no_resources_found_scheduling_attempts = 8;
           /**
            * <code>optional int64 num_no_resources_found_scheduling_attempts = 8;</code>
            */
@@ -4203,7 +4295,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumNoResourcesFoundSchedulingAttempts();
 
-          // optional int64 num_retried_transactions = 9;
           /**
            * <code>optional int64 num_retried_transactions = 9;</code>
            */
@@ -4213,7 +4304,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumRetriedTransactions();
 
-          // optional int64 num_jobs_timed_out_scheduling = 10;
           /**
            * <code>optional int64 num_jobs_timed_out_scheduling = 10;</code>
            */
@@ -4223,7 +4313,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumJobsTimedOutScheduling();
 
-          // optional int64 num_successful_task_transactions = 11;
           /**
            * <code>optional int64 num_successful_task_transactions = 11;</code>
            */
@@ -4233,7 +4322,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumSuccessfulTaskTransactions();
 
-          // optional int64 num_failed_task_transactions = 12;
           /**
            * <code>optional int64 num_failed_task_transactions = 12;</code>
            */
@@ -4243,7 +4331,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumFailedTaskTransactions();
 
-          // optional bool is_multi_path = 13;
           /**
            * <code>optional bool is_multi_path = 13;</code>
            */
@@ -4253,7 +4340,6 @@ public final class ClusterSimulationProtos {
            */
           boolean getIsMultiPath();
 
-          // optional int64 num_jobs_left_in_queue = 14;
           /**
            * <code>optional int64 num_jobs_left_in_queue = 14;</code>
            *
@@ -4271,7 +4357,6 @@ public final class ClusterSimulationProtos {
            */
           long getNumJobsLeftInQueue();
 
-          // optional int64 failed_find_victim_attempts = 15;
           /**
            * <code>optional int64 failed_find_victim_attempts = 15;</code>
            *
@@ -4293,8 +4378,9 @@ public final class ClusterSimulationProtos {
          * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats}
          */
         public static final class SchedulerStats extends
-            com.google.protobuf.GeneratedMessage
-            implements SchedulerStatsOrBuilder {
+            com.google.protobuf.GeneratedMessage implements
+            // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats)
+            SchedulerStatsOrBuilder {
           // Use SchedulerStats.newBuilder() to construct.
           private SchedulerStats(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -4341,8 +4427,9 @@ public final class ClusterSimulationProtos {
                     break;
                   }
                   case 10: {
+                    com.google.protobuf.ByteString bs = input.readBytes();
                     bitField0_ |= 0x00000001;
-                    schedulerName_ = input.readBytes();
+                    schedulerName_ = bs;
                     break;
                   }
                   case 17: {
@@ -4466,10 +4553,10 @@ public final class ClusterSimulationProtos {
             return PARSER;
           }
 
-          public interface PerDayStatsOrBuilder
-              extends com.google.protobuf.MessageOrBuilder {
+          public interface PerDayStatsOrBuilder extends
+              // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats)
+              com.google.protobuf.MessageOrBuilder {
 
-            // optional int64 day_num = 1;
             /**
              * <code>optional int64 day_num = 1;</code>
              */
@@ -4479,7 +4566,6 @@ public final class ClusterSimulationProtos {
              */
             long getDayNum();
 
-            // optional double useful_busy_time = 2;
             /**
              * <code>optional double useful_busy_time = 2;</code>
              */
@@ -4489,7 +4575,6 @@ public final class ClusterSimulationProtos {
              */
             double getUsefulBusyTime();
 
-            // optional double wasted_busy_time = 3;
             /**
              * <code>optional double wasted_busy_time = 3;</code>
              */
@@ -4499,7 +4584,6 @@ public final class ClusterSimulationProtos {
              */
             double getWastedBusyTime();
 
-            // optional int64 num_successful_transactions = 4;
             /**
              * <code>optional int64 num_successful_transactions = 4;</code>
              */
@@ -4509,7 +4593,6 @@ public final class ClusterSimulationProtos {
              */
             long getNumSuccessfulTransactions();
 
-            // optional int64 num_failed_transactions = 5;
             /**
              * <code>optional int64 num_failed_transactions = 5;</code>
              */
@@ -4527,8 +4610,9 @@ public final class ClusterSimulationProtos {
            * </pre>
            */
           public static final class PerDayStats extends
-              com.google.protobuf.GeneratedMessage
-              implements PerDayStatsOrBuilder {
+              com.google.protobuf.GeneratedMessage implements
+              // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats)
+              PerDayStatsOrBuilder {
             // Use PerDayStats.newBuilder() to construct.
             private PerDayStats(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
               super(builder);
@@ -4639,7 +4723,6 @@ public final class ClusterSimulationProtos {
             }
 
             private int bitField0_;
-            // optional int64 day_num = 1;
             public static final int DAY_NUM_FIELD_NUMBER = 1;
             private long dayNum_;
             /**
@@ -4655,7 +4738,6 @@ public final class ClusterSimulationProtos {
               return dayNum_;
             }
 
-            // optional double useful_busy_time = 2;
             public static final int USEFUL_BUSY_TIME_FIELD_NUMBER = 2;
             private double usefulBusyTime_;
             /**
@@ -4671,7 +4753,6 @@ public final class ClusterSimulationProtos {
               return usefulBusyTime_;
             }
 
-            // optional double wasted_busy_time = 3;
             public static final int WASTED_BUSY_TIME_FIELD_NUMBER = 3;
             private double wastedBusyTime_;
             /**
@@ -4687,7 +4768,6 @@ public final class ClusterSimulationProtos {
               return wastedBusyTime_;
             }
 
-            // optional int64 num_successful_transactions = 4;
             public static final int NUM_SUCCESSFUL_TRANSACTIONS_FIELD_NUMBER = 4;
             private long numSuccessfulTransactions_;
             /**
@@ -4703,7 +4783,6 @@ public final class ClusterSimulationProtos {
               return numSuccessfulTransactions_;
             }
 
-            // optional int64 num_failed_transactions = 5;
             public static final int NUM_FAILED_TRANSACTIONS_FIELD_NUMBER = 5;
             private long numFailedTransactions_;
             /**
@@ -4729,7 +4808,8 @@ public final class ClusterSimulationProtos {
             private byte memoizedIsInitialized = -1;
             public final boolean isInitialized() {
               byte isInitialized = memoizedIsInitialized;
-              if (isInitialized != -1) return isInitialized == 1;
+              if (isInitialized == 1) return true;
+              if (isInitialized == 0) return false;
 
               memoizedIsInitialized = 1;
               return true;
@@ -4868,8 +4948,9 @@ public final class ClusterSimulationProtos {
              * </pre>
              */
             public static final class Builder extends
-                com.google.protobuf.GeneratedMessage.Builder<Builder>
-               implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStatsOrBuilder {
+                com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+                // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats)
+                ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStatsOrBuilder {
               public static final com.google.protobuf.Descriptors.Descriptor
                   getDescriptor() {
                 return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_descriptor;
@@ -5018,7 +5099,6 @@ public final class ClusterSimulationProtos {
               }
               private int bitField0_;
 
-              // optional int64 day_num = 1;
               private long dayNum_ ;
               /**
                * <code>optional int64 day_num = 1;</code>
@@ -5051,7 +5131,6 @@ public final class ClusterSimulationProtos {
                 return this;
               }
 
-              // optional double useful_busy_time = 2;
               private double usefulBusyTime_ ;
               /**
                * <code>optional double useful_busy_time = 2;</code>
@@ -5084,7 +5163,6 @@ public final class ClusterSimulationProtos {
                 return this;
               }
 
-              // optional double wasted_busy_time = 3;
               private double wastedBusyTime_ ;
               /**
                * <code>optional double wasted_busy_time = 3;</code>
@@ -5117,7 +5195,6 @@ public final class ClusterSimulationProtos {
                 return this;
               }
 
-              // optional int64 num_successful_transactions = 4;
               private long numSuccessfulTransactions_ ;
               /**
                * <code>optional int64 num_successful_transactions = 4;</code>
@@ -5150,7 +5227,6 @@ public final class ClusterSimulationProtos {
                 return this;
               }
 
-              // optional int64 num_failed_transactions = 5;
               private long numFailedTransactions_ ;
               /**
                * <code>optional int64 num_failed_transactions = 5;</code>
@@ -5194,10 +5270,10 @@ public final class ClusterSimulationProtos {
             // @@protoc_insertion_point(class_scope:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats)
           }
 
-          public interface PerWorkloadBusyTimeOrBuilder
-              extends com.google.protobuf.MessageOrBuilder {
+          public interface PerWorkloadBusyTimeOrBuilder extends
+              // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime)
+              com.google.protobuf.MessageOrBuilder {
 
-            // optional string workload_name = 1;
             /**
              * <code>optional string workload_name = 1;</code>
              */
@@ -5212,7 +5288,6 @@ public final class ClusterSimulationProtos {
             com.google.protobuf.ByteString
                 getWorkloadNameBytes();
 
-            // optional double useful_busy_time = 2;
             /**
              * <code>optional double useful_busy_time = 2;</code>
              */
@@ -5222,7 +5297,6 @@ public final class ClusterSimulationProtos {
              */
             double getUsefulBusyTime();
 
-            // optional double wasted_busy_time = 3;
             /**
              * <code>optional double wasted_busy_time = 3;</code>
              */
@@ -5240,8 +5314,9 @@ public final class ClusterSimulationProtos {
            * </pre>
            */
           public static final class PerWorkloadBusyTime extends
-              com.google.protobuf.GeneratedMessage
-              implements PerWorkloadBusyTimeOrBuilder {
+              com.google.protobuf.GeneratedMessage implements
+              // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime)
+              PerWorkloadBusyTimeOrBuilder {
             // Use PerWorkloadBusyTime.newBuilder() to construct.
             private PerWorkloadBusyTime(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
               super(builder);
@@ -5288,8 +5363,9 @@ public final class ClusterSimulationProtos {
                       break;
                     }
                     case 10: {
+                      com.google.protobuf.ByteString bs = input.readBytes();
                       bitField0_ |= 0x00000001;
-                      workloadName_ = input.readBytes();
+                      workloadName_ = bs;
                       break;
                     }
                     case 17: {
@@ -5342,7 +5418,6 @@ public final class ClusterSimulationProtos {
             }
 
             private int bitField0_;
-            // optional string workload_name = 1;
             public static final int WORKLOAD_NAME_FIELD_NUMBER = 1;
             private java.lang.Object workloadName_;
             /**
@@ -5385,7 +5460,6 @@ public final class ClusterSimulationProtos {
               }
             }
 
-            // optional double useful_busy_time = 2;
             public static final int USEFUL_BUSY_TIME_FIELD_NUMBER = 2;
             private double usefulBusyTime_;
             /**
@@ -5401,7 +5475,6 @@ public final class ClusterSimulationProtos {
               return usefulBusyTime_;
             }
 
-            // optional double wasted_busy_time = 3;
             public static final int WASTED_BUSY_TIME_FIELD_NUMBER = 3;
             private double wastedBusyTime_;
             /**
@@ -5425,7 +5498,8 @@ public final class ClusterSimulationProtos {
             private byte memoizedIsInitialized = -1;
             public final boolean isInitialized() {
               byte isInitialized = memoizedIsInitialized;
-              if (isInitialized != -1) return isInitialized == 1;
+              if (isInitialized == 1) return true;
+              if (isInitialized == 0) return false;
 
               memoizedIsInitialized = 1;
               return true;
@@ -5550,8 +5624,9 @@ public final class ClusterSimulationProtos {
              * </pre>
              */
             public static final class Builder extends
-                com.google.protobuf.GeneratedMessage.Builder<Builder>
-               implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTimeOrBuilder {
+                com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+                // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime)
+                ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTimeOrBuilder {
               public static final com.google.protobuf.Descriptors.Descriptor
                   getDescriptor() {
                 return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_descriptor;
@@ -5684,7 +5759,6 @@ public final class ClusterSimulationProtos {
               }
               private int bitField0_;
 
-              // optional string workload_name = 1;
               private java.lang.Object workloadName_ = "";
               /**
                * <code>optional string workload_name = 1;</code>
@@ -5698,9 +5772,12 @@ public final class ClusterSimulationProtos {
               public java.lang.String getWorkloadName() {
                 java.lang.Object ref = workloadName_;
                 if (!(ref instanceof java.lang.String)) {
-                  java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                      .toStringUtf8();
-                  workloadName_ = s;
+                  com.google.protobuf.ByteString bs =
+                      (com.google.protobuf.ByteString) ref;
+                  java.lang.String s = bs.toStringUtf8();
+                  if (bs.isValidUtf8()) {
+                    workloadName_ = s;
+                  }
                   return s;
                 } else {
                   return (java.lang.String) ref;
@@ -5758,7 +5835,6 @@ public final class ClusterSimulationProtos {
                 return this;
               }
 
-              // optional double useful_busy_time = 2;
               private double usefulBusyTime_ ;
               /**
                * <code>optional double useful_busy_time = 2;</code>
@@ -5791,7 +5867,6 @@ public final class ClusterSimulationProtos {
                 return this;
               }
 
-              // optional double wasted_busy_time = 3;
               private double wastedBusyTime_ ;
               /**
                * <code>optional double wasted_busy_time = 3;</code>
@@ -5836,7 +5911,6 @@ public final class ClusterSimulationProtos {
           }
 
           private int bitField0_;
-          // optional string scheduler_name = 1;
           public static final int SCHEDULER_NAME_FIELD_NUMBER = 1;
           private java.lang.Object schedulerName_;
           /**
@@ -5879,7 +5953,6 @@ public final class ClusterSimulationProtos {
             }
           }
 
-          // optional double useful_busy_time = 2;
           public static final int USEFUL_BUSY_TIME_FIELD_NUMBER = 2;
           private double usefulBusyTime_;
           /**
@@ -5895,7 +5968,6 @@ public final class ClusterSimulationProtos {
             return usefulBusyTime_;
           }
 
-          // optional double wasted_busy_time = 3;
           public static final int WASTED_BUSY_TIME_FIELD_NUMBER = 3;
           private double wastedBusyTime_;
           /**
@@ -5911,7 +5983,6 @@ public final class ClusterSimulationProtos {
             return wastedBusyTime_;
           }
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats per_day_stats = 4;
           public static final int PER_DAY_STATS_FIELD_NUMBER = 4;
           private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats> perDayStats_;
           /**
@@ -5947,7 +6018,6 @@ public final class ClusterSimulationProtos {
             return perDayStats_.get(index);
           }
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime per_workload_busy_time = 5;
           public static final int PER_WORKLOAD_BUSY_TIME_FIELD_NUMBER = 5;
           private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime> perWorkloadBusyTime_;
           /**
@@ -5983,7 +6053,6 @@ public final class ClusterSimulationProtos {
             return perWorkloadBusyTime_.get(index);
           }
 
-          // optional int64 num_successful_transactions = 6;
           public static final int NUM_SUCCESSFUL_TRANSACTIONS_FIELD_NUMBER = 6;
           private long numSuccessfulTransactions_;
           /**
@@ -6009,7 +6078,6 @@ public final class ClusterSimulationProtos {
             return numSuccessfulTransactions_;
           }
 
-          // optional int64 num_failed_transactions = 7;
           public static final int NUM_FAILED_TRANSACTIONS_FIELD_NUMBER = 7;
           private long numFailedTransactions_;
           /**
@@ -6025,7 +6093,6 @@ public final class ClusterSimulationProtos {
             return numFailedTransactions_;
           }
 
-          // optional int64 num_no_resources_found_scheduling_attempts = 8;
           public static final int NUM_NO_RESOURCES_FOUND_SCHEDULING_ATTEMPTS_FIELD_NUMBER = 8;
           private long numNoResourcesFoundSchedulingAttempts_;
           /**
@@ -6041,7 +6108,6 @@ public final class ClusterSimulationProtos {
             return numNoResourcesFoundSchedulingAttempts_;
           }
 
-          // optional int64 num_retried_transactions = 9;
           public static final int NUM_RETRIED_TRANSACTIONS_FIELD_NUMBER = 9;
           private long numRetriedTransactions_;
           /**
@@ -6057,7 +6123,6 @@ public final class ClusterSimulationProtos {
             return numRetriedTransactions_;
           }
 
-          // optional int64 num_jobs_timed_out_scheduling = 10;
           public static final int NUM_JOBS_TIMED_OUT_SCHEDULING_FIELD_NUMBER = 10;
           private long numJobsTimedOutScheduling_;
           /**
@@ -6073,7 +6138,6 @@ public final class ClusterSimulationProtos {
             return numJobsTimedOutScheduling_;
           }
 
-          // optional int64 num_successful_task_transactions = 11;
           public static final int NUM_SUCCESSFUL_TASK_TRANSACTIONS_FIELD_NUMBER = 11;
           private long numSuccessfulTaskTransactions_;
           /**
@@ -6089,7 +6153,6 @@ public final class ClusterSimulationProtos {
             return numSuccessfulTaskTransactions_;
           }
 
-          // optional int64 num_failed_task_transactions = 12;
           public static final int NUM_FAILED_TASK_TRANSACTIONS_FIELD_NUMBER = 12;
           private long numFailedTaskTransactions_;
           /**
@@ -6105,7 +6168,6 @@ public final class ClusterSimulationProtos {
             return numFailedTaskTransactions_;
           }
 
-          // optional bool is_multi_path = 13;
           public static final int IS_MULTI_PATH_FIELD_NUMBER = 13;
           private boolean isMultiPath_;
           /**
@@ -6121,7 +6183,6 @@ public final class ClusterSimulationProtos {
             return isMultiPath_;
           }
 
-          // optional int64 num_jobs_left_in_queue = 14;
           public static final int NUM_JOBS_LEFT_IN_QUEUE_FIELD_NUMBER = 14;
           private long numJobsLeftInQueue_;
           /**
@@ -6145,7 +6206,6 @@ public final class ClusterSimulationProtos {
             return numJobsLeftInQueue_;
           }
 
-          // optional int64 failed_find_victim_attempts = 15;
           public static final int FAILED_FIND_VICTIM_ATTEMPTS_FIELD_NUMBER = 15;
           private long failedFindVictimAttempts_;
           /**
@@ -6189,7 +6249,8 @@ public final class ClusterSimulationProtos {
           private byte memoizedIsInitialized = -1;
           public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1) return isInitialized == 1;
+            if (isInitialized == 1) return true;
+            if (isInitialized == 0) return false;
 
             memoizedIsInitialized = 1;
             return true;
@@ -6394,8 +6455,9 @@ public final class ClusterSimulationProtos {
            * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats}
            */
           public static final class Builder extends
-              com.google.protobuf.GeneratedMessage.Builder<Builder>
-             implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStatsOrBuilder {
+              com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+              // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats)
+              ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStatsOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor
                 getDescriptor() {
               return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor;
@@ -6702,7 +6764,6 @@ public final class ClusterSimulationProtos {
             }
             private int bitField0_;
 
-            // optional string scheduler_name = 1;
             private java.lang.Object schedulerName_ = "";
             /**
              * <code>optional string scheduler_name = 1;</code>
@@ -6716,9 +6777,12 @@ public final class ClusterSimulationProtos {
             public java.lang.String getSchedulerName() {
               java.lang.Object ref = schedulerName_;
               if (!(ref instanceof java.lang.String)) {
-                java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                    .toStringUtf8();
-                schedulerName_ = s;
+                com.google.protobuf.ByteString bs =
+                    (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                if (bs.isValidUtf8()) {
+                  schedulerName_ = s;
+                }
                 return s;
               } else {
                 return (java.lang.String) ref;
@@ -6776,7 +6840,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double useful_busy_time = 2;
             private double usefulBusyTime_ ;
             /**
              * <code>optional double useful_busy_time = 2;</code>
@@ -6809,7 +6872,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional double wasted_busy_time = 3;
             private double wastedBusyTime_ ;
             /**
              * <code>optional double wasted_busy_time = 3;</code>
@@ -6842,7 +6904,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats per_day_stats = 4;
             private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats> perDayStats_ =
               java.util.Collections.emptyList();
             private void ensurePerDayStatsIsMutable() {
@@ -6984,7 +7045,8 @@ public final class ClusterSimulationProtos {
                 java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerDayStats> values) {
               if (perDayStatsBuilder_ == null) {
                 ensurePerDayStatsIsMutable();
-                super.addAll(values, perDayStats_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                    values, perDayStats_);
                 onChanged();
               } else {
                 perDayStatsBuilder_.addAllMessages(values);
@@ -7082,7 +7144,6 @@ public final class ClusterSimulationProtos {
               return perDayStatsBuilder_;
             }
 
-            // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime per_workload_busy_time = 5;
             private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime> perWorkloadBusyTime_ =
               java.util.Collections.emptyList();
             private void ensurePerWorkloadBusyTimeIsMutable() {
@@ -7224,7 +7285,8 @@ public final class ClusterSimulationProtos {
                 java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.PerWorkloadBusyTime> values) {
               if (perWorkloadBusyTimeBuilder_ == null) {
                 ensurePerWorkloadBusyTimeIsMutable();
-                super.addAll(values, perWorkloadBusyTime_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                    values, perWorkloadBusyTime_);
                 onChanged();
               } else {
                 perWorkloadBusyTimeBuilder_.addAllMessages(values);
@@ -7322,7 +7384,6 @@ public final class ClusterSimulationProtos {
               return perWorkloadBusyTimeBuilder_;
             }
 
-            // optional int64 num_successful_transactions = 6;
             private long numSuccessfulTransactions_ ;
             /**
              * <code>optional int64 num_successful_transactions = 6;</code>
@@ -7375,7 +7436,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_failed_transactions = 7;
             private long numFailedTransactions_ ;
             /**
              * <code>optional int64 num_failed_transactions = 7;</code>
@@ -7408,7 +7468,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_no_resources_found_scheduling_attempts = 8;
             private long numNoResourcesFoundSchedulingAttempts_ ;
             /**
              * <code>optional int64 num_no_resources_found_scheduling_attempts = 8;</code>
@@ -7441,7 +7500,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_retried_transactions = 9;
             private long numRetriedTransactions_ ;
             /**
              * <code>optional int64 num_retried_transactions = 9;</code>
@@ -7474,7 +7532,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_jobs_timed_out_scheduling = 10;
             private long numJobsTimedOutScheduling_ ;
             /**
              * <code>optional int64 num_jobs_timed_out_scheduling = 10;</code>
@@ -7507,7 +7564,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_successful_task_transactions = 11;
             private long numSuccessfulTaskTransactions_ ;
             /**
              * <code>optional int64 num_successful_task_transactions = 11;</code>
@@ -7540,7 +7596,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_failed_task_transactions = 12;
             private long numFailedTaskTransactions_ ;
             /**
              * <code>optional int64 num_failed_task_transactions = 12;</code>
@@ -7573,7 +7628,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional bool is_multi_path = 13;
             private boolean isMultiPath_ ;
             /**
              * <code>optional bool is_multi_path = 13;</code>
@@ -7606,7 +7660,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 num_jobs_left_in_queue = 14;
             private long numJobsLeftInQueue_ ;
             /**
              * <code>optional int64 num_jobs_left_in_queue = 14;</code>
@@ -7655,7 +7708,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional int64 failed_find_victim_attempts = 15;
             private long failedFindVictimAttempts_ ;
             /**
              * <code>optional int64 failed_find_victim_attempts = 15;</code>
@@ -7715,10 +7767,10 @@ public final class ClusterSimulationProtos {
           // @@protoc_insertion_point(class_scope:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats)
         }
 
-        public interface SchedulerWorkloadOrBuilder
-            extends com.google.protobuf.MessageOrBuilder {
+        public interface SchedulerWorkloadOrBuilder extends
+            // @@protoc_insertion_point(interface_extends:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload)
+            com.google.protobuf.MessageOrBuilder {
 
-          // optional string schedulerName = 1;
           /**
            * <code>optional string schedulerName = 1;</code>
            */
@@ -7733,7 +7785,6 @@ public final class ClusterSimulationProtos {
           com.google.protobuf.ByteString
               getSchedulerNameBytes();
 
-          // optional string workloadName = 2;
           /**
            * <code>optional string workloadName = 2;</code>
            */
@@ -7757,8 +7808,9 @@ public final class ClusterSimulationProtos {
          * </pre>
          */
         public static final class SchedulerWorkload extends
-            com.google.protobuf.GeneratedMessage
-            implements SchedulerWorkloadOrBuilder {
+            com.google.protobuf.GeneratedMessage implements
+            // @@protoc_insertion_point(message_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload)
+            SchedulerWorkloadOrBuilder {
           // Use SchedulerWorkload.newBuilder() to construct.
           private SchedulerWorkload(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -7805,13 +7857,15 @@ public final class ClusterSimulationProtos {
                     break;
                   }
                   case 10: {
+                    com.google.protobuf.ByteString bs = input.readBytes();
                     bitField0_ |= 0x00000001;
-                    schedulerName_ = input.readBytes();
+                    schedulerName_ = bs;
                     break;
                   }
                   case 18: {
+                    com.google.protobuf.ByteString bs = input.readBytes();
                     bitField0_ |= 0x00000002;
-                    workloadName_ = input.readBytes();
+                    workloadName_ = bs;
                     break;
                   }
                 }
@@ -7854,7 +7908,6 @@ public final class ClusterSimulationProtos {
           }
 
           private int bitField0_;
-          // optional string schedulerName = 1;
           public static final int SCHEDULERNAME_FIELD_NUMBER = 1;
           private java.lang.Object schedulerName_;
           /**
@@ -7897,7 +7950,6 @@ public final class ClusterSimulationProtos {
             }
           }
 
-          // optional string workloadName = 2;
           public static final int WORKLOADNAME_FIELD_NUMBER = 2;
           private java.lang.Object workloadName_;
           /**
@@ -7947,7 +7999,8 @@ public final class ClusterSimulationProtos {
           private byte memoizedIsInitialized = -1;
           public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1) return isInitialized == 1;
+            if (isInitialized == 1) return true;
+            if (isInitialized == 0) return false;
 
             memoizedIsInitialized = 1;
             return true;
@@ -8066,8 +8119,9 @@ public final class ClusterSimulationProtos {
            * </pre>
            */
           public static final class Builder extends
-              com.google.protobuf.GeneratedMessage.Builder<Builder>
-             implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkloadOrBuilder {
+              com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+              // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload)
+              ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkloadOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor
                 getDescriptor() {
               return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_descriptor;
@@ -8193,7 +8247,6 @@ public final class ClusterSimulationProtos {
             }
             private int bitField0_;
 
-            // optional string schedulerName = 1;
             private java.lang.Object schedulerName_ = "";
             /**
              * <code>optional string schedulerName = 1;</code>
@@ -8207,9 +8260,12 @@ public final class ClusterSimulationProtos {
             public java.lang.String getSchedulerName() {
               java.lang.Object ref = schedulerName_;
               if (!(ref instanceof java.lang.String)) {
-                java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                    .toStringUtf8();
-                schedulerName_ = s;
+                com.google.protobuf.ByteString bs =
+                    (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                if (bs.isValidUtf8()) {
+                  schedulerName_ = s;
+                }
                 return s;
               } else {
                 return (java.lang.String) ref;
@@ -8267,7 +8323,6 @@ public final class ClusterSimulationProtos {
               return this;
             }
 
-            // optional string workloadName = 2;
             private java.lang.Object workloadName_ = "";
             /**
              * <code>optional string workloadName = 2;</code>
@@ -8281,9 +8336,12 @@ public final class ClusterSimulationProtos {
             public java.lang.String getWorkloadName() {
               java.lang.Object ref = workloadName_;
               if (!(ref instanceof java.lang.String)) {
-                java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                    .toStringUtf8();
-                workloadName_ = s;
+                com.google.protobuf.ByteString bs =
+                    (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                if (bs.isValidUtf8()) {
+                  workloadName_ = s;
+                }
                 return s;
               } else {
                 return (java.lang.String) ref;
@@ -8353,7 +8411,6 @@ public final class ClusterSimulationProtos {
         }
 
         private int bitField0_;
-        // optional double cell_state_avg_cpu_utilization = 1;
         public static final int CELL_STATE_AVG_CPU_UTILIZATION_FIELD_NUMBER = 1;
         private double cellStateAvgCpuUtilization_;
         /**
@@ -8377,7 +8434,6 @@ public final class ClusterSimulationProtos {
           return cellStateAvgCpuUtilization_;
         }
 
-        // optional double cell_state_avg_mem_utilization = 2;
         public static final int CELL_STATE_AVG_MEM_UTILIZATION_FIELD_NUMBER = 2;
         private double cellStateAvgMemUtilization_;
         /**
@@ -8393,7 +8449,6 @@ public final class ClusterSimulationProtos {
           return cellStateAvgMemUtilization_;
         }
 
-        // optional double cell_state_avg_cpu_locked = 3;
         public static final int CELL_STATE_AVG_CPU_LOCKED_FIELD_NUMBER = 3;
         private double cellStateAvgCpuLocked_;
         /**
@@ -8419,7 +8474,6 @@ public final class ClusterSimulationProtos {
           return cellStateAvgCpuLocked_;
         }
 
-        // optional double cell_state_avg_mem_locked = 4;
         public static final int CELL_STATE_AVG_MEM_LOCKED_FIELD_NUMBER = 4;
         private double cellStateAvgMemLocked_;
         /**
@@ -8435,7 +8489,6 @@ public final class ClusterSimulationProtos {
           return cellStateAvgMemLocked_;
         }
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats workload_stats = 5;
         public static final int WORKLOAD_STATS_FIELD_NUMBER = 5;
         private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats> workloadStats_;
         /**
@@ -8491,7 +8544,6 @@ public final class ClusterSimulationProtos {
           return workloadStats_.get(index);
         }
 
-        // optional string sweep_workload = 6;
         public static final int SWEEP_WORKLOAD_FIELD_NUMBER = 6;
         private java.lang.Object sweepWorkload_;
         /**
@@ -8546,7 +8598,6 @@ public final class ClusterSimulationProtos {
           }
         }
 
-        // optional double avg_job_interarrival_time = 7;
         public static final int AVG_JOB_INTERARRIVAL_TIME_FIELD_NUMBER = 7;
         private double avgJobInterarrivalTime_;
         /**
@@ -8562,7 +8613,6 @@ public final class ClusterSimulationProtos {
           return avgJobInterarrivalTime_;
         }
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats scheduler_stats = 8;
         public static final int SCHEDULER_STATS_FIELD_NUMBER = 8;
         private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats> schedulerStats_;
         /**
@@ -8618,7 +8668,6 @@ public final class ClusterSimulationProtos {
           return schedulerStats_.get(index);
         }
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload sweep_scheduler_workload = 9;
         public static final int SWEEP_SCHEDULER_WORKLOAD_FIELD_NUMBER = 9;
         private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload> sweepSchedulerWorkload_;
         /**
@@ -8674,7 +8723,6 @@ public final class ClusterSimulationProtos {
           return sweepSchedulerWorkload_.get(index);
         }
 
-        // optional double constant_think_time = 10;
         public static final int CONSTANT_THINK_TIME_FIELD_NUMBER = 10;
         private double constantThinkTime_;
         /**
@@ -8690,7 +8738,6 @@ public final class ClusterSimulationProtos {
           return constantThinkTime_;
         }
 
-        // optional double per_task_think_time = 11;
         public static final int PER_TASK_THINK_TIME_FIELD_NUMBER = 11;
         private double perTaskThinkTime_;
         /**
@@ -8730,7 +8777,8 @@ public final class ClusterSimulationProtos {
         private byte memoizedIsInitialized = -1;
         public final boolean isInitialized() {
           byte isInitialized = memoizedIsInitialized;
-          if (isInitialized != -1) return isInitialized == 1;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
 
           memoizedIsInitialized = 1;
           return true;
@@ -8907,8 +8955,9 @@ public final class ClusterSimulationProtos {
          * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult}
          */
         public static final class Builder extends
-            com.google.protobuf.GeneratedMessage.Builder<Builder>
-           implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResultOrBuilder {
+            com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult)
+            ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResultOrBuilder {
           public static final com.google.protobuf.Descriptors.Descriptor
               getDescriptor() {
             return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor;
@@ -9212,7 +9261,6 @@ public final class ClusterSimulationProtos {
           }
           private int bitField0_;
 
-          // optional double cell_state_avg_cpu_utilization = 1;
           private double cellStateAvgCpuUtilization_ ;
           /**
            * <code>optional double cell_state_avg_cpu_utilization = 1;</code>
@@ -9261,7 +9309,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // optional double cell_state_avg_mem_utilization = 2;
           private double cellStateAvgMemUtilization_ ;
           /**
            * <code>optional double cell_state_avg_mem_utilization = 2;</code>
@@ -9294,7 +9341,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // optional double cell_state_avg_cpu_locked = 3;
           private double cellStateAvgCpuLocked_ ;
           /**
            * <code>optional double cell_state_avg_cpu_locked = 3;</code>
@@ -9347,7 +9393,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // optional double cell_state_avg_mem_locked = 4;
           private double cellStateAvgMemLocked_ ;
           /**
            * <code>optional double cell_state_avg_mem_locked = 4;</code>
@@ -9380,7 +9425,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats workload_stats = 5;
           private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats> workloadStats_ =
             java.util.Collections.emptyList();
           private void ensureWorkloadStatsIsMutable() {
@@ -9562,7 +9606,8 @@ public final class ClusterSimulationProtos {
               java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.WorkloadStats> values) {
             if (workloadStatsBuilder_ == null) {
               ensureWorkloadStatsIsMutable();
-              super.addAll(values, workloadStats_);
+              com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                  values, workloadStats_);
               onChanged();
             } else {
               workloadStatsBuilder_.addAllMessages(values);
@@ -9692,7 +9737,6 @@ public final class ClusterSimulationProtos {
             return workloadStatsBuilder_;
           }
 
-          // optional string sweep_workload = 6;
           private java.lang.Object sweepWorkload_ = "";
           /**
            * <code>optional string sweep_workload = 6;</code>
@@ -9714,9 +9758,12 @@ public final class ClusterSimulationProtos {
           public java.lang.String getSweepWorkload() {
             java.lang.Object ref = sweepWorkload_;
             if (!(ref instanceof java.lang.String)) {
-              java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                  .toStringUtf8();
-              sweepWorkload_ = s;
+              com.google.protobuf.ByteString bs =
+                  (com.google.protobuf.ByteString) ref;
+              java.lang.String s = bs.toStringUtf8();
+              if (bs.isValidUtf8()) {
+                sweepWorkload_ = s;
+              }
               return s;
             } else {
               return (java.lang.String) ref;
@@ -9790,7 +9837,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // optional double avg_job_interarrival_time = 7;
           private double avgJobInterarrivalTime_ ;
           /**
            * <code>optional double avg_job_interarrival_time = 7;</code>
@@ -9823,7 +9869,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats scheduler_stats = 8;
           private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats> schedulerStats_ =
             java.util.Collections.emptyList();
           private void ensureSchedulerStatsIsMutable() {
@@ -10005,7 +10050,8 @@ public final class ClusterSimulationProtos {
               java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats> values) {
             if (schedulerStatsBuilder_ == null) {
               ensureSchedulerStatsIsMutable();
-              super.addAll(values, schedulerStats_);
+              com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                  values, schedulerStats_);
               onChanged();
             } else {
               schedulerStatsBuilder_.addAllMessages(values);
@@ -10135,7 +10181,6 @@ public final class ClusterSimulationProtos {
             return schedulerStatsBuilder_;
           }
 
-          // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload sweep_scheduler_workload = 9;
           private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload> sweepSchedulerWorkload_ =
             java.util.Collections.emptyList();
           private void ensureSweepSchedulerWorkloadIsMutable() {
@@ -10317,7 +10362,8 @@ public final class ClusterSimulationProtos {
               java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerWorkload> values) {
             if (sweepSchedulerWorkloadBuilder_ == null) {
               ensureSweepSchedulerWorkloadIsMutable();
-              super.addAll(values, sweepSchedulerWorkload_);
+              com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                  values, sweepSchedulerWorkload_);
               onChanged();
             } else {
               sweepSchedulerWorkloadBuilder_.addAllMessages(values);
@@ -10447,7 +10493,6 @@ public final class ClusterSimulationProtos {
             return sweepSchedulerWorkloadBuilder_;
           }
 
-          // optional double constant_think_time = 10;
           private double constantThinkTime_ ;
           /**
            * <code>optional double constant_think_time = 10;</code>
@@ -10480,7 +10525,6 @@ public final class ClusterSimulationProtos {
             return this;
           }
 
-          // optional double per_task_think_time = 11;
           private double perTaskThinkTime_ ;
           /**
            * <code>optional double per_task_think_time = 11;</code>
@@ -10541,7 +10585,6 @@ public final class ClusterSimulationProtos {
       }
 
       private int bitField0_;
-      // optional string cell_name = 1;
       public static final int CELL_NAME_FIELD_NUMBER = 1;
       private java.lang.Object cellName_;
       /**
@@ -10584,7 +10627,6 @@ public final class ClusterSimulationProtos {
         }
       }
 
-      // optional string workload_split_type = 2;
       public static final int WORKLOAD_SPLIT_TYPE_FIELD_NUMBER = 2;
       private java.lang.Object workloadSplitType_;
       /**
@@ -10627,7 +10669,6 @@ public final class ClusterSimulationProtos {
         }
       }
 
-      // optional double run_time = 3;
       public static final int RUN_TIME_FIELD_NUMBER = 3;
       private double runTime_;
       /**
@@ -10643,7 +10684,6 @@ public final class ClusterSimulationProtos {
         return runTime_;
       }
 
-      // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult experiment_result = 4;
       public static final int EXPERIMENT_RESULT_FIELD_NUMBER = 4;
       private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult> experimentResult_;
       /**
@@ -10679,7 +10719,6 @@ public final class ClusterSimulationProtos {
         return experimentResult_.get(index);
       }
 
-      // optional bool is_prefilled = 5 [default = false];
       public static final int IS_PREFILLED_FIELD_NUMBER = 5;
       private boolean isPrefilled_;
       /**
@@ -10695,7 +10734,6 @@ public final class ClusterSimulationProtos {
         return isPrefilled_;
       }
 
-      // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats common_workload_stats = 6;
       public static final int COMMON_WORKLOAD_STATS_FIELD_NUMBER = 6;
       private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats> commonWorkloadStats_;
       /**
@@ -10762,7 +10800,8 @@ public final class ClusterSimulationProtos {
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
         byte isInitialized = memoizedIsInitialized;
-        if (isInitialized != -1) return isInitialized == 1;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
 
         memoizedIsInitialized = 1;
         return true;
@@ -10908,8 +10947,9 @@ public final class ClusterSimulationProtos {
        * </pre>
        */
       public static final class Builder extends
-          com.google.protobuf.GeneratedMessage.Builder<Builder>
-         implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnvOrBuilder {
+          com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv)
+          ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnvOrBuilder {
         public static final com.google.protobuf.Descriptors.Descriptor
             getDescriptor() {
           return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor;
@@ -11137,7 +11177,6 @@ public final class ClusterSimulationProtos {
         }
         private int bitField0_;
 
-        // optional string cell_name = 1;
         private java.lang.Object cellName_ = "";
         /**
          * <code>optional string cell_name = 1;</code>
@@ -11151,9 +11190,12 @@ public final class ClusterSimulationProtos {
         public java.lang.String getCellName() {
           java.lang.Object ref = cellName_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            cellName_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              cellName_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -11211,7 +11253,6 @@ public final class ClusterSimulationProtos {
           return this;
         }
 
-        // optional string workload_split_type = 2;
         private java.lang.Object workloadSplitType_ = "";
         /**
          * <code>optional string workload_split_type = 2;</code>
@@ -11225,9 +11266,12 @@ public final class ClusterSimulationProtos {
         public java.lang.String getWorkloadSplitType() {
           java.lang.Object ref = workloadSplitType_;
           if (!(ref instanceof java.lang.String)) {
-            java.lang.String s = ((com.google.protobuf.ByteString) ref)
-                .toStringUtf8();
-            workloadSplitType_ = s;
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              workloadSplitType_ = s;
+            }
             return s;
           } else {
             return (java.lang.String) ref;
@@ -11285,7 +11329,6 @@ public final class ClusterSimulationProtos {
           return this;
         }
 
-        // optional double run_time = 3;
         private double runTime_ ;
         /**
          * <code>optional double run_time = 3;</code>
@@ -11318,7 +11361,6 @@ public final class ClusterSimulationProtos {
           return this;
         }
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.ExperimentResult experiment_result = 4;
         private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult> experimentResult_ =
           java.util.Collections.emptyList();
         private void ensureExperimentResultIsMutable() {
@@ -11460,7 +11502,8 @@ public final class ClusterSimulationProtos {
             java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.ExperimentResult> values) {
           if (experimentResultBuilder_ == null) {
             ensureExperimentResultIsMutable();
-            super.addAll(values, experimentResult_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                values, experimentResult_);
             onChanged();
           } else {
             experimentResultBuilder_.addAllMessages(values);
@@ -11558,7 +11601,6 @@ public final class ClusterSimulationProtos {
           return experimentResultBuilder_;
         }
 
-        // optional bool is_prefilled = 5 [default = false];
         private boolean isPrefilled_ ;
         /**
          * <code>optional bool is_prefilled = 5 [default = false];</code>
@@ -11591,7 +11633,6 @@ public final class ClusterSimulationProtos {
           return this;
         }
 
-        // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats common_workload_stats = 6;
         private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats> commonWorkloadStats_ =
           java.util.Collections.emptyList();
         private void ensureCommonWorkloadStatsIsMutable() {
@@ -11773,7 +11814,8 @@ public final class ClusterSimulationProtos {
             java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv.CommonWorkloadStats> values) {
           if (commonWorkloadStatsBuilder_ == null) {
             ensureCommonWorkloadStatsIsMutable();
-            super.addAll(values, commonWorkloadStats_);
+            com.google.protobuf.AbstractMessageLite.Builder.addAll(
+                values, commonWorkloadStats_);
             onChanged();
           } else {
             commonWorkloadStatsBuilder_.addAllMessages(values);
@@ -11914,7 +11956,6 @@ public final class ClusterSimulationProtos {
       // @@protoc_insertion_point(class_scope:ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv)
     }
 
-    // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv experiment_env = 1;
     public static final int EXPERIMENT_ENV_FIELD_NUMBER = 1;
     private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv> experimentEnv_;
     /**
@@ -11956,7 +11997,8 @@ public final class ClusterSimulationProtos {
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
 
       memoizedIsInitialized = 1;
       return true;
@@ -12063,8 +12105,9 @@ public final class ClusterSimulationProtos {
      * Protobuf type {@code ClusterSchedulingSimulation.ExperimentResultSet}
      */
     public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSetOrBuilder {
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:ClusterSchedulingSimulation.ExperimentResultSet)
+        ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSetOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
         return ClusterSchedulingSimulation.ClusterSimulationProtos.internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor;
@@ -12208,7 +12251,6 @@ public final class ClusterSimulationProtos {
       }
       private int bitField0_;
 
-      // repeated .ClusterSchedulingSimulation.ExperimentResultSet.ExperimentEnv experiment_env = 1;
       private java.util.List<ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv> experimentEnv_ =
         java.util.Collections.emptyList();
       private void ensureExperimentEnvIsMutable() {
@@ -12350,7 +12392,8 @@ public final class ClusterSimulationProtos {
           java.lang.Iterable<? extends ClusterSchedulingSimulation.ClusterSimulationProtos.ExperimentResultSet.ExperimentEnv> values) {
         if (experimentEnvBuilder_ == null) {
           ensureExperimentEnvIsMutable();
-          super.addAll(values, experimentEnv_);
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, experimentEnv_);
           onChanged();
         } else {
           experimentEnvBuilder_.addAllMessages(values);
@@ -12459,52 +12502,52 @@ public final class ClusterSimulationProtos {
     // @@protoc_insertion_point(class_scope:ClusterSchedulingSimulation.ExperimentResultSet)
   }
 
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -12519,10 +12562,10 @@ public final class ClusterSimulationProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\037cluster_simulation_protos.proto\022\033Clust" +
-      "erSchedulingSimulation\"\256\030\n\023ExperimentRes" +
+      "erSchedulingSimulation\"\351\030\n\023ExperimentRes" +
       "ultSet\022V\n\016experiment_env\030\001 \003(\0132>.Cluster" +
       "SchedulingSimulation.ExperimentResultSet" +
-      ".ExperimentEnv\032\276\027\n\rExperimentEnv\022\021\n\tcell" +
+      ".ExperimentEnv\032\371\027\n\rExperimentEnv\022\021\n\tcell" +
       "_name\030\001 \001(\t\022\033\n\023workload_split_type\030\002 \001(\t" +
       "\022\020\n\010run_time\030\003 \001(\001\022j\n\021experiment_result\030" +
       "\004 \003(\0132O.ClusterSchedulingSimulation.Expe" +
@@ -12530,147 +12573,149 @@ public final class ClusterSimulationProtos {
       "Result\022\033\n\014is_prefilled\030\005 \001(\010:\005false\022q\n\025c",
       "ommon_workload_stats\030\006 \003(\0132R.ClusterSche" +
       "dulingSimulation.ExperimentResultSet.Exp" +
-      "erimentEnv.CommonWorkloadStats\032\212\002\n\023Commo" +
+      "erimentEnv.CommonWorkloadStats\032\247\002\n\023Commo" +
       "nWorkloadStats\022\025\n\rworkload_name\030\001 \001(\t\022n\n" +
       "\tjob_stats\030\002 \003(\0132[.ClusterSchedulingSimu" +
       "lation.ExperimentResultSet.ExperimentEnv" +
-      ".CommonWorkloadStats.JobStats\032l\n\010JobStat" +
-      "s\022\n\n\002id\030\001 \001(\003\022\021\n\tnum_tasks\030\002 \001(\005\022\024\n\014mem_" +
-      "per_task\030\003 \001(\001\022\024\n\014cpu_per_task\030\004 \001(\001\022\025\n\r" +
-      "task_duration\030\005 \001(\001\032\341\022\n\020ExperimentResult",
-      "\022&\n\036cell_state_avg_cpu_utilization\030\001 \001(\001" +
-      "\022&\n\036cell_state_avg_mem_utilization\030\002 \001(\001" +
-      "\022!\n\031cell_state_avg_cpu_locked\030\003 \001(\001\022!\n\031c" +
-      "ell_state_avg_mem_locked\030\004 \001(\001\022u\n\016worklo" +
-      "ad_stats\030\005 \003(\0132].ClusterSchedulingSimula" +
-      "tion.ExperimentResultSet.ExperimentEnv.E" +
-      "xperimentResult.WorkloadStats\022\026\n\016sweep_w" +
-      "orkload\030\006 \001(\t\022!\n\031avg_job_interarrival_ti" +
-      "me\030\007 \001(\001\022w\n\017scheduler_stats\030\010 \003(\0132^.Clus" +
-      "terSchedulingSimulation.ExperimentResult",
+      ".CommonWorkloadStats.JobStats\032\210\001\n\010JobSta" +
+      "ts\022\n\n\002id\030\001 \001(\003\022\021\n\tnum_tasks\030\002 \001(\005\022\024\n\014mem" +
+      "_per_task\030\003 \001(\001\022\024\n\014cpu_per_task\030\004 \001(\001\022\025\n" +
+      "\rtask_duration\030\005 \001(\001\022\032\n\022num_tasks_moldab",
+      "le\030\006 \001(\001\032\377\022\n\020ExperimentResult\022&\n\036cell_st" +
+      "ate_avg_cpu_utilization\030\001 \001(\001\022&\n\036cell_st" +
+      "ate_avg_mem_utilization\030\002 \001(\001\022!\n\031cell_st" +
+      "ate_avg_cpu_locked\030\003 \001(\001\022!\n\031cell_state_a" +
+      "vg_mem_locked\030\004 \001(\001\022u\n\016workload_stats\030\005 " +
+      "\003(\0132].ClusterSchedulingSimulation.Experi" +
+      "mentResultSet.ExperimentEnv.ExperimentRe" +
+      "sult.WorkloadStats\022\026\n\016sweep_workload\030\006 \001" +
+      "(\t\022!\n\031avg_job_interarrival_time\030\007 \001(\001\022w\n" +
+      "\017scheduler_stats\030\010 \003(\0132^.ClusterScheduli",
+      "ngSimulation.ExperimentResultSet.Experim" +
+      "entEnv.ExperimentResult.SchedulerStats\022\203" +
+      "\001\n\030sweep_scheduler_workload\030\t \003(\0132a.Clus" +
+      "terSchedulingSimulation.ExperimentResult" +
       "Set.ExperimentEnv.ExperimentResult.Sched" +
-      "ulerStats\022\203\001\n\030sweep_scheduler_workload\030\t" +
-      " \003(\0132a.ClusterSchedulingSimulation.Exper" +
-      "imentResultSet.ExperimentEnv.ExperimentR" +
-      "esult.SchedulerWorkload\022\033\n\023constant_thin" +
-      "k_time\030\n \001(\001\022\033\n\023per_task_think_time\030\013 \001(" +
-      "\001\032\245\005\n\rWorkloadStats\022\025\n\rworkload_name\030\001 \001" +
-      "(\t\022\020\n\010num_jobs\030\002 \001(\003\022\032\n\022num_jobs_schedul" +
-      "ed\030\003 \001(\003\022 \n\030num_jobs_fully_scheduled\030\004 \001" +
-      "(\003\022%\n\035num_jobs_timed_out_scheduling\030\005 \001(",
-      "\003\022%\n\035job_think_times_90_percentile\030\006 \001(\001" +
-      "\0220\n(avg_job_queue_times_till_first_sched" +
-      "uled\030\007 \001(\001\0220\n(avg_job_queue_times_till_f" +
-      "ully_scheduled\030\010 \001(\001\0229\n1job_queue_time_t" +
-      "ill_first_scheduled_90_percentile\030\t \001(\001\022" +
-      "9\n1job_queue_time_till_fully_scheduled_9" +
-      "0_percentile\030\n \001(\001\022-\n%num_scheduling_att" +
-      "empts_90_percentile\030\013 \001(\001\022-\n%num_schedul" +
-      "ing_attempts_99_percentile\030\014 \001(\001\0222\n*num_" +
-      "task_scheduling_attempts_90_percentile\030\r",
-      " \001(\001\0222\n*num_task_scheduling_attempts_99_" +
-      "percentile\030\016 \001(\001\022\036\n\026avg_job_execution_ti" +
-      "me\030\017 \001(\001\022\037\n\027avg_job_completion_time\030\020 \001(" +
-      "\001\032\341\007\n\016SchedulerStats\022\026\n\016scheduler_name\030\001" +
-      " \001(\t\022\030\n\020useful_busy_time\030\002 \001(\001\022\030\n\020wasted" +
-      "_busy_time\030\003 \001(\001\022\201\001\n\rper_day_stats\030\004 \003(\013" +
-      "2j.ClusterSchedulingSimulation.Experimen" +
+      "ulerWorkload\022\033\n\023constant_think_time\030\n \001(" +
+      "\001\022\033\n\023per_task_think_time\030\013 \001(\001\032\303\005\n\rWorkl" +
+      "oadStats\022\025\n\rworkload_name\030\001 \001(\t\022\020\n\010num_j" +
+      "obs\030\002 \001(\003\022\032\n\022num_jobs_scheduled\030\003 \001(\003\022 \n" +
+      "\030num_jobs_fully_scheduled\030\004 \001(\003\022%\n\035num_j",
+      "obs_timed_out_scheduling\030\005 \001(\003\022%\n\035job_th" +
+      "ink_times_90_percentile\030\006 \001(\001\0220\n(avg_job" +
+      "_queue_times_till_first_scheduled\030\007 \001(\001\022" +
+      "0\n(avg_job_queue_times_till_fully_schedu" +
+      "led\030\010 \001(\001\0229\n1job_queue_time_till_first_s" +
+      "cheduled_90_percentile\030\t \001(\001\0229\n1job_queu" +
+      "e_time_till_fully_scheduled_90_percentil" +
+      "e\030\n \001(\001\022-\n%num_scheduling_attempts_90_pe" +
+      "rcentile\030\013 \001(\001\022-\n%num_scheduling_attempt" +
+      "s_99_percentile\030\014 \001(\001\0222\n*num_task_schedu",
+      "ling_attempts_90_percentile\030\r \001(\001\0222\n*num" +
+      "_task_scheduling_attempts_99_percentile\030" +
+      "\016 \001(\001\022\036\n\026avg_job_execution_time\030\017 \001(\001\022\037\n" +
+      "\027avg_job_completion_time\030\020 \001(\001\022\034\n\024avg_jo" +
+      "b_ramp_up_time\030\021 \001(\001\032\341\007\n\016SchedulerStats\022" +
+      "\026\n\016scheduler_name\030\001 \001(\t\022\030\n\020useful_busy_t" +
+      "ime\030\002 \001(\001\022\030\n\020wasted_busy_time\030\003 \001(\001\022\201\001\n\r" +
+      "per_day_stats\030\004 \003(\0132j.ClusterSchedulingS" +
+      "imulation.ExperimentResultSet.Experiment" +
+      "Env.ExperimentResult.SchedulerStats.PerD",
+      "ayStats\022\222\001\n\026per_workload_busy_time\030\005 \003(\013" +
+      "2r.ClusterSchedulingSimulation.Experimen" +
       "tResultSet.ExperimentEnv.ExperimentResul" +
-      "t.SchedulerStats.PerDayStats\022\222\001\n\026per_wor" +
-      "kload_busy_time\030\005 \003(\0132r.ClusterSchedulin",
-      "gSimulation.ExperimentResultSet.Experime" +
-      "ntEnv.ExperimentResult.SchedulerStats.Pe" +
-      "rWorkloadBusyTime\022#\n\033num_successful_tran" +
-      "sactions\030\006 \001(\003\022\037\n\027num_failed_transaction" +
-      "s\030\007 \001(\003\0222\n*num_no_resources_found_schedu" +
-      "ling_attempts\030\010 \001(\003\022 \n\030num_retried_trans" +
-      "actions\030\t \001(\003\022%\n\035num_jobs_timed_out_sche" +
-      "duling\030\n \001(\003\022(\n num_successful_task_tran" +
-      "sactions\030\013 \001(\003\022$\n\034num_failed_task_transa" +
-      "ctions\030\014 \001(\003\022\025\n\ris_multi_path\030\r \001(\010\022\036\n\026n",
-      "um_jobs_left_in_queue\030\016 \001(\003\022#\n\033failed_fi" +
-      "nd_victim_attempts\030\017 \001(\003\032\230\001\n\013PerDayStats" +
-      "\022\017\n\007day_num\030\001 \001(\003\022\030\n\020useful_busy_time\030\002 " +
-      "\001(\001\022\030\n\020wasted_busy_time\030\003 \001(\001\022#\n\033num_suc" +
-      "cessful_transactions\030\004 \001(\003\022\037\n\027num_failed" +
-      "_transactions\030\005 \001(\003\032`\n\023PerWorkloadBusyTi" +
-      "me\022\025\n\rworkload_name\030\001 \001(\t\022\030\n\020useful_busy" +
-      "_time\030\002 \001(\001\022\030\n\020wasted_busy_time\030\003 \001(\001\032@\n" +
-      "\021SchedulerWorkload\022\025\n\rschedulerName\030\001 \001(" +
-      "\t\022\024\n\014workloadName\030\002 \001(\t"
+      "t.SchedulerStats.PerWorkloadBusyTime\022#\n\033" +
+      "num_successful_transactions\030\006 \001(\003\022\037\n\027num" +
+      "_failed_transactions\030\007 \001(\003\0222\n*num_no_res" +
+      "ources_found_scheduling_attempts\030\010 \001(\003\022 " +
+      "\n\030num_retried_transactions\030\t \001(\003\022%\n\035num_" +
+      "jobs_timed_out_scheduling\030\n \001(\003\022(\n num_s" +
+      "uccessful_task_transactions\030\013 \001(\003\022$\n\034num",
+      "_failed_task_transactions\030\014 \001(\003\022\025\n\ris_mu" +
+      "lti_path\030\r \001(\010\022\036\n\026num_jobs_left_in_queue" +
+      "\030\016 \001(\003\022#\n\033failed_find_victim_attempts\030\017 " +
+      "\001(\003\032\230\001\n\013PerDayStats\022\017\n\007day_num\030\001 \001(\003\022\030\n\020" +
+      "useful_busy_time\030\002 \001(\001\022\030\n\020wasted_busy_ti" +
+      "me\030\003 \001(\001\022#\n\033num_successful_transactions\030" +
+      "\004 \001(\003\022\037\n\027num_failed_transactions\030\005 \001(\003\032`" +
+      "\n\023PerWorkloadBusyTime\022\025\n\rworkload_name\030\001" +
+      " \001(\t\022\030\n\020useful_busy_time\030\002 \001(\001\022\030\n\020wasted" +
+      "_busy_time\030\003 \001(\001\032@\n\021SchedulerWorkload\022\025\n",
+      "\rschedulerName\030\001 \001(\t\022\024\n\014workloadName\030\002 \001" +
+      "(\t"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
-      new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-        public com.google.protobuf.ExtensionRegistry assignDescriptors(
-            com.google.protobuf.Descriptors.FileDescriptor root) {
-          descriptor = root;
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor =
-            getDescriptor().getMessageTypes().get(0);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor,
-              new java.lang.String[] { "ExperimentEnv", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor.getNestedTypes().get(0);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor,
-              new java.lang.String[] { "CellName", "WorkloadSplitType", "RunTime", "ExperimentResult", "IsPrefilled", "CommonWorkloadStats", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor.getNestedTypes().get(0);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor,
-              new java.lang.String[] { "WorkloadName", "JobStats", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor.getNestedTypes().get(0);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_descriptor,
-              new java.lang.String[] { "Id", "NumTasks", "MemPerTask", "CpuPerTask", "TaskDuration", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor.getNestedTypes().get(1);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor,
-              new java.lang.String[] { "CellStateAvgCpuUtilization", "CellStateAvgMemUtilization", "CellStateAvgCpuLocked", "CellStateAvgMemLocked", "WorkloadStats", "SweepWorkload", "AvgJobInterarrivalTime", "SchedulerStats", "SweepSchedulerWorkload", "ConstantThinkTime", "PerTaskThinkTime", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor.getNestedTypes().get(0);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_descriptor,
-              new java.lang.String[] { "WorkloadName", "NumJobs", "NumJobsScheduled", "NumJobsFullyScheduled", "NumJobsTimedOutScheduling", "JobThinkTimes90Percentile", "AvgJobQueueTimesTillFirstScheduled", "AvgJobQueueTimesTillFullyScheduled", "JobQueueTimeTillFirstScheduled90Percentile", "JobQueueTimeTillFullyScheduled90Percentile", "NumSchedulingAttempts90Percentile", "NumSchedulingAttempts99Percentile", "NumTaskSchedulingAttempts90Percentile", "NumTaskSchedulingAttempts99Percentile", "AvgJobExecutionTime", "AvgJobCompletionTime", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor.getNestedTypes().get(1);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor,
-              new java.lang.String[] { "SchedulerName", "UsefulBusyTime", "WastedBusyTime", "PerDayStats", "PerWorkloadBusyTime", "NumSuccessfulTransactions", "NumFailedTransactions", "NumNoResourcesFoundSchedulingAttempts", "NumRetriedTransactions", "NumJobsTimedOutScheduling", "NumSuccessfulTaskTransactions", "NumFailedTaskTransactions", "IsMultiPath", "NumJobsLeftInQueue", "FailedFindVictimAttempts", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor.getNestedTypes().get(0);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_descriptor,
-              new java.lang.String[] { "DayNum", "UsefulBusyTime", "WastedBusyTime", "NumSuccessfulTransactions", "NumFailedTransactions", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor.getNestedTypes().get(1);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_descriptor,
-              new java.lang.String[] { "WorkloadName", "UsefulBusyTime", "WastedBusyTime", });
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_descriptor =
-            internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor.getNestedTypes().get(2);
-          internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_descriptor,
-              new java.lang.String[] { "SchedulerName", "WorkloadName", });
-          return null;
-        }
-      };
+        new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
+          public com.google.protobuf.ExtensionRegistry assignDescriptors(
+              com.google.protobuf.Descriptors.FileDescriptor root) {
+            descriptor = root;
+            return null;
+          }
+        };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor =
+      getDescriptor().getMessageTypes().get(0);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor,
+        new java.lang.String[] { "ExperimentEnv", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_descriptor.getNestedTypes().get(0);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor,
+        new java.lang.String[] { "CellName", "WorkloadSplitType", "RunTime", "ExperimentResult", "IsPrefilled", "CommonWorkloadStats", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor.getNestedTypes().get(0);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor,
+        new java.lang.String[] { "WorkloadName", "JobStats", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_descriptor.getNestedTypes().get(0);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_CommonWorkloadStats_JobStats_descriptor,
+        new java.lang.String[] { "Id", "NumTasks", "MemPerTask", "CpuPerTask", "TaskDuration", "NumTasksMoldable", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_descriptor.getNestedTypes().get(1);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor,
+        new java.lang.String[] { "CellStateAvgCpuUtilization", "CellStateAvgMemUtilization", "CellStateAvgCpuLocked", "CellStateAvgMemLocked", "WorkloadStats", "SweepWorkload", "AvgJobInterarrivalTime", "SchedulerStats", "SweepSchedulerWorkload", "ConstantThinkTime", "PerTaskThinkTime", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor.getNestedTypes().get(0);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_WorkloadStats_descriptor,
+        new java.lang.String[] { "WorkloadName", "NumJobs", "NumJobsScheduled", "NumJobsFullyScheduled", "NumJobsTimedOutScheduling", "JobThinkTimes90Percentile", "AvgJobQueueTimesTillFirstScheduled", "AvgJobQueueTimesTillFullyScheduled", "JobQueueTimeTillFirstScheduled90Percentile", "JobQueueTimeTillFullyScheduled90Percentile", "NumSchedulingAttempts90Percentile", "NumSchedulingAttempts99Percentile", "NumTaskSchedulingAttempts90Percentile", "NumTaskSchedulingAttempts99Percentile", "AvgJobExecutionTime", "AvgJobCompletionTime", "AvgJobRampUpTime", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor.getNestedTypes().get(1);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor,
+        new java.lang.String[] { "SchedulerName", "UsefulBusyTime", "WastedBusyTime", "PerDayStats", "PerWorkloadBusyTime", "NumSuccessfulTransactions", "NumFailedTransactions", "NumNoResourcesFoundSchedulingAttempts", "NumRetriedTransactions", "NumJobsTimedOutScheduling", "NumSuccessfulTaskTransactions", "NumFailedTaskTransactions", "IsMultiPath", "NumJobsLeftInQueue", "FailedFindVictimAttempts", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor.getNestedTypes().get(0);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerDayStats_descriptor,
+        new java.lang.String[] { "DayNum", "UsefulBusyTime", "WastedBusyTime", "NumSuccessfulTransactions", "NumFailedTransactions", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_descriptor.getNestedTypes().get(1);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerStats_PerWorkloadBusyTime_descriptor,
+        new java.lang.String[] { "WorkloadName", "UsefulBusyTime", "WastedBusyTime", });
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_descriptor =
+      internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_descriptor.getNestedTypes().get(2);
+    internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_ClusterSchedulingSimulation_ExperimentResultSet_ExperimentEnv_ExperimentResult_SchedulerWorkload_descriptor,
+        new java.lang.String[] { "SchedulerName", "WorkloadName", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

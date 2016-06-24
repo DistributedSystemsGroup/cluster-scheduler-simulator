@@ -1,3 +1,5 @@
+#! /bin/python3
+
 # Copyright (c) 2013, Regents of the University of California
 # All rights reserved.
 
@@ -29,21 +31,40 @@
 # C, L, or lambda can be varied per a single series (the simulator
 # currently allows ranges to be provided for more than one of these).
 
-import sys, os, re
-from utils import *
-from decimal import Decimal
-import logging
-import numpy as np
-import matplotlib.pyplot as plt
-import math
-import operator
-import re
-import sets
-from collections import defaultdict
+import sys
 
-# import cluster_simulation_protos_pb2
-import imp
-cluster_simulation_protos_pb2 = imp.load_source('cluster_simulation_protos_pb2', '../cluster_simulation_protos_pb2.py')
+if sys.version_info[0] == 3:
+    if sys.version_info[1] == 4:
+        from importlib.machinery import SourceFileLoader
+        cluster_simulation_protos_pb2 = SourceFileLoader("cluster_simulation_protos_pb2",
+                                                         "../cluster_simulation_protos_pb2.py").load_module()
+        utils = SourceFileLoader("utils", "./utils.py").load_module()
+    else:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cluster_simulation_protos_pb2",
+                                                      "../cluster_simulation_protos_pb2.py")
+        cluster_simulation_protos_pb2 = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cluster_simulation_protos_pb2)
+        spec = importlib.util.spec_from_file_location("utils", "./utils.py")
+        utils = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(utils)
+elif sys.version_info[0] == 2:
+    import imp
+    cluster_simulation_protos_pb2 = imp.load_source("cluster_simulation_protos_pb2",
+                                                    "../cluster_simulation_protos_pb2.py")
+    utils = imp.load_source('utils', './utils.py')
+
+import logging
+import operator
+import os
+import re
+from collections import defaultdict
+from decimal import Decimal
+from filecmp import cmp
+
+import matplotlib.pyplot as plt
+import numpy as np
+import sets
 
 # logging.basicConfig(level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
@@ -86,12 +107,12 @@ try:
 except:
     usage()
 
-set_leg_fontsize(11)
+utils.set_leg_fontsize(11)
 
 # ---------------------------------------
 # Set up some general graphing variables.
 if paper_mode:
-    set_paper_rcs()
+    utils.set_paper_rcs()
     fig = plt.figure(figsize=(2, 1.33))
 else:
     fig = plt.figure()
@@ -321,10 +342,11 @@ def get_mad(median, data):
 def sort_labels(handles, labels):
     hl = sorted(zip(handles, labels),
                 lambda x, y: cmp(int(operator.itemgetter(1)(x)), int(operator.itemgetter(1)(y))))
-    handles2, labels2 = zip(*hl)
+    handles2, labels2 = list(zip(*hl))
     return handles2, labels2
 
 
+output_prefix = os.path.normpath(output_prefix)
 logging.info("Output prefix: %s" % output_prefix)
 logging.info("Input file(s): %s" % input_protobuffs)
 
@@ -332,6 +354,7 @@ input_list = input_protobuffs.split(",")
 logging.info("protobuff list: %s" % input_list)
 
 for filename in input_list:
+    filename = os.path.normpath(filename)
     logging.info("Handling file %s." % filename)
     # Read in the ExperimentResultSet.
     experiment_result_set = cluster_simulation_protos_pb2.ExperimentResultSet()
@@ -349,61 +372,76 @@ for filename in input_list:
         # Within this environment, loop through each experiment result
         logging.debug("Processing %d experiment results." % len(env.experiment_result))
 
+
         # We're going to sort the experiment_results in case the experiments
         # in a series were run out of order.
         # Different types of experiment results require different comparators.
-        def c_comparator(a, b):
-            return cmp(a.constant_think_time, b.constant_think_time)
+        # def c_comparator(a, b):
+        #     return cmp(a.constant_think_time, b.constant_think_time)
+        #
+        #
+        # def l_comparator(a, b):
+        #     return cmp(a.per_task_think_time, b.per_task_think_time)
+        #
+        #
+        # def lambda_comparator(a, b):
+        #     return cmp(a.avg_job_interarrival_time, b.avg_job_interarrival_time)
+
+        def c_comparator(item):
+            return item.constant_think_time
 
 
-        def l_comparator(a, b):
-            return cmp(a.per_task_think_time, b.per_task_think_time)
+        def l_comparator(item):
+            return item.per_task_think_time
 
 
-        def lambda_comparator(a, b):
-            return cmp(a.avg_job_interarrival_time, b.avg_job_interarrival_time)
+        def lambda_comparator(item):
+            return item.avg_job_interarrival_time
 
 
         sorted_exp_results = env.experiment_result
         if vary_dim == "c":
-            sorted_exp_results = sorted(env.experiment_result, c_comparator)
+            # sorted_exp_results = sorted(env.experiment_result, c_comparator)
+            sorted_exp_results.sort(key=c_comparator)
         elif vary_dim == "l":
-            sorted_exp_results = sorted(env.experiment_result, l_comparator)
+            # sorted_exp_results = sorted(env.experiment_result, l_comparator)
+            sorted_exp_results.sort(key=l_comparator)
         else:
-            sorted_exp_results = sorted(env.experiment_result, lambda_comparator)
+            # sorted_exp_results = sorted(env.experiment_result, lambda_comparator)
+            sorted_exp_results.sort(key=lambda_comparator)
 
         for common_workload_stats in env.common_workload_stats:
             workload_name = common_workload_stats.workload_name
             for job_stats in common_workload_stats.job_stats:
                 # Number of Tasks
-                append_or_create_2d(workload_job_num_tasks,
-                                    exp_env,
-                                    workload_name,
-                                    job_stats.num_tasks)
+                utils.append_or_create_2d(workload_job_num_tasks,
+                                          exp_env,
+                                          workload_name,
+                                          job_stats.num_tasks)
 
                 # Number of Tasks
-                append_or_create_2d(workload_job_num_moldable_tasks,
-                                    exp_env,
-                                    workload_name,
-                                    job_stats.num_tasks_moldable)
+                utils.append_or_create_2d(workload_job_num_moldable_tasks,
+                                          exp_env,
+                                          workload_name,
+                                          job_stats.num_tasks_moldable)
 
                 # Memory per Tasks
-                append_or_create_2d(workload_job_mem_tasks,
-                                    exp_env,
-                                    workload_name,
-                                    job_stats.mem_per_task * (1024 ** 2))
+                utils.append_or_create_2d(workload_job_mem_tasks,
+                                          exp_env,
+                                          workload_name,
+                                          job_stats.mem_per_task * (1024 ** 2))
 
                 # CPU per Tasks
-                append_or_create_2d(workload_job_cpu_tasks,
-                                    exp_env,
-                                    workload_name,
-                                    job_stats.cpu_per_task)
+                utils.append_or_create_2d(workload_job_cpu_tasks,
+                                          exp_env,
+                                          workload_name,
+                                          job_stats.cpu_per_task)
 
                 # Tasks Runtime
-                append_or_create_2d(workload_job_runtime_tasks,
-                                    exp_env,
-                                    workload_name,
-                                    job_stats.task_duration)
+                utils.append_or_create_2d(workload_job_runtime_tasks,
+                                          exp_env,
+                                          workload_name,
+                                          job_stats.task_duration)
 
         for exp_result in sorted_exp_results:
             # Record the correct x val depending on which dimension is being
@@ -440,92 +478,92 @@ for filename in input_list:
             for wl_stat in exp_result.workload_stats:
                 # Avg. job queue times till first scheduling.
                 value = Value(x_val, wl_stat.avg_job_queue_times_till_first_scheduled)
-                append_or_create_2d(workload_queue_time_till_first,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_queue_time_till_first,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
                 # logging.debug("workload_queue_time_till_first[%s %s].append(%s)."
                 #               % (exp_env, wl_stat.workload_name, value))
 
                 # Avg. job queue times till fully scheduling.
                 value = Value(x_val, wl_stat.avg_job_queue_times_till_fully_scheduled)
-                append_or_create_2d(workload_queue_time_till_fully,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_queue_time_till_fully,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
                 # logging.debug("workload_queue_time_till_fully[%s %s].append(%s)."
                 #               % (exp_env, wl_stat.workload_name, value))
 
                 # Avg. job ramp-up times.
                 value = Value(x_val, wl_stat.avg_job_ramp_up_time)
-                append_or_create_2d(workload_avg_ramp_up_time,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_avg_ramp_up_time,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
 
                 # 90%tile job queue times till first scheduling.
                 value = \
                     Value(x_val, wl_stat.job_queue_time_till_first_scheduled_90_percentile)
-                append_or_create_2d(workload_queue_time_till_first_90_ptile,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_queue_time_till_first_90_ptile,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
                 # logging.debug("workload_queue_time_till_first_90_ptile[%s %s].append(%s)."
                 #               % (exp_env, wl_stat.workload_name, value))
 
                 # 90%tile job queue times till fully scheduling.
                 value = \
                     Value(x_val, wl_stat.job_queue_time_till_fully_scheduled_90_percentile)
-                append_or_create_2d(workload_queue_time_till_fully_90_ptile,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_queue_time_till_fully_90_ptile,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
                 # logging.debug("workload_queue_time_till_fully_90_ptile[%s %s].append(%s)."
                 #               % (exp_env, wl_stat.workload_name, value))
 
                 # Num jobs that didn't schedule.
                 value = Value(x_val, wl_stat.num_jobs - wl_stat.num_jobs_scheduled)
-                append_or_create_2d(workload_num_jobs_unscheduled,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_num_jobs_unscheduled,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
                 # logging.debug("num_jobs_unscheduled[%s %s].append(%s)."
                 #               % (exp_env, wl_stat.workload_name, value))
 
                 # Num jobs that did schedule at least one task.
                 value = Value(x_val, wl_stat.num_jobs_scheduled)
-                append_or_create_2d(workload_num_jobs_scheduled,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_num_jobs_scheduled,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
 
                 # Num jobs that timed out.
                 value = Value(x_val, wl_stat.num_jobs_timed_out_scheduling)
-                append_or_create_2d(workload_num_jobs_timed_out,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_num_jobs_timed_out,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
 
                 # Num jobs that did fully schedule.
                 value = Value(x_val, wl_stat.num_jobs_fully_scheduled)
-                append_or_create_2d(workload_num_jobs_fully_scheduled,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_num_jobs_fully_scheduled,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
 
                 # Avg job execution time.
                 value = Value(x_val, wl_stat.avg_job_execution_time)
-                append_or_create_2d(workload_avg_job_execution_time,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_avg_job_execution_time,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
 
                 # Avg completion time.
                 value = Value(x_val, wl_stat.avg_job_completion_time)
-                append_or_create_2d(workload_avg_job_completion_time,
-                                    exp_env,
-                                    wl_stat.workload_name,
-                                    value)
+                utils.append_or_create_2d(workload_avg_job_completion_time,
+                                          exp_env,
+                                          wl_stat.workload_name,
+                                          value)
 
             # If we have multiple schedulers of the same type, track
             # some stats as an average across them, using a (counter, sum).
@@ -571,7 +609,7 @@ for filename in input_list:
                 #      logging.error("Unrecognized scheduler name.")
                 #      sys.exit(1)
                 #    value = Value(x_val, bt_approx_fraction)
-                #    append_or_create_2d(sched_total_busy_fraction,
+                #    utils.append_or_create_2d(sched_total_busy_fraction,
                 #                        exp_env,
                 #                        sched_stat.scheduler_name + "Approx",
                 #                        value)
@@ -583,10 +621,10 @@ for filename in input_list:
                                   sched_stat.wasted_busy_time) /
                                  exp_env.run_time)
                 value = Value(x_val, busy_fraction)
-                append_or_create_2d(sched_total_busy_fraction,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_total_busy_fraction,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # Update the running average of busytime fraction for this scheduler-type.
                 sched_name_root = re.match('^[^-]+', sched_stat.scheduler_name).group(0)
                 avg_busy_fraction[sched_name_root]["count"] += 1.0
@@ -608,10 +646,10 @@ for filename in input_list:
                 #                conflict_fraction))
 
                 value = Value(x_val, conflict_fraction)
-                append_or_create_2d(sched_conflict_fraction,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_conflict_fraction,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("sched_conflict_fraction[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
 
@@ -649,37 +687,37 @@ for filename in input_list:
                 # Daily busy time median.
                 daily_busy_time_med = np.median(daily_busy_fractions)
                 value = Value(x_val, daily_busy_time_med)
-                append_or_create_2d(sched_daily_busy_fraction,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_daily_busy_fraction,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("sched_daily_busy_fraction[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
                 # Error Bar (MAD) for daily busy time.
                 value = Value(x_val, get_mad(daily_busy_time_med,
                                              daily_busy_fractions))
-                append_or_create_2d(sched_daily_busy_fraction_err,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_daily_busy_fraction_err,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("sched_daily_busy_fraction_err[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
                 # Daily conflict fraction median.
                 daily_conflict_fraction_med = np.median(daily_conflict_fractions)
                 value = Value(x_val, daily_conflict_fraction_med)
-                append_or_create_2d(sched_daily_conflict_fraction,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_daily_conflict_fraction,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("sched_daily_conflict_fraction[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
                 # Error Bar (MAD) for daily conflict fraction.
                 value = Value(x_val, get_mad(daily_conflict_fraction_med,
                                              daily_conflict_fractions))
-                append_or_create_2d(sched_daily_conflict_fraction_err,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_daily_conflict_fraction_err,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("sched_daily_conflict_fraction_err[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
 
@@ -695,61 +733,61 @@ for filename in input_list:
                     #                conflict_fraction))
 
                     value = Value(x_val, task_conflict_fraction)
-                    append_or_create_2d(sched_task_conflict_fraction,
-                                        exp_env,
-                                        sched_stat.scheduler_name,
-                                        value)
+                    utils.append_or_create_2d(sched_task_conflict_fraction,
+                                              exp_env,
+                                              sched_stat.scheduler_name,
+                                              value)
                     logging.debug("sched_task_conflict_fraction[%s %s].append(%s)."
                                   % (exp_env, sched_stat.scheduler_name, value))
 
                 # Num retried transactions
                 value = Value(x_val, sched_stat.num_retried_transactions)
-                append_or_create_2d(sched_num_retried_transactions,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_num_retried_transactions,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("num_retried_transactions[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
 
                 # Num jobs pending at end of simulation.
                 value = Value(x_val, sched_stat.num_jobs_left_in_queue)
-                append_or_create_2d(sched_num_jobs_remaining,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_num_jobs_remaining,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("sched_num_jobs_remaining[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
 
                 # Num failed find victim attempts
                 value = Value(x_val, sched_stat.failed_find_victim_attempts)
-                append_or_create_2d(sched_failed_find_victim_attempts,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_failed_find_victim_attempts,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
                 # logging.debug("failed_find_victim_attempts[%s %s].append(%s)."
                 #               % (exp_env, sched_stat.scheduler_name, value))
                 value = Value(x_val, sched_stat.num_jobs_timed_out_scheduling)
-                append_or_create_2d(sched_num_jobs_timed_out,
-                                    exp_env,
-                                    sched_stat.scheduler_name,
-                                    value)
+                utils.append_or_create_2d(sched_num_jobs_timed_out,
+                                          exp_env,
+                                          sched_stat.scheduler_name,
+                                          value)
 
             # Average busy time fraction across multiple schedulers
-            for sched_name_root, stats in avg_busy_fraction.iteritems():
+            for sched_name_root, stats in avg_busy_fraction.items():
                 avg = stats["sum"] / stats["count"]
                 value = Value(x_val, avg)
-                append_or_create_2d(multi_sched_avg_busy_fraction,
-                                    exp_env,
-                                    sched_name_root + "-" + str(int(stats["count"])),
-                                    value)
+                utils.append_or_create_2d(multi_sched_avg_busy_fraction,
+                                          exp_env,
+                                          sched_name_root + "-" + str(int(stats["count"])),
+                                          value)
             # Average conflict fraction across multiple schedulers
-            for sched_name_root, stats in avg_conflict_fraction.iteritems():
+            for sched_name_root, stats in avg_conflict_fraction.items():
                 avg = stats["sum"] / stats["count"]
                 value = Value(x_val, avg)
-                append_or_create_2d(multi_sched_avg_conflict_fraction,
-                                    exp_env,
-                                    sched_name_root + "-" + str(int(stats["count"])),
-                                    value)
+                utils.append_or_create_2d(multi_sched_avg_conflict_fraction,
+                                          exp_env,
+                                          sched_name_root + "-" + str(int(stats["count"])),
+                                          value)
 
 
 def plot_1d_data_set_dict(data_set_1d_dict,
@@ -766,10 +804,10 @@ def plot_1d_data_set_dict(data_set_1d_dict,
         ax = fig.add_subplot(111)
         # Track a union of all x_vals which can be used to figure out
         # the x-axis for the plot we are generating.
-        all_x_vals_set = sets.Set()
-        for exp_env, values in data_set_1d_dict.iteritems():
+        all_x_vals_set = set()
+        for exp_env, values in data_set_1d_dict.items():
             if paper_mode:
-                cell_label = cell_to_anon(exp_env.cell_name)
+                cell_label = utils.cell_to_anon(exp_env.cell_name)
             else:
                 cell_label = exp_env.cell_name
 
@@ -802,13 +840,13 @@ def plot_1d_data_set_dict(data_set_1d_dict,
                 local_linestyles = linestyles
 
             ax.plot(x_vals, y_vals, 'x-',
-                    color=local_colors[cell_to_anon(exp_env.cell_name)],
+                    color=local_colors[utils.cell_to_anon(exp_env.cell_name)],
                     label=cell_label, markersize=ms,
-                    mec=local_colors[cell_to_anon(exp_env.cell_name)])
+                    mec=local_colors[utils.cell_to_anon(exp_env.cell_name)])
 
         setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, all_x_vals_set, v_dim=vary_dim)
     except Exception as e:
-        logging.error(e.message)
+        logging.error(e)
 
 
 # In our per-workload or per-scheduler plots, all lines
@@ -831,10 +869,10 @@ def plot_2d_data_set_dict(data_set_2d_dict,
         ax = fig.add_subplot(111)
         # Track a union of all x_vals which can be used to figure out
         # the x-axis for the plot we are generating.
-        all_x_vals_set = sets.Set()
-        for exp_env, name_to_val_map in data_set_2d_dict.iteritems():
+        all_x_vals_set = set()
+        for exp_env, name_to_val_map in data_set_2d_dict.items():
             if paper_mode:
-                cell_label = cell_to_anon(exp_env.cell_name)
+                cell_label = utils.cell_to_anon(exp_env.cell_name)
             else:
                 cell_label = exp_env.cell_name
 
@@ -848,14 +886,15 @@ def plot_2d_data_set_dict(data_set_2d_dict,
             # passed in as argument envs_to_plot.
             if paper_mode and not re.search(cell_label, envs_to_plot):
                 logging.debug(
-                    "skipping plot because cell_label %s was not passed in as envs_to_plot %s" % (cell_label, envs_to_plot))
+                    "skipping plot because cell_label %s was not passed in as envs_to_plot %s" % (
+                        cell_label, envs_to_plot))
                 continue
             # if exp_env.is_prefilled:
             #   # TEMPORARY: Skip prefilled to get smaller place-holder graph
             #   #            for paper draft.
             #   continue
 
-            for wl_or_sched_name, values in name_to_val_map.iteritems():
+            for wl_or_sched_name, values in name_to_val_map.items():
                 # Skip service schedulers.
                 logging.debug("wl_or_sched_name is {}".format(wl_or_sched_name))
                 # if re.search('Service', wl_or_sched_name):
@@ -915,9 +954,9 @@ def plot_2d_data_set_dict(data_set_2d_dict,
                 if error_bars_data_set_2d_dict is None:
                     ax.plot(x_vals, y_vals, linestyles_paper[wl_or_sched_num],
                             dashes=dashes_paper[wl_or_sched_num],
-                            color=local_colors[cell_to_anon(exp_env.cell_name)],
+                            color=local_colors[utils.cell_to_anon(exp_env.cell_name)],
                             label=line_label, markersize=ms,
-                            mec=local_colors[cell_to_anon(exp_env.cell_name)])
+                            mec=local_colors[utils.cell_to_anon(exp_env.cell_name)])
                 else:
                     err_bar_vals = \
                         [i.y for i in error_bars_data_set_2d_dict[exp_env][wl_or_sched_name]]
@@ -934,7 +973,7 @@ def plot_2d_data_set_dict(data_set_2d_dict,
         logging.debug("all_x_vals_set size: {}".format(len(all_x_vals_set)))
         setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, all_x_vals_set, v_dim=vary_dim)
     except Exception as e:
-        logging.error(e.message)
+        logging.error(e)
 
 
 def plot_distribution(data_set_2d_dict,
@@ -946,96 +985,100 @@ def plot_distribution(data_set_2d_dict,
             y_axis_type == "ms-to-day" or
             y_axis_type == "abs")
     logging.info("Plotting {}".format(plot_title))
-    plt.clf()
-    ax = fig.add_subplot(111)
-    # Track a union of all x_vals which can be used to figure out
-    # the x-axis for the plot we are generating.
-    all_x_vals_set = sets.Set()
-    for exp_env, name_to_job_map in data_set_2d_dict.iteritems():
-        if paper_mode:
-            cell_label = cell_to_anon(exp_env.cell_name)
-        else:
-            cell_label = exp_env.cell_name
-
-        # if exp_env.cell_name != "B":
-        #      print("skipping %s" % exp_env.cell_name)
-        #      continue
-        #    else:
-        #      print("not skipping %s" % exp_env.cell_name)
-
-        # If in paper mode, skip this plot if the cell name was not
-        # passed in as argument envs_to_plot.
-        if paper_mode and not re.search(cell_label, envs_to_plot):
-            logging.debug(
-                "skipping plot because cell_label %s was not passed in as envs_to_plot %s" % (cell_label, envs_to_plot))
-            continue
-        # if exp_env.is_prefilled:
-        #   # TEMPORARY: Skip prefilled to get smaller place-holder graph
-        #   #            for paper draft.
-        #   continue
-
-        for wl_or_sched_name, values in name_to_job_map.iteritems():
-            # Skip service schedulers.
-            logging.debug("wl_or_sched_name is {}".format(wl_or_sched_name))
-            # if re.search('Service', wl_or_sched_name):
-            #     logging.debug("Skipping %s" % wl_or_sched_name)
-            #     continue
-
-            wl_or_sched_num = wl_or_sched_name
-            result = re.search('[0-9]+$', wl_or_sched_name)
-            if result is not None:
-                wl_or_sched_num = result.group(0)
-
-            line_label = str(wl_or_sched_num)
-            # Hacky: chop MonolithicBatch, MesosBatch, MonolithicService, etc.
-            # down to "Batch" and "Service" if in paper mode.
-            updated_wl_or_sched_name = wl_or_sched_name
-            if paper_mode and re.search("Batch", wl_or_sched_name):
-                updated_wl_or_sched_name = "Batch"
-            if paper_mode and re.search("Service", wl_or_sched_name):
-                updated_wl_or_sched_name = "Service"
-            # Append scheduler or workload name unless in paper mode and
-            # graphing monolithic.
-            # if not (paper_mode and re.search("Monolithic", wl_or_sched_name)):
-            #   line_label += " " + updated_wl_or_sched_name
-
-            # if exp_env.is_prefilled:
-            #   line_label += " prefilled"
-            # Don't add an item to the legend for batch schedulers/workloads
-            # in paper mode. We'll explain those in the caption.
-            if paper_mode and updated_wl_or_sched_name == "Service":
-                line_label = "_nolegend_"
-
-            cdf = []
-            x_vals = [value for value in values]
-            x_vals.sort()
-            for i, value in enumerate(x_vals):
-                cdf.append(i / float(len(x_vals)))
-
-            x_vals = np.array(x_vals)
-            all_x_vals_set = all_x_vals_set.union(x_vals)
-            logging.debug("all_x_vals_set updated, now = %s" % all_x_vals_set)
-            y_vals = np.array(cdf)
-            logging.debug("Plotting line for %s %s %s, line_label = %s." %
-                          (exp_env, wl_or_sched_name, plot_title, line_label))
-            logging.debug("x vals: " + " ".join([str(i) for i in x_vals]))
-            logging.debug("y vals: " + " ".join([str(i) for i in y_vals]))
-
-            if exp_env.is_prefilled:
-                local_colors = prefilled_colors_web
-                local_linestyles = prefilled_linestyles_web
+    try:
+        plt.clf()
+        ax = fig.add_subplot(111)
+        # Track a union of all x_vals which can be used to figure out
+        # the x-axis for the plot we are generating.
+        all_x_vals_set = set()
+        for exp_env, name_to_job_map in data_set_2d_dict.items():
+            if paper_mode:
+                cell_label = utils.cell_to_anon(exp_env.cell_name)
             else:
-                local_colors = colors
-                local_linestyles = linestyles
+                cell_label = exp_env.cell_name
 
-            ax.plot(x_vals, y_vals, linestyles_paper[wl_or_sched_num],
-                    dashes=dashes_paper[wl_or_sched_num],
-                    color=local_colors[cell_to_anon(exp_env.cell_name)],
-                    label=line_label, markersize=ms,
-                    mec=local_colors[cell_to_anon(exp_env.cell_name)])
+            # if exp_env.cell_name != "B":
+            #      print("skipping %s" % exp_env.cell_name)
+            #      continue
+            #    else:
+            #      print("not skipping %s" % exp_env.cell_name)
 
-    logging.debug("all_x_vals_set size: {}".format(len(all_x_vals_set)))
-    setup_graph_details(ax, plot_title, filename_suffix, "", y_axis_type, all_x_vals_set, x_label=x_label)
+            # If in paper mode, skip this plot if the cell name was not
+            # passed in as argument envs_to_plot.
+            if paper_mode and not re.search(cell_label, envs_to_plot):
+                logging.debug(
+                    "skipping plot because cell_label %s was not passed in as envs_to_plot %s" % (
+                        cell_label, envs_to_plot))
+                continue
+            # if exp_env.is_prefilled:
+            #   # TEMPORARY: Skip prefilled to get smaller place-holder graph
+            #   #            for paper draft.
+            #   continue
+
+            for wl_or_sched_name, values in name_to_job_map.items():
+                # Skip service schedulers.
+                logging.debug("wl_or_sched_name is {}".format(wl_or_sched_name))
+                # if re.search('Service', wl_or_sched_name):
+                #     logging.debug("Skipping %s" % wl_or_sched_name)
+                #     continue
+
+                wl_or_sched_num = wl_or_sched_name
+                result = re.search('[0-9]+$', wl_or_sched_name)
+                if result is not None:
+                    wl_or_sched_num = result.group(0)
+
+                line_label = str(wl_or_sched_num)
+                # Hacky: chop MonolithicBatch, MesosBatch, MonolithicService, etc.
+                # down to "Batch" and "Service" if in paper mode.
+                updated_wl_or_sched_name = wl_or_sched_name
+                if paper_mode and re.search("Batch", wl_or_sched_name):
+                    updated_wl_or_sched_name = "Batch"
+                if paper_mode and re.search("Service", wl_or_sched_name):
+                    updated_wl_or_sched_name = "Service"
+                # Append scheduler or workload name unless in paper mode and
+                # graphing monolithic.
+                # if not (paper_mode and re.search("Monolithic", wl_or_sched_name)):
+                #   line_label += " " + updated_wl_or_sched_name
+
+                # if exp_env.is_prefilled:
+                #   line_label += " prefilled"
+                # Don't add an item to the legend for batch schedulers/workloads
+                # in paper mode. We'll explain those in the caption.
+                if paper_mode and updated_wl_or_sched_name == "Service":
+                    line_label = "_nolegend_"
+
+                cdf = []
+                x_vals = [value for value in values]
+                x_vals.sort()
+                for i, value in enumerate(x_vals):
+                    cdf.append(i / float(len(x_vals)))
+
+                x_vals = np.array(x_vals)
+                all_x_vals_set = all_x_vals_set.union(x_vals)
+                logging.debug("all_x_vals_set updated, now = %s" % all_x_vals_set)
+                y_vals = np.array(cdf)
+                logging.debug("Plotting line for %s %s %s, line_label = %s." %
+                              (exp_env, wl_or_sched_name, plot_title, line_label))
+                logging.debug("x vals: " + " ".join([str(i) for i in x_vals]))
+                logging.debug("y vals: " + " ".join([str(i) for i in y_vals]))
+
+                if exp_env.is_prefilled:
+                    local_colors = prefilled_colors_web
+                    local_linestyles = prefilled_linestyles_web
+                else:
+                    local_colors = colors
+                    local_linestyles = linestyles
+
+                ax.plot(x_vals, y_vals, linestyles_paper[wl_or_sched_num],
+                        dashes=dashes_paper[wl_or_sched_num],
+                        color=local_colors[utils.cell_to_anon(exp_env.cell_name)],
+                        label=line_label, markersize=ms,
+                        mec=local_colors[utils.cell_to_anon(exp_env.cell_name)])
+
+        logging.debug("all_x_vals_set size: {}".format(len(all_x_vals_set)))
+        setup_graph_details(ax, plot_title, filename_suffix, "", y_axis_type, all_x_vals_set, x_label=x_label)
+    except Exception as e:
+        logging.error(e)
 
 
 def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x_vals_set, v_dim="", x_label=""):
@@ -1065,11 +1108,11 @@ def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x
         ax.set_ylabel(y_label)
         ax.set_xlabel(x_label)
         if v_dim == "c":
-            ax.set_xlabel(u'Scheduler 1 constant processing time [sec]')
+            ax.set_xlabel('Scheduler 1 constant processing time [sec]')
         elif v_dim == "l":
-            ax.set_xlabel(u'Scheduler 1 per-task processing time [sec]')
+            ax.set_xlabel('Scheduler 1 per-task processing time [sec]')
         elif v_dim == "lambda":
-            ax.set_xlabel(u'Job arrival rate to scheduler 1, lambda 1')
+            ax.set_xlabel('Job arrival rate to scheduler 1, lambda 1')
 
     # x-axis scale, limit, tics and tic labels.
     ax.set_xscale('log')
@@ -1093,14 +1136,14 @@ def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x
     # y-axis limit, tics and tic labels.
     if y_axis_type == "0-to-1":
         logging.debug("Setting up y-axis for '0-to-1' style graph.")
-        plt.ylim([0, 1.1])
+        plt.ylim([0, 1])
         plt.yticks((0, 0.2, 0.4, 0.6, 0.8, 1.0),
                    ('0.0', '0.2', '0.4', '0.6', '0.8', '1.0'))
     elif y_axis_type == "ms-to-day":
         logging.debug("Setting up y-axis for 'ms-to-day' style graph.")
         # ax.set_yscale('symlog', linthreshy=0.001)
         ax.set_yscale('log')
-        plt.ylim(ymin=0.01, ymax=24 * 3600 + 1)
+        plt.ylim(ymin=0.01, ymax=24 * 3600)
         plt.yticks((0.01, 1, 60, 3600, 24 * 3600), ('10ms', '1s', '1m', '1h', '1d'))
     elif y_axis_type == "abs":
         plt.ylim(ymin=0)
@@ -1115,7 +1158,7 @@ def setup_graph_details(ax, plot_title, filename_suffix, y_label, y_axis_type, x
     final_filename = os.path.join(output_prefix,
                                   '{}-vs-{}'.format(v_dim, filename_suffix) if v_dim != "" else filename_suffix)
     logging.debug("Writing plot to %s", final_filename)
-    writeout(final_filename, output_formats)
+    utils.writeout(final_filename, output_formats)
 
 
 if vary_dim == "c" or vary_dim == "l":
@@ -1123,128 +1166,127 @@ if vary_dim == "c" or vary_dim == "l":
 else:
     string_prefix = "Job Inter-arrival time"
 
-
 # CELL CPU UTILIZATION
 plot_1d_data_set_dict(cell_cpu_utilization,
                       string_prefix + " vs. Avg cell CPU utilization",
                       "avg-percent-cell-cpu-utilization",
-                      u'Avg % CPU utilization in cell',
+                      'Avg % CPU utilization in cell',
                       "0-to-1")
 
 # Cell MEM UTILIZATION
 plot_1d_data_set_dict(cell_mem_utilization,
                       string_prefix + "  vs. Avg cell memory utilization",
                       "avg-percent-cell-mem-utilization",
-                      u'Avg % memory utilization in cell',
+                      'Avg % memory utilization in cell',
                       "0-to-1")
 
 # CELL CPU LOCKED
 plot_1d_data_set_dict(cell_cpu_locked,
                       string_prefix + "  vs. Avg cell CPU locked",
                       "avg-percent-cell-cpu-locked",
-                      u'Avg % CPU locked in cell',
+                      'Avg % CPU locked in cell',
                       "0-to-1")
 
 # Cell MEM LOCKED
 plot_1d_data_set_dict(cell_mem_locked,
                       string_prefix + "  vs. Avg cell memory locked",
                       "avg-percent-cell-mem-locked",
-                      u'Avg % memory locked in cell',
+                      'Avg % memory locked in cell',
                       "0-to-1")
 #
 # JOB QUEUE WAIT TIME PLOTS
 plot_2d_data_set_dict(workload_queue_time_till_first,
                       string_prefix + "  vs. job wait time till first",
                       "wait-time-first",
-                      u'Avg. wait time till first sched attempt [sec]',
+                      'Avg. wait time till first sched attempt [sec]',
                       "ms-to-day")
 
 plot_2d_data_set_dict(workload_queue_time_till_fully,
                       string_prefix + "  vs. job wait time till fully",
                       "wait-time-fully",
-                      u'Avg. wait time till fully scheduled [sec]',
+                      'Avg. wait time till fully scheduled [sec]',
                       "ms-to-day")
 
 plot_2d_data_set_dict(workload_queue_time_till_first_90_ptile,
                       string_prefix + "  vs. 90%tile job wait time till first",
                       "wait-time-first-90ptile",
-                      u'90%tile wait time till first scheduled [sec]',
+                      '90%tile wait time till first scheduled [sec]',
                       "ms-to-day")
 
 plot_2d_data_set_dict(workload_queue_time_till_fully_90_ptile,
                       string_prefix + "  vs. 90%tile job wait time till fully",
                       "wait-time-fully-90ptile",
-                      u'90%tile wait time till fully scheduled [sec]',
+                      '90%tile wait time till fully scheduled [sec]',
                       "ms-to-day")
 
 plot_2d_data_set_dict(workload_num_jobs_unscheduled,
                       string_prefix + "  vs. num jobs unscheduled",
                       "jobs-unscheduled",
-                      u'Num jobs unscheduled',
+                      'Num jobs unscheduled',
                       "abs")
 
 plot_2d_data_set_dict(workload_num_jobs_scheduled,
                       string_prefix + "  vs. num jobs scheduled",
                       "jobs-scheduled",
-                      u'Num jobs scheduled',
+                      'Num jobs scheduled',
                       "abs")
 
 plot_2d_data_set_dict(workload_num_jobs_timed_out,
                       string_prefix + "  vs. num jobs ignored due to no-fit events",
                       "num-jobs-timed-out",
-                      u'Num jobs ignored due to failed scheduling',
+                      'Num jobs ignored due to failed scheduling',
                       "abs")
 
 plot_2d_data_set_dict(workload_num_jobs_fully_scheduled,
                       string_prefix + "  vs. num jobs fully scheduled",
                       "jobs-fully-scheduled",
-                      u'Num jobs fully scheduled',
+                      'Num jobs fully scheduled',
                       "abs")
 
 plot_2d_data_set_dict(workload_avg_job_execution_time,
                       string_prefix + "  vs. avg jobs execution time",
                       "avg-jobs-execution-time",
-                      u'Avg jobs execution time',
+                      'Avg jobs execution time',
                       "ms-to-day")
 
 plot_2d_data_set_dict(workload_avg_job_completion_time,
                       string_prefix + "  vs. avg job completion time",
                       "avg-jobs-completion-time",
-                      u'Avg jobs completion time',
+                      'Avg jobs completion time',
                       "ms-to-day")
 
 plot_2d_data_set_dict(workload_avg_ramp_up_time,
                       string_prefix + "  vs. avg job ramp-up time",
                       "avg-jobs-ramp-up-time",
-                      u'Avg jobs ramp-up time',
+                      'Avg jobs ramp-up time',
                       "ms-to-day")
 
 # SCHEDULER BUSY TIME FRACTION PLOT
 plot_2d_data_set_dict(sched_total_busy_fraction,
                       string_prefix + "  vs. busy time fraction",
                       "busy-time-fraction",
-                      u'Busy time fraction',
+                      'Busy time fraction',
                       "0-to-1")
 
 # SCHEDULER CONFLICT FRACTION PLOT
 plot_2d_data_set_dict(sched_conflict_fraction,
                       string_prefix + "  vs. conflict fraction",
                       "conflict-fraction",
-                      u'Conflict fraction',
+                      'Conflict fraction',
                       "0-to-1")
 
 # SCHEDULER DAILY BUSY AND CONFLICT FRACTION MEDIANS
 plot_2d_data_set_dict(sched_daily_busy_fraction,
                       string_prefix + "  vs. median(daily busy time fraction)",
                       "daily-busy-fraction-med",
-                      u'Median(daily busy time fraction)',
+                      'Median(daily busy time fraction)',
                       "0-to-1",
                       sched_daily_busy_fraction_err)
 
 plot_2d_data_set_dict(sched_daily_conflict_fraction,
                       string_prefix + "  vs. median(daily conflict fraction)",
                       "daily-conflict-fraction-med",
-                      u'Median(daily conflict fraction)',
+                      'Median(daily conflict fraction)',
                       "0-to-1",
                       sched_daily_conflict_fraction_err)
 
@@ -1252,72 +1294,72 @@ plot_2d_data_set_dict(sched_daily_conflict_fraction,
 plot_2d_data_set_dict(multi_sched_avg_busy_fraction,
                       string_prefix + "  vs. avg busy time fraction",
                       "multi-sched-avg-busy-time-fraction",
-                      u'Avg busy time fraction',
+                      'Avg busy time fraction',
                       "0-to-1")
 
 plot_2d_data_set_dict(multi_sched_avg_conflict_fraction,
                       string_prefix + "  vs. avg conflict fraction",
                       "multi-sched-avg-conflict-fraction",
-                      u'Avg conflict fraction',
+                      'Avg conflict fraction',
                       "0-to-1")
 
 # SCHEDULER TASK CONFLICT FRACTION PLOT
 plot_2d_data_set_dict(sched_task_conflict_fraction,
                       string_prefix + "  vs. task conflict fraction",
                       "task-conflict-fraction",
-                      u'Task conflict fraction',
+                      'Task conflict fraction',
                       "0-to-1")
 
 plot_2d_data_set_dict(sched_num_retried_transactions,
                       string_prefix + "  vs. retried transactions",
                       "retried-transactions",
-                      u'Num retried transactions',
+                      'Num retried transactions',
                       "abs")
 
 plot_2d_data_set_dict(sched_num_jobs_remaining,
                       string_prefix + "  vs. pending jobs at end of sim.",
                       "pending-jobs-at-end",
-                      u'Num pending jobs at end of sim.',
+                      'Num pending jobs at end of sim.',
                       "abs")
 
 plot_2d_data_set_dict(sched_failed_find_victim_attempts,
                       string_prefix + "  vs. failed attempts to find task for machine.",
                       "failed-find-task-for-machine",
-                      u'Num failed attempts to find task for machine',
+                      'Num failed attempts to find task for machine',
                       "abs")
 
 plot_2d_data_set_dict(sched_num_jobs_timed_out,
                       string_prefix + "  vs. num jobs ignored due to no-fit events.",
                       "num-jobs-timed-out-scheduler",
-                      u'Num jobs ignored due to failed scheduling',
+                      'Num jobs ignored due to failed scheduling',
                       "abs")
 
 plot_distribution(workload_job_num_tasks,
                   "Job Tasks distribution",
                   "tasks-distribution",
-                  u'Num tasks',
+                  'Num tasks',
                   "abs")
 
 plot_distribution(workload_job_num_moldable_tasks,
                   "Job Moldable Tasks distribution",
                   "tasks-moldable-distribution",
-                  u'Num tasks',
+                  'Num tasks',
                   "abs")
 
 plot_distribution(workload_job_mem_tasks,
                   "Job Tasks Memory distribution",
                   "tasks-memory-distribution",
-                  u'Memory (KB)',
+                  'Memory (KB)',
                   "abs")
 
 plot_distribution(workload_job_cpu_tasks,
                   "Job Tasks CPU distribution",
                   "tasks-cpu-distribution",
-                  u'CPU',
+                  'CPU',
                   "abs")
 
 plot_distribution(workload_job_runtime_tasks,
                   "Job Tasks Runtime distribution",
                   "tasks-runtime-distribution",
-                  u'Runtime (s)',
+                  'Runtime (s)',
                   "abs")

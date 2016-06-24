@@ -250,7 +250,8 @@ class NewSparkScheduler(name: String,
     */
   override
   def scheduleJob(job: Job,
-                  cellState: CellState): Seq[ClaimDelta] = {
+                  cellState: CellState,
+                  elastic:Boolean = false): Seq[ClaimDelta] = {
     assert(simulator != null)
     assert(cellState != null)
     assert(job.cpusPerTask <= cellState.cpusPerMachine,
