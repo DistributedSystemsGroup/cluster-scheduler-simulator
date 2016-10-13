@@ -28,7 +28,7 @@ package ClusterSchedulingSimulation.schedulers
 
 import ClusterSchedulingSimulation.{CellState, Scheduler, _}
 
-import scala.collection.mutable.HashMap
+import scala.collection.mutable.{HashMap, ListBuffer}
 
 /* This class and its subclasses are used by factory method
  * ClusterSimulator.newScheduler() to determine which type of Simulator
@@ -36,8 +36,9 @@ import scala.collection.mutable.HashMap
  * construct the simulator.
  */
 class SparkSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
-                         runTime: Double, allocationMode:AllocationModes.Value = AllocationModes.Incremental)
-  extends ClusterSimulatorDesc(runTime, allocationMode){
+                         runTime: Double,
+                         val allocationMode:AllocationModes.Value = AllocationModes.Incremental)
+  extends ClusterSimulatorDesc(runTime){
   override
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
@@ -73,7 +74,8 @@ class SparkSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
           constantThinkTimes.toMap,
           perTaskThinkTimes.toMap,
           math.floor(newBlackListPercent *
-            cellStateDesc.numMachines.toDouble).toInt)
+            cellStateDesc.numMachines.toDouble).toInt,
+          allocationMode)
     })
 
     val cellState = new CellState(cellStateDesc.numMachines,
@@ -87,7 +89,6 @@ class SparkSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
       workloadToSchedulerMap,
       workloads,
       prefillWorkloads,
-      allocationMode,
       logging)
   }
 }
@@ -95,11 +96,13 @@ class SparkSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
 class SparkScheduler(name: String,
                      constantThinkTimes: Map[String, Double],
                      perTaskThinkTimes: Map[String, Double],
-                     numMachinesToBlackList: Double = 0)
+                     numMachinesToBlackList: Double = 0,
+                     allocationMode: AllocationModes.Value)
   extends Scheduler(name,
     constantThinkTimes,
     perTaskThinkTimes,
-    numMachinesToBlackList) {
+    numMachinesToBlackList,
+    allocationMode) {
 
   println("scheduler-id-info: %d, %s, %d, %s, %s"
     .format(Thread.currentThread().getId(),
@@ -245,7 +248,7 @@ class SparkScheduler(name: String,
   override
   def scheduleJob(job: Job,
                   cellState: CellState,
-                  elastic:Boolean = false): Seq[ClaimDelta] = {
+                  elastic:Boolean = false): ListBuffer[ClaimDelta] = {
     assert(simulator != null)
     assert(cellState != null)
     assert(job.cpusPerTask <= cellState.cpusPerMachine,

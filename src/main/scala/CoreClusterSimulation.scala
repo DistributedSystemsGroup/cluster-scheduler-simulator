@@ -46,13 +46,21 @@ abstract class Simulator(logging: Boolean = false){
   type Action = () => Unit
 
   if(!logging)
-    logger.setLevel(Level.ERROR)
+    logger.setLevel(Level.WARN)
 
   case class WorkItem(time: Double, action: Action, eventType: EventTypes.Value, itemId: Long)
   implicit object WorkItemOrdering extends Ordering[WorkItem] {
-    def compare(a: WorkItem, b: WorkItem) = {
-//      if (a.time < b.time) 1
-//      else if (a.time > b.time) -1
+    /** Returns an integer whose sign communicates how x compares to y.
+      *
+      * The result sign has the following meaning:
+      *
+      *  - negative if x < y
+      *  - positive if x > y
+      *  - zero otherwise (if x == y)
+      */
+    def compare(a: WorkItem, b: WorkItem): Int = {
+//      if (a.time < b.time) -1
+//      else if (a.time > b.time) 1
 //      else 0
       a.time.compare(b.time)
     }
@@ -99,11 +107,13 @@ abstract class Simulator(logging: Boolean = false){
    * seconds or until `@code wallClockTimeout` seconds of execution
    * time elapses.
     *
-    * @return true if simulation ran till runTime or completion, and false
-   *         if simulation timed out.
+    * @return Pair (boolean, double)
+    *         1. true if simulation ran till runTime or completion, and false
+    *         if simulation timed out.
+    *         2. the simulation total time
    */
   def run(runTime:Option[Double] = None,
-          wallClockTimeout:Option[Double] = None): Boolean = {
+          wallClockTimeout:Option[Double] = None): (Boolean, Double) = {
     
     afterDelay(-1) {
       logger.info("*** Simulation started, time = "+ currentTime +". ***")
@@ -131,7 +141,7 @@ abstract class Simulator(logging: Boolean = false){
 
     val totalTime = run_(currentTime)
     logger.info("*** Simulation finished running, time = "+ totalTime +". ***")
-    !timedOut
+    (!timedOut, totalTime)
   }
 }
 
@@ -139,7 +149,7 @@ object AllocationModes extends Enumeration {
   val Incremental, All = Value
 }
 
-abstract class ClusterSimulatorDesc(val runTime: Double, val allocationMode: AllocationModes.Value) {
+abstract class ClusterSimulatorDesc(val runTime: Double) {
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
                    blackListPercent: Double,
@@ -149,6 +159,52 @@ abstract class ClusterSimulatorDesc(val runTime: Double, val allocationMode: All
                    workloads: Seq[Workload],
                    prefillWorkloads: Seq[Workload],
                    logging: Boolean = false): ClusterSimulator
+}
+
+class PrefillScheduler(cellState: CellState)
+  extends Scheduler(name = "prefillScheduler",
+    constantThinkTimes = Map[String, Double](),
+    perTaskThinkTimes = Map[String, Double](),
+    numMachinesToBlackList = 0,
+    allocationMode = AllocationModes.Incremental) {
+
+
+  def scheduleWorkloads(workloads: Seq[Workload]): Unit ={
+    // Prefill jobs that exist at the beginning of the simulation.
+    // Setting these up is similar to loading jobs that are part
+    // of the simulation run; they need to be scheduled onto machines
+    simulator.logger.info("Prefilling cell-state with %d workloads."
+      .format(workloads.length))
+    workloads.foreach(workload => {
+      simulator.logger.info("Prefilling cell-state with %d jobs from workload %s."
+        .format(workload.numJobs, workload.name))
+      //var i = 0
+      workload.getJobs.foreach(job => {
+        //i += 1
+        // println("Prefilling %d %s job id - %d."
+        //         .format(i, workload.name, job.id))
+        if (job.cpusPerTask > cellState.cpusPerMachine ||
+          job.memPerTask > cellState.memPerMachine) {
+          simulator.logger.warn(("IGNORING A JOB REQUIRING %f CPU & %f MEM PER TASK " +
+            "BECAUSE machines only have %f cpu / %f mem.")
+            .format(job.cpusPerTask, job.memPerTask,
+              cellState.cpusPerMachine, cellState.memPerMachine))
+        } else {
+          val claimDeltas = scheduleJob(job, cellState)
+          // assert(job.numTasks == claimDeltas.length,
+          //        "Prefill job failed to schedule.")
+          cellState.scheduleEndEvents(claimDeltas)
+
+          simulator.logger.info(("After prefill, common cell state now has %.2f%% (%.2f) " +
+            "cpus and %.2f%% (%.2f) mem occupied.")
+            .format(cellState.totalOccupiedCpus / cellState.totalCpus * 100.0,
+              cellState.totalOccupiedCpus,
+              cellState.totalOccupiedMem / cellState.totalMem * 100.0,
+              cellState.totalOccupiedMem))
+        }
+      })
+    })
+  }
 }
 
 /**
@@ -168,10 +224,10 @@ class ClusterSimulator(val cellState: CellState,
                        val workloadToSchedulerMap: Map[String, Seq[String]],
                        val workloads: Seq[Workload],
                        prefillWorkloads: Seq[Workload],
-                       val allocationMode: AllocationModes.Value,
                        logging: Boolean = false,
                        monitorUtilization: Boolean = true,
-                       monitoringPeriod: Double = 1.0)
+                       monitoringPeriod: Double = 1.0,
+                       var prefillScheduler: PrefillScheduler = null)
                       extends Simulator(logging) {
   assert(schedulers.nonEmpty, "At least one scheduler must be provided to" +
                               "scheduler constructor.")
@@ -181,63 +237,20 @@ class ClusterSimulator(val cellState: CellState,
                                                                    ,("Workload-Scheduler map points to a scheduler, " +
                                                                      "%s, that is not registered").format(schedulerName)))
 
-  assert(allocationMode == AllocationModes.Incremental ||
-    allocationMode == AllocationModes.All,
-    ("allocationMode must be one of: {%s, %s}, " +
-      "but it was %s.").format(AllocationModes.Incremental, AllocationModes.All, allocationMode))
-
-  def getAllocationMode: AllocationModes.Value = allocationMode
-
   // Set up a pointer to this simulator in the cellstate.
   cellState.simulator = this
   // Set up a pointer to this simulator in each scheduler.
   schedulers.values.foreach(_.simulator = this)
 
-  class PrefillScheduler
-      extends Scheduler(name = "prefillScheduler",
-                        constantThinkTimes = Map[String, Double](),
-                        perTaskThinkTimes = Map[String, Double](),
-                        numMachinesToBlackList = 0) {}
 
-  private val prefillScheduler = new PrefillScheduler
+  if(prefillScheduler == null)
+    prefillScheduler =  new PrefillScheduler(cellState)
   prefillScheduler.simulator = this
-  // Prefill jobs that exist at the beginning of the simulation.
-  // Setting these up is similar to loading jobs that are part
-  // of the simulation run; they need to be scheduled onto machines
-  logger.info("Prefilling cell-state with %d workloads."
-          .format(prefillWorkloads.length))
-  prefillWorkloads.foreach(workload => {
-    logger.info("Prefilling cell-state with %d jobs from workload %s."
-            .format(workload.numJobs, workload.name))
-    //var i = 0
-    workload.getJobs.foreach(job => {
-      //i += 1
-      // println("Prefilling %d %s job id - %d."
-      //         .format(i, workload.name, job.id))
-      if (job.cpusPerTask > cellState.cpusPerMachine ||
-          job.memPerTask > cellState.memPerMachine) {
-        logger.warn(("IGNORING A JOB REQUIRING %f CPU & %f MEM PER TASK " +
-                 "BECAUSE machines only have %f cpu / %f mem.")
-                .format(job.cpusPerTask, job.memPerTask,
-                        cellState.cpusPerMachine, cellState.memPerMachine))
-      } else {
-        val claimDeltas = prefillScheduler.scheduleJob(job, cellState)
-        // assert(job.numTasks == claimDeltas.length,
-        //        "Prefill job failed to schedule.")
-        cellState.scheduleEndEvents(claimDeltas)
-
-        logger.info(("After prefill, common cell state now has %.2f%% (%.2f) " +
-             "cpus and %.2f%% (%.2f) mem occupied.")
-             .format(cellState.totalOccupiedCpus / cellState.totalCpus * 100.0,
-                     cellState.totalOccupiedCpus,
-                     cellState.totalOccupiedMem / cellState.totalMem * 100.0,
-                     cellState.totalOccupiedMem))
-      }
-    })
-  })
+  prefillScheduler.scheduleWorkloads(prefillWorkloads)
 
   // Set up workloads
   workloads.foreach(workload => {
+    var jobsToRemove: ListBuffer[Job] = ListBuffer[Job]()
     var numSkipped, numLoaded = 0
     workload.getJobs.foreach(job => {
       val scheduler = getSchedulerForWorkloadName(job.workloadName)
@@ -246,6 +259,7 @@ class ClusterSimulator(val cellState: CellState,
             "not been mapped to any registered schedulers. Please update " +
             "a mapping for this scheduler via the workloadSchedulerMap param.")
             .format(job.workloadName))
+        jobsToRemove += job
         numSkipped += 1
       } else {
         // Schedule the task to get submitted to its scheduler at its
@@ -260,24 +274,37 @@ class ClusterSimulator(val cellState: CellState,
         //                job.id,
         //                job.cpusPerTask * job.numTasks,
         //                job.memPerTask * job.numTasks))
-        if (job.cpusPerTask * job.numTasks > cellState.totalCpus + 0.000001 || 
-            job.memPerTask * job.numTasks > cellState.totalMem + 0.000001) {
+//        if (job.cpusPerTask * job.numTasks > cellState.totalCpus ||
+//            job.memPerTask * job.numTasks > cellState.totalMem){
+        val taskCanFitPerCpus = Math.floor(cellState.cpusPerMachine / job.cpusPerTask) * cellState.numMachines
+        val taskCanFitPerMem = Math.floor(cellState.memPerMachine / job.memPerTask) * cellState.numMachines
+        if(taskCanFitPerCpus < job.numTasks || taskCanFitPerMem < job.numTasks) {
+//        if(taskCanFitPerCpus < job.moldableTasks || taskCanFitPerMem < job.moldableTasks) {
           logger.warn(("The cell (%f cpus, %f mem) is not big enough " +
-                  "to hold job id %d all at once which requires %f cpus " +
+                  "to hold job id %d all at once which requires %d tasks for %f cpus " +
                   "and %f mem in total.").format(cellState.totalCpus,
                                                  cellState.totalMem,
                                                  job.id,
+                                                 job.numTasks,
                                                  job.cpusPerTask * job.numTasks,
                                                  job.memPerTask * job.numTasks))
+          numSkipped += 1
+          jobsToRemove += job
+        } else {
+          afterDelay(job.submitted - currentTime) {
+            scheduler.foreach(_.addJob(job))
+          }
+          numLoaded += 1
         }
-        afterDelay(job.submitted - currentTime) {
-          scheduler.foreach(_.addJob(job))
-        }
-        numLoaded += 1
+
       }
     })
-    logger.info("Loaded %d jobs from workload %s, and skipped %d.".format(
+    if(numSkipped > 0){
+      logger.warn("Loaded %d jobs from workload %s, and skipped %d.".format(
         numLoaded, workload.name, numSkipped))
+      workload.removeJobs(jobsToRemove)
+    }
+
   })
   var roundRobinCounter = 0
   // If more than one scheduler is assigned a workload, round robin across them.
@@ -303,22 +330,39 @@ class ClusterSimulator(val cellState: CellState,
   def avgCpuLocked: Double = sumCpuLocked / numMonitoringMeasurements
   def avgMemLocked: Double = sumMemLocked / numMonitoringMeasurements
   val cpuUtilization: ListBuffer[Double] = ListBuffer()
+  val memUtilization: ListBuffer[Double] = ListBuffer()
   var sumCpuUtilization: Double = 0.0
   var sumMemUtilization: Double = 0.0
   var sumCpuLocked: Double = 0.0
   var sumMemLocked: Double = 0.0
   var numMonitoringMeasurements: Long = 0
 
+  val pendingQueueStatus: scala.collection.mutable.Map[String, ListBuffer[Long]] = scala.collection.mutable.Map[String, ListBuffer[Long]]()
+  val runningQueueStatus: scala.collection.mutable.Map[String, ListBuffer[Long]] = scala.collection.mutable.Map[String, ListBuffer[Long]]()
+
+  schedulers.values.foreach(scheduler => {
+    pendingQueueStatus.put(scheduler.name, ListBuffer[Long]())
+    runningQueueStatus.put(scheduler.name, ListBuffer[Long]())
+  })
+
   def measureUtilization(): Unit = {
     numMonitoringMeasurements += 1
     sumCpuUtilization += (cellState.totalOccupiedCpus / cellState.totalCpus)
     cpuUtilization += (cellState.totalOccupiedCpus / cellState.totalCpus)
+    memUtilization += (cellState.totalOccupiedMem / cellState.totalMem)
     sumMemUtilization += (cellState.totalOccupiedMem / cellState.totalMem)
     sumCpuLocked += cellState.totalLockedCpus
     sumMemLocked += cellState.totalLockedMem
     logger.debug("Adding measurement %d. Avg cpu: %f. Avg mem: %f"
         .format(numMonitoringMeasurements,
           avgCpuUtilization, avgMemUtilization))
+
+    schedulers.values.foreach(scheduler => {
+      pendingQueueStatus(scheduler.name) += scheduler.jobQueueSize
+      runningQueueStatus(scheduler.name) += scheduler.runningJobQueueSize
+    })
+
+
     //Temporary: print utilization throughout the day.
     // if (numMonitoringMeasurements % 1000 == 0) {
     //   println("%f - Current cluster utilization: %f %f cpu , %f %f mem"
@@ -348,7 +392,7 @@ class ClusterSimulator(val cellState: CellState,
 
   override
   def run(runTime:Option[Double] = None,
-          wallClockTimeout:Option[Double] = None): Boolean = {
+          wallClockTimeout:Option[Double] = None): (Boolean, Double) = {
     assert(currentTime == 0.0, "currentTime must be 0 at simulator run time.")
     schedulers.values.foreach(scheduler => {
       assert(scheduler.jobQueueSize == 0,
@@ -396,11 +440,18 @@ class SchedulerDesc(val name: String,
 abstract class Scheduler(val name: String,
                          constantThinkTimes: Map[String, Double],
                          perTaskThinkTimes: Map[String, Double],
-                         numMachinesToBlackList: Double) {
+                         numMachinesToBlackList: Double,
+                         allocationMode: AllocationModes.Value) {
   assert(constantThinkTimes.size == perTaskThinkTimes.size)
   assert(numMachinesToBlackList >= 0)
 
+  assert(allocationMode == AllocationModes.Incremental ||
+    allocationMode == AllocationModes.All,
+    ("allocationMode must be one of: {%s, %s}, " +
+      "but it was %s.").format(AllocationModes.Incremental, AllocationModes.All, allocationMode))
+
   protected val pendingQueue: collection.mutable.Queue[Job] = collection.mutable.Queue[Job]()
+  protected val runningQueue: collection.mutable.Queue[Job] = collection.mutable.Queue[Job]()
 
   // This gets set when this scheduler is added to a Simulator.
   // TODO(andyk): eliminate this pointer and make the scheduler
@@ -409,7 +460,7 @@ abstract class Scheduler(val name: String,
   //              by templatizing the Scheduler class and having only
   //              one simulator of the correct type, instead of one
   //              simulator for each of the parent and child classes.
-  var simulator: ClusterSimulator = null
+  var simulator: ClusterSimulator = _
   var scheduling: Boolean = false
 
   // Job transaction stat counters.
@@ -444,6 +495,11 @@ abstract class Scheduler(val name: String,
   var perWorkloadWastedTimeScheduling = mutable.HashMap[String, Double]()
   val randomNumberGenerator = new util.Random(Seed())
 
+  // The following variables are used to understand the average queue size during the simulation
+  var totalQueueSize: Long = 0
+  var numSchedulingCalls: Long = 0
+  def avgQueueSize: Double = totalQueueSize / numSchedulingCalls.toDouble
+
   override
   def toString = name
 
@@ -452,6 +508,10 @@ abstract class Scheduler(val name: String,
                               "Scheduler before you can use it.")
   }
 
+  def wakeUp(): Unit = {
+    //FIXME: Fix this hack thing to force the user to override this method
+    throw new Exception("Please override this method.")
+  }
 
   // Add a job to this scheduler's job queue.
   def addJob(job: Job): Unit = {
@@ -520,7 +580,7 @@ abstract class Scheduler(val name: String,
    */
   def scheduleJob(job: Job,
                   cellState: CellState,
-                  elastic:Boolean = false): Seq[ClaimDelta] = {
+                  elastic:Boolean = false): ListBuffer[ClaimDelta] = {
     assert(simulator != null)
     assert(cellState != null)
     assert(job.cpusPerTask <= cellState.cpusPerMachine,
@@ -587,15 +647,16 @@ abstract class Scheduler(val name: String,
   // Give up on a job if (a) it hasn't scheduled a single task in
   // 100 tries or (b) it hasn't finished scheduling after 1000 tries.
   def giveUpSchedulingJob(job: Job): Boolean = {
-    if(simulator.allocationMode == AllocationModes.Incremental)
-      (job.numSchedulingAttempts > 100 && job.unscheduledTasks == job.moldableTasks) || job.numSchedulingAttempts > 1000
-    else if(simulator.allocationMode == AllocationModes.All)
-      job.numSchedulingAttempts > 1000
-    else
-      false
+    allocationMode match {
+      case AllocationModes.Incremental =>
+        (job.numSchedulingAttempts > 100 && job.unscheduledTasks == job.moldableTasks) || job.numSchedulingAttempts > 1000
+      case AllocationModes.All => job.numSchedulingAttempts > 1000
+      case _ => false
+    }
   }
 
   def jobQueueSize: Long = pendingQueue.size
+  def runningJobQueueSize: Long = runningQueue.size
 
   def isMultiPath: Boolean =
     constantThinkTimes.values.toSet.size > 1 ||
@@ -727,7 +788,7 @@ class CellState(val numMachines: Int,
          transactionMode.equals("incremental"),
          "transactionMode must be one of: {'all-or-nothing', 'incremental'}, " +
          "but it was %s.".format(transactionMode))
-  var simulator: ClusterSimulator = null
+  var simulator: ClusterSimulator = _
   // An array where value at position k is the total cpus that have been
   // allocated for machine k.
   val allocatedCpusPerMachine = new Array[Double](numMachines)
@@ -755,6 +816,7 @@ class CellState(val numMachines: Int,
   def totalMem = numMachines * memPerMachine
   def availableCpus = totalCpus - (totalOccupiedCpus + totalLockedCpus)
   def availableMem = totalMem - (totalOccupiedMem + totalLockedMem)
+  def isFull = availableCpus.floor <= 0 || availableMem.floor <= 0
 
   // Convenience methods to see how many cpus/mem are available on a machine.
   def availableCpusPerMachine(machineID: Int) = {
@@ -868,7 +930,7 @@ class CellState(val numMachines: Int,
 
     // Also track the per machine resources available.
     assert(availableCpusPerMachine(machineID) + cpus <=
-           cpusPerMachine + 0.000001)
+           cpusPerMachine + 0.000001, "Cpus are %f".format(availableCpusPerMachine(machineID) + cpus))
     assert(availableMemPerMachine(machineID) + mem <=
            memPerMachine + 0.000001)
     allocatedCpusPerMachine(machineID) -= cpus
@@ -967,10 +1029,9 @@ class CellState(val numMachines: Int,
     if (scheduleEndEvent) { 
       scheduleEndEvents(appliedDeltas)
     }
-    new CommitResult(appliedDeltas, conflictDeltas)
+    CommitResult(appliedDeltas, conflictDeltas)
   }
 
-  //
   /**
     * Create an end event for each delta provided. The end event will
     * free the resources used by the task represented by the ClaimDelta.
@@ -985,9 +1046,11 @@ class CellState(val numMachines: Int,
     */
   def scheduleEndEvents(claimDeltas: Seq[ClaimDelta], delay: Double = -1, jobId: Long = 0): Unit = {
     assert(simulator != null, "Simulator must be non-null in CellState.")
+    var maxDelay = 0.0
     claimDeltas.foreach(appliedDelta => {
-      simulator.afterDelay(if(delay == -1) appliedDelta.duration else delay,
-        eventType = EventTypes.Remove , itemId = jobId) {
+      val realDelay = if(delay == -1) appliedDelta.duration else delay
+      if(realDelay > maxDelay) maxDelay = realDelay
+      simulator.afterDelay(realDelay, eventType = EventTypes.Remove , itemId = jobId) {
         appliedDelta.unApply(simulator.cellState)
         simulator.logger.info(("A task started by scheduler %s finished. " +
                        "Freeing %f cpus, %f mem. Available: %f cpus, %f mem.")
@@ -998,6 +1061,12 @@ class CellState(val numMachines: Int,
                              availableMem))
       }
     })
+
+    simulator.schedulers.foreach{case(key, scheduler) =>
+        simulator.afterDelay(maxDelay, eventType = EventTypes.Trigger, itemId = jobId){
+          scheduler.wakeUp()
+        }
+      }
   }
 
   /**
@@ -1044,14 +1113,14 @@ class CellState(val numMachines: Int,
 }
 
 object JobStates extends Enumeration {
-  val TimedOut, Not_Scheduled, Partially_Scheduled, Fully_Scheduled = Value
+  val TimedOut, Not_Scheduled, Partially_Scheduled, Fully_Scheduled, Completed = Value
 }
 
 /**
   *
   * @param id           Job ID
   * @param submitted    The time the job was submitted in seconds
-  * @param numTasks     Number of tasks that compose this job
+  * @param _numTasks     Number of tasks that compose this job
   * @param taskDuration Durations of each task in seconds
   * @param workloadName Type of job
   * @param cpusPerTask  Number of cpus required by this job
@@ -1059,20 +1128,26 @@ object JobStates extends Enumeration {
   * @param isRigid      Boolean value to check if the job is picky or not
   */
 case class Job(id: Long,
-               var submitted: Double,
-               numTasks: Int,
+               submitted: Double,
+               _numTasks: Int,
                var taskDuration: Double,
                workloadName: String,
                cpusPerTask: Double,
                memPerTask: Double,
                isRigid: Boolean = false,
-               moldableTaskPercentage: Option[Int] = None) {
-  val logger = Logger.getLogger(this.getClass.getName)
-  logger.trace("New Job. numTasks: %d, cpusPerTask: %f, memPerTask: %f".format(numTasks, cpusPerTask, memPerTask))
-
-  assert(numTasks != 0, "numTasks for job %d is %d".format(id, numTasks))
+               numMoldableTasks: Option[Integer] = None,
+               priority: Int = 0,
+               error: Double = 1) {
+  assert(_numTasks != 0, "numTasks for job %d is %d".format(id, _numTasks))
   assert(!cpusPerTask.isNaN, "cpusPerTask for job %d is %f".format(id, cpusPerTask))
   assert(!memPerTask.isNaN, "memPerTask for job %d is %f".format(id, memPerTask))
+
+  val sizeAdjustment: Double = {
+    if(workloadName.equals("Interactive"))
+      0.001
+    else
+      1
+  }
 
   override def equals(that: Any): Boolean =
     that match {
@@ -1080,9 +1155,11 @@ case class Job(id: Long,
       case _ => false
     }
 
+  val logger = Logger.getLogger(this.getClass.getName)
+
   var requestedCores: Double = Int.MaxValue
 
-  private[this] var _unscheduledTasks: Int = numTasks
+  private[this] var _unscheduledTasks: Int = _numTasks
   var finalStatus = JobStates.Not_Scheduled
 
   // Time, in seconds, this job spent waiting in its scheduler's queue
@@ -1104,8 +1181,8 @@ case class Job(id: Long,
   var numTaskSchedulingAttempts: Long = 0
   var usefulTimeScheduling: Double = 0.0
   var wastedTimeScheduling: Double = 0.0
-  // Store informations to calculate the excution time of the job
-  var jobStartedWorking: Double = 0.0
+  // Store information to calculate the execution time of the job
+  private[this] var _jobStartedWorking: Double = 0.0
   var jobFinishedWorking: Double = 0.0
 
   // Zoe Applications variables
@@ -1115,12 +1192,44 @@ case class Job(id: Long,
   private[this] var _moldableTasksUnscheduled: Int = 0
   private[this] var _elasticTasksUnscheduled: Int = 0
 
-  private[this] var _jobDuration: Double = 0
+  private[this] var _jobDuration: Double = taskDuration
   private[this] var _elasticTaskSpeedUpContribution: Double = 0
+  private[this] var _size: Double = 0
+  private[this] var _progress: Double = 0
+  // This variable is used to calculate the relative (non absolute) progression
+  private[this] var _lastProgressTimeCalculation: Double = 0
 
-  var claimDeltas: collection.mutable.ListBuffer[ClaimDelta] = collection.mutable.ListBuffer[ClaimDelta]()
+  var claimInelasticDeltas: collection.mutable.ListBuffer[ClaimDelta] = collection.mutable.ListBuffer[ClaimDelta]()
+  var claimElasticDeltas: collection.mutable.ListBuffer[ClaimDelta] = collection.mutable.ListBuffer[ClaimDelta]()
+  def allClaimDeltas: collection.mutable.ListBuffer[ClaimDelta] = claimInelasticDeltas ++ claimElasticDeltas
+
+  /*
+    * We set the number of moldable tasks that compose the Zoe Applications
+    * remember that at least one moldable service must exist
+    * a Zoe Application cannot be composed by just elastic services
+    */
+  numMoldableTasks match {
+    case Some(param) =>
+      _isZoeApp = true
+
+      _moldableTasks = param
+      if(_moldableTasks == 0)
+        _moldableTasks = 1
+      _elasticTasks = _numTasks
+      unscheduledTasks = _moldableTasks
+      elasticTasksUnscheduled = _elasticTasks
+
+//      _jobDuration = _elasticTasks * taskDuration
+      _jobDuration = taskDuration
+      _elasticTaskSpeedUpContribution = taskDuration
+    case None => None
+  }
+
+  def isZoeApp: Boolean = _isZoeApp
 
   // Some getter and Setter
+  def numTasks: Int = if(_isZoeApp) _moldableTasks + _elasticTasks else _numTasks
+
   def timeInQueueTillFirstScheduled: Double = _timeInQueueTillFirstScheduled
   def timeInQueueTillFirstScheduled_=(value: Double): Unit = {
     _timeInQueueTillFirstScheduled = value
@@ -1129,6 +1238,12 @@ case class Job(id: Long,
   def timeInQueueTillFullyScheduled: Double = _timeInQueueTillFullyScheduled
   def timeInQueueTillFullyScheduled_=(value: Double): Unit = {
     _timeInQueueTillFullyScheduled = value
+  }
+
+  def jobStartedWorking: Double = _jobStartedWorking
+  def jobStartedWorking_=(value: Double): Unit = {
+    _jobStartedWorking = value
+    _lastProgressTimeCalculation = _jobStartedWorking
   }
 
   def firstScheduled: Boolean = _firstScheduled
@@ -1146,19 +1261,56 @@ case class Job(id: Long,
   def elasticTasksUnscheduled: Int = _elasticTasksUnscheduled
   def elasticTasksUnscheduled_=(value: Int): Unit = {
     _elasticTasksUnscheduled = value
+    assert(_elasticTasksUnscheduled <= elasticTasks, "Elastic Services to schedule are more than requested (%d/%d)".format(_elasticTasksUnscheduled, elasticTasks))
   }
   def elasticTasks: Int = _elasticTasks
-  def elasticTasks_=(value: Int): Unit = {
-    _elasticTasks = value
-  }
+
   def jobDuration: Double = _jobDuration
-  def jobDuration_=(value: Double): Unit = {
-    _jobDuration = value
-  }
 
   def elasticTaskSpeedUpContribution: Double = _elasticTaskSpeedUpContribution
-  def elasticTaskSpeedUpContribution_=(value: Double): Unit = {
-    _elasticTaskSpeedUpContribution = value
+
+  def remainingTime: Double = (1 - _progress) * jobDuration
+
+  def estimateJobDuration(currTime: Double = 0.0, newTasksAllocated: Int = 0, tasksRemoved: Int = 0, mock: Boolean = false): Double = {
+    val tasksAllocated = scheduledTasks + scheduledElasticTasks
+    var relativeProgress: Double = 0.0
+    val tmp_lastProgressTimeCalculation = _lastProgressTimeCalculation
+    val tmp_progress = _progress
+
+    if(_jobStartedWorking != currTime){
+      relativeProgress = (currTime - _lastProgressTimeCalculation) /
+        ((numTasks / (tasksAllocated - newTasksAllocated + tasksRemoved).toDouble) * jobDuration)
+    }
+
+    _lastProgressTimeCalculation = currTime
+    _progress += relativeProgress
+
+    assert(_progress < 1.0, "Progress cannot be higher than 1! (%f)".format(_progress))
+
+    val timeLeft: Double = ( 1 - _progress) * ((numTasks / tasksAllocated.toDouble) * jobDuration)
+
+    // This was the only solution that I found. It is ugly but it is working, dunno why moving down here the piece of code
+    // that increments the _progress and updates the _lastProgressTimeCalculation was causing the _progress to go over 1.0
+    if(mock){
+      _lastProgressTimeCalculation = tmp_lastProgressTimeCalculation
+      _progress = tmp_progress
+    }
+
+    timeLeft
+  }
+
+  def reset(): Unit = {
+    _progress = 0
+    unscheduledTasks = moldableTasks
+    elasticTasksUnscheduled = elasticTasks
+    claimInelasticDeltas = collection.mutable.ListBuffer[ClaimDelta]()
+    claimElasticDeltas = collection.mutable.ListBuffer[ClaimDelta]()
+    finalStatus =  JobStates.Not_Scheduled
+    _firstScheduled = true
+    _timeInQueueTillFirstScheduled = 0.0
+    _timeInQueueTillFullyScheduled = 0.0
+    _jobStartedWorking = 0.0
+    jobFinishedWorking = 0.0
   }
 
   /**
@@ -1175,33 +1327,16 @@ case class Job(id: Long,
   }
 
   def isScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled || finalStatus == JobStates.Fully_Scheduled ||
-    (finalStatus == JobStates.TimedOut && unscheduledTasks != moldableTasks)
-  def isFullyScheduled: Boolean = finalStatus == JobStates.Fully_Scheduled
+    (finalStatus == JobStates.TimedOut && unscheduledTasks != moldableTasks) || finalStatus == JobStates.Completed
+  def isFullyScheduled: Boolean = finalStatus == JobStates.Fully_Scheduled || finalStatus == JobStates.Completed
   def isPartiallyScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled
   def isTimedOut: Boolean = finalStatus == JobStates.TimedOut
   def isNotScheduled: Boolean = finalStatus == JobStates.Not_Scheduled
 
-
-  /*
-    * We set the number of moldable tasks that compose the Zoe Applications
-    * remember that at least one moldable service must exist
-    * a Zoe Application cannot be composed by just elastic services
-    */
-  moldableTaskPercentage match {
-    case Some(param) =>
-      _isZoeApp = true
-      _moldableTasks = Math.ceil(numTasks * param / 100.0).toInt
-      if(_moldableTasks == 0)
-        _moldableTasks = 1
-      elasticTasks = numTasks - _moldableTasks
-      unscheduledTasks = _moldableTasks
-      elasticTasksUnscheduled = _elasticTasks
-      jobDuration = Math.ceil(numTasks / _moldableTasks.toFloat) * taskDuration
-      elasticTaskSpeedUpContribution = (jobDuration - taskDuration) / elasticTasks
-    case None => None
-  }
-
   def scheduledTasks = moldableTasks - unscheduledTasks
+  def scheduledElasticTasks = elasticTasks - elasticTasksUnscheduled
+
+  def responseRatio(currentTime: Double): Double = 1 + (currentTime - submitted) / jobDuration
 
   // For Spark
   def coresGranted = cpusPerTask * scheduledTasks
@@ -1244,6 +1379,8 @@ case class Job(id: Long,
       timeInQueueTillFirstScheduled += currentTime - lastEnqueued
     }
   }
+
+  logger.trace("New Job. numTasks: %d, cpusPerTask: %f, memPerTask: %f".format(numTasks, cpusPerTask, memPerTask))
 }
 
 /**
@@ -1261,7 +1398,12 @@ class Workload(val name: String,
     assert (job.workloadName == name)
     jobs.append(job)
   }
-  def addJobs(jobs: Seq[Job]) = jobs.foreach(addJob)
+  def removeJob(job: Job) = {
+    assert (job.workloadName == name)
+    jobs -= job
+  }
+  def addJobs(jobs: Seq[Job]) = jobs.foreach(job => {addJob(job)})
+  def removeJobs(jobs: Seq[Job]) = jobs.foreach(job => {removeJob(job)})
   def numJobs: Int = jobs.length
 
 //  def cpus: Double = jobs.map(j => {j.numTasks * j.cpusPerTask}).sum
@@ -1500,7 +1642,7 @@ object DistCache {
   }
 
   def buildDist(workloadName: String, traceFileName: String): Array[Double] = {
-    assert(workloadName.equals("Batch") || workloadName.equals("Service"))
+    assert(workloadName.equals("Batch") || workloadName.equals("Service") || workloadName.equals("Interactive") || workloadName.equals("Batch-MPI"))
     val dataPoints = new collection.mutable.ListBuffer[Double]()
     val refDistribution = new Array[Double](1001)
 
@@ -1520,7 +1662,9 @@ object DistCache {
       // Add the job to this workload if its job type is the same as
       // this generator's, which we determine based on workloadName.
       if ((isServiceJob && workloadName.equals("Service")) ||
-          (!isServiceJob && workloadName.equals("Batch"))) {
+          (!isServiceJob && workloadName.equals("Batch")) ||
+          (!isServiceJob && workloadName.equals("Batch-MPI")) ||
+          (isServiceJob && workloadName.equals("Interactive"))) {
         dataPoints.append(dataPoint)
         realDataSum += dataPoint
       }

@@ -69,7 +69,7 @@ class Experiment(
                   prefillCpuLimits: Map[String, Double] = Map(),
                   prefillMemLimits: Map[String, Double] = Map(),
                   // Default simulations to 10 minute timeout.
-                  simulationTimeout: Double = 60.0*10.0) extends Runnable {
+                  simulationTimeout: Option[Double] = Option(60.0*10.0)) extends Runnable {
   val logger = Logger.getLogger(this.getClass.getName)
 
   prefillCpuLimits.values.foreach(l => assert(l >= 0.0 && l <= 1.0))
@@ -102,8 +102,9 @@ class Experiment(
     val allExperimentEnv: Array[ExperimentEnv.Builder] = new Array[ExperimentEnv.Builder](workloadDescs.length)
     val allExperimentResult: Array[Array[ExperimentResult]] = new Array[Array[ExperimentResult]](workloadDescs.length)
     val experimentResultSet = ExperimentResultSet.newBuilder()
+    experimentResultSet.setExperimentName(name)
 
-    logger.debug("Running Experiment %s with RunTime: %.2fs and Timeout: %.2fs".format(name, simulatorDesc.runTime, simulationTimeout))
+    logger.debug("Running Experiment %s with RunTime: %.2fs and Timeout: %s".format(name, simulatorDesc.runTime, simulationTimeout))
     // Parameter sweep over workloadDescs
     var workloadDescId = 0
     var run_id = 0
@@ -117,6 +118,7 @@ class Experiment(
       experimentEnv.setIsPrefilled(
         workloadDesc.prefillWorkloadGenerators.nonEmpty)
       experimentEnv.setRunTime(simulatorDesc.runTime)
+
       // Create the workloads to store their stats in the protobuff
       workloadDesc.workloadGenerators.foreach(workloadGenerator => {
         val newWorkload = workloadGenerator.newWorkload(timeWindow = simulatorDesc.runTime)
@@ -124,16 +126,22 @@ class Experiment(
         val commonWorkloadStats = ExperimentResultSet.
           ExperimentEnv.CommonWorkloadStats.newBuilder()
         commonWorkloadStats.setWorkloadName(workloadGenerator.workloadName)
+        var previousArrivalTime: Double = 0
         newWorkload.getJobs.foreach(job => {
           val jobStats = ExperimentResultSet.
-            ExperimentEnv.CommonWorkloadStats.JobStats.newBuilder()
+            ExperimentEnv.JobStats.newBuilder()
 
           jobStats.setId(job.id)
           jobStats.setNumTasks(job.numTasks)
           jobStats.setMemPerTask(job.memPerTask)
           jobStats.setCpuPerTask(job.cpusPerTask)
           jobStats.setTaskDuration(job.taskDuration)
-          jobStats.setNumTasksMoldable(job.moldableTasks)
+          jobStats.setNumInelastic(job.moldableTasks)
+          jobStats.setArrivalTime(job.submitted)
+          if(job.submitted < previousArrivalTime)
+            logger.warn("The Jobs are not sorted by their arrival time. Results for the interArrivalTime may be wrong!")
+          jobStats.setInterArrivalTime(job.submitted - previousArrivalTime)
+          previousArrivalTime = job.submitted
 
           commonWorkloadStats.addJobStats(jobStats)
         })
@@ -243,7 +251,7 @@ class Experiment(
                 schedulerWorkloadsToSweepOver = copyOfSchedulerWorkloadsToSweepOver,
                 constantThinkTime = constantThinkTime,
                 perTaskThinkTime = perTaskThinkTime,
-                simulatorRunTime = simulatorDesc.runTime,
+                simulatorRunTime = Option(simulatorDesc.runTime),
                 simulationTimeout = simulationTimeout,
                 workloads =  workloads,
                 simulator = simulatorDesc.newSimulator(constantThinkTime,
@@ -349,9 +357,8 @@ class ExperimentRun(
                      constantThinkTime: Double,
                      perTaskThinkTime: Double,
                      // Simulator setup.
-                     simulatorRunTime: Double,
-                     // Default simulations to 10 minute timeout.
-                     simulationTimeout: Double = 60.0*10.0,
+                     simulatorRunTime: Option[Double],
+                     simulationTimeout: Option[Double],
                      workloads: ListBuffer[Workload],
                      simulator: ClusterSimulator
                    ) extends Callable[(Int, Int, ExperimentResult)]{
@@ -381,6 +388,22 @@ class ExperimentRun(
     experimentResult.setCellStateAvgMemLocked(
       simulator.avgMemLocked / simulator.cellState.totalMem)
 
+    val resourceUtilization = ExperimentResultSet.ExperimentEnv.ExperimentResult.ResourceUtilization.newBuilder()
+    simulator.cpuUtilization.foreach(cpu => resourceUtilization.addCpu(cpu))
+    simulator.memUtilization.foreach(mem => resourceUtilization.addMemory(mem))
+    experimentResult.setResourceUtilization(resourceUtilization)
+
+
+    var totalJobTurnaroundTime: Double = 0.0
+    var totalJobExecutionTime: Double = 0.0
+    var totalAvgQueueTime: Double = 0.0
+    var totalAvgRampUpTime: Double = 0.0
+    var totalJobFinished: Long = 0
+    var totalJobScheduled: Long = 0
+    var totalJobNotScheduled: Long = 0
+    var totalJobs: Long = 0
+    var totalTimeouts: Long = 0
+    var totalSchedulingAttempts: Long = 0
     // Save repeated stats about workloads.
     workloads.foreach(workload => {
       val workloadStats = ExperimentResultSet.
@@ -390,12 +413,15 @@ class ExperimentRun(
       workloadStats.setWorkloadName(workload.name)
 
       workloadStats.setNumJobs(workload.numJobs)
+      totalJobs += workloadStats.getNumJobs
       workloadStats.setNumJobsScheduled(
         workload.getJobs.count(_.isScheduled))
+      totalJobScheduled += workloadStats.getNumJobsScheduled
       workloadStats.setNumJobsFullyScheduled(
         workload.getJobs.count(_.isFullyScheduled))
       workloadStats.setNumJobsTimedOutScheduling(
         workload.getJobs.count(_.isTimedOut))
+      totalTimeouts += workloadStats.getNumJobsTimedOutScheduling
 
       workloadStats.setJobThinkTimes90Percentile(
         workload.jobUsefulThinkTimesPercentile(0.9))
@@ -419,23 +445,70 @@ class ExperimentRun(
       workloadStats.setNumTaskSchedulingAttempts99Percentile(
         workload.numTaskSchedulingAttemptsPercentile(0.99))
 
+      var schedulingAttempts: Long = 0
+      workload.getJobs.foreach(job => {schedulingAttempts += job.numSchedulingAttempts})
+      workloadStats.setNumSchedulingAttempts(schedulingAttempts)
+      totalSchedulingAttempts += schedulingAttempts
 
-      var totalJobExecutionTime = 0.0
-      var totalJobCompletionTime = 0.0
-      var countJobFinished = 0
+
+      var workloadTotalJobExecutionTime: Double = 0.0
+      var workloadTotalJobTurnaroudTime: Double = 0.0
+      var workloadCountJobFinished: Long = 0
+      var workloadTotalJobNotScheduled: Long = 0
       workload.getJobs.foreach(job => {
+        var jobTurnaround: Double = -1
+        var jobExecutionTime: Double = -1
         if (job.isFullyScheduled) {
-          totalJobExecutionTime += job.jobFinishedWorking - job.jobStartedWorking
-          totalJobCompletionTime += job.jobFinishedWorking - job.submitted
-          countJobFinished += 1
-        }
-      })
-      workloadStats.setAvgJobExecutionTime(totalJobExecutionTime / countJobFinished.toDouble)
-      workloadStats.setAvgJobCompletionTime(totalJobCompletionTime / countJobFinished.toDouble)
+          jobTurnaround = job.jobFinishedWorking - job.submitted
+          jobExecutionTime = job.jobFinishedWorking - job.jobStartedWorking
+          workloadTotalJobExecutionTime += jobExecutionTime
+          workloadTotalJobTurnaroudTime += jobTurnaround
+          workloadCountJobFinished += 1
+        }else if(job.isNotScheduled)
+          workloadTotalJobNotScheduled += 1
 
+        val jobStats = ExperimentResultSet.
+          ExperimentEnv.
+          JobStats.newBuilder()
+
+        jobStats.setTurnaround(jobTurnaround)
+        jobStats.setQueueTime(job.timeInQueueTillFirstScheduled)
+        jobStats.setRampUpTime(job.timeInQueueTillFullyScheduled - job.timeInQueueTillFirstScheduled)
+        jobStats.setExecutionTime(jobExecutionTime)
+        jobStats.setNumTasks(job.numTasks)
+        jobStats.setNumInelastic(job.moldableTasks)
+        jobStats.setNumElastic(job.elasticTasks)
+        jobStats.setNumInelasticScheduled(job.scheduledTasks)
+        jobStats.setNumElasticScheduled(job.scheduledElasticTasks)
+
+        workloadStats.addJobStats(jobStats)
+      })
+      workloadStats.setAvgJobExecutionTime(workloadTotalJobExecutionTime / workloadCountJobFinished.toDouble)
+      workloadStats.setAvgJobTurnaroundTime(workloadTotalJobTurnaroudTime / workloadCountJobFinished.toDouble)
+
+      // Output to logger
+      logger.info(("[%s][Stats][%s] Avg Turnaround: %.2f | Avg Execution: %.2f" +
+        " | Avg Queue: %.2f | Avg RampUp: %.2f | Scheduled: %d(%d) Fully: %d Total: %d | Timeouts: %d | Scheduling Attempts: %d").format(
+        name,
+        workload.name,
+        workloadStats.getAvgJobTurnaroundTime,
+        workloadStats.getAvgJobExecutionTime,
+        workloadStats.getAvgJobQueueTimesTillFirstScheduled,
+        workloadStats.getAvgJobRampUpTime,
+        workloadStats.getNumJobsScheduled,workloadTotalJobNotScheduled, workloadCountJobFinished, workloadStats.getNumJobs,
+        workloadStats.getNumJobsTimedOutScheduling,
+        schedulingAttempts)
+      )
+      totalJobTurnaroundTime += workloadTotalJobTurnaroudTime
+      totalJobExecutionTime += workloadTotalJobExecutionTime
+      totalJobFinished += workloadCountJobFinished
+      totalJobNotScheduled += workloadTotalJobNotScheduled
+      totalAvgQueueTime += workloadStats.getAvgJobQueueTimesTillFirstScheduled
+      totalAvgRampUpTime += workloadStats.getAvgJobRampUpTime
 
       experimentResult.addWorkloadStats(workloadStats)
     })
+
     // Record workload specific details about the parameter sweeps.
     experimentResult.setSweepWorkload(workloadToSweepOver)
     experimentResult.setAvgJobInterarrivalTime(
@@ -443,6 +516,8 @@ class ExperimentRun(
         workloads.filter(_.name == workloadToSweepOver)
           .head.avgJobInterarrivalTime))
 
+    var totalJobsLeftInQueue: Long = 0
+    var totalAvgQueueSize: Double = 0
     // Save repeated stats about schedulers.
     simulator.schedulers.values.foreach(scheduler => {
       val schedulerStats =
@@ -455,6 +530,12 @@ class ExperimentRun(
         scheduler.totalUsefulTimeScheduling)
       schedulerStats.setWastedBusyTime(
         scheduler.totalWastedTimeScheduling)
+
+      val queuesStatus = ExperimentResultSet.ExperimentEnv.ExperimentResult.SchedulerStats.QueuesStatus.newBuilder()
+      simulator.pendingQueueStatus(scheduler.name).foreach(pending => queuesStatus.addPending(pending))
+      simulator.runningQueueStatus(scheduler.name).foreach(running => queuesStatus.addRunning(running))
+      schedulerStats.setQueuesStatus(queuesStatus)
+
       // Per scheduler metrics bucketed by day.
       // Use floor since days are zero-indexed. For example, if the
       // simulator only runs for 1/2 day, we should only have one
@@ -533,6 +614,8 @@ class ExperimentRun(
 
       schedulerStats.setIsMultiPath(scheduler.isMultiPath)
       schedulerStats.setNumJobsLeftInQueue(scheduler.jobQueueSize)
+      totalJobsLeftInQueue += schedulerStats.getNumJobsLeftInQueue
+      totalAvgQueueSize += scheduler.avgQueueSize
       schedulerStats.setFailedFindVictimAttempts(
         scheduler.failedFindVictimAttempts)
 
@@ -555,7 +638,31 @@ class ExperimentRun(
 
     experimentResult.setConstantThinkTime(constantThinkTime)
     experimentResult.setPerTaskThinkTime(perTaskThinkTime)
+
+    // Output to logger
+    logger.info(("[%s][Stats] Avg Turnaround: %.2f | Avg Execution: %.2f" +
+      " | Avg Queue: %.2f | Avg RampUp: %.2f | Scheduled: %d(%d) Fully: %d Total: %d | Timeouts: %d | Scheduling Attempts: %d").format(
+      name,
+      totalJobTurnaroundTime / totalJobFinished.toDouble,
+      totalJobExecutionTime / totalJobFinished.toDouble,
+      totalAvgQueueTime / workloads.length.toDouble,
+      totalAvgRampUpTime / workloads.length.toDouble,
+      totalJobScheduled, totalJobNotScheduled, totalJobFinished, totalJobs,
+      totalTimeouts,
+      totalSchedulingAttempts)
+    )
+    // Output to logger
+    logger.info("[%s][Stats] Avg CPU: %.2f | Avg Mem: %.2f | Jobs Throughput: %f | Left in queue: %d | Avg Queue Size: %f".format(
+      name,
+      experimentResult.getCellStateAvgCpuUtilization,
+      experimentResult.getCellStateAvgMemUtilization,
+      totalJobFinished / simulatorRunTime,
+      totalJobsLeftInQueue,
+      totalAvgQueueSize / simulator.schedulers.size.toDouble)
+    )
+
     experimentResult.build()
+
     //    /**
     //      * TODO(andyk): Once protocol buffer support is finished,
     //      *              remove this.
@@ -575,28 +682,27 @@ class ExperimentRun(
     logger.info("Starting %s - %d".format(name, id + 1))
 
     val startTime = System.currentTimeMillis()
-    val success: Boolean = simulator.run(Some(simulatorRunTime),
-      Some(simulationTimeout))
+    val (success, totalTime): (Boolean, Double) = simulator.run(simulatorRunTime,
+      simulationTimeout)
     if (success) {
-      // Simulation did not time out, so record stats.
-      // Save our results as a protocol buffer.
-      val experimentResult = recordStats(
-        simulator = simulator,
-        workloads = workloads,
-        avgJobInterarrivalTime = avgJobInterarrivalTime,
-        constantThinkTime = constantThinkTime,
-        perTaskThinkTime = perTaskThinkTime,
-        simulatorRunTime = simulatorRunTime,
-        workloadToSweepOver = workloadToSweepOver,
-        schedulerWorkloadsToSweepOver = schedulerWorkloadsToSweepOver
-      )
-      logger.info("Done %s - %d. Real RunTime: %.2fs"
-        .format(name, id + 1, (System.currentTimeMillis() - startTime) / 1000.0))
-      (workloadDescId, id, experimentResult)
+      logger.info("Done %s - %d. Real RunTime: %.2fs. Sim RunTime: %.2fs"
+        .format(name, id + 1, (System.currentTimeMillis() - startTime) / 1000.0, totalTime))
     } else {
-      logger.info("Done %s - %d. Sim timed out."
-        .format(name, id))
-      (-1, -1, null)
+      logger.warn("Done %s - %d. Sim timed out. Sim RunTime: %.2fs"
+        .format(name, id, totalTime))
     }
+
+    // Save our results as a protocol buffer even if a simulation timed out
+    val experimentResult = recordStats(
+      simulator = simulator,
+      workloads = workloads,
+      avgJobInterarrivalTime = avgJobInterarrivalTime,
+      constantThinkTime = constantThinkTime,
+      perTaskThinkTime = perTaskThinkTime,
+      simulatorRunTime = totalTime,
+      workloadToSweepOver = workloadToSweepOver,
+      schedulerWorkloadsToSweepOver = schedulerWorkloadsToSweepOver
+    )
+    (workloadDescId, id, experimentResult)
   }
 }

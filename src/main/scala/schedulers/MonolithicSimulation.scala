@@ -39,8 +39,8 @@ import scala.collection.mutable.HashMap
  */
 class MonolithicSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
                               runTime: Double,
-                              allocationMode: AllocationModes.Value)
-                             extends ClusterSimulatorDesc(runTime, allocationMode){
+                              val allocationMode: AllocationModes.Value)
+                             extends ClusterSimulatorDesc(runTime){
   override
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
@@ -76,7 +76,8 @@ class MonolithicSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
                                   constantThinkTimes.toMap,
                                   perTaskThinkTimes.toMap,
                                   math.floor(newBlackListPercent *
-                                    cellStateDesc.numMachines.toDouble).toInt)
+                                    cellStateDesc.numMachines.toDouble).toInt,
+            allocationMode)
     })
 
     val cellState = new CellState(cellStateDesc.numMachines,
@@ -90,7 +91,6 @@ class MonolithicSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
                          workloadToSchedulerMap,
                          workloads,
                          prefillWorkloads,
-      allocationMode,
                          logging)
   }
 }
@@ -98,11 +98,13 @@ class MonolithicSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
 class MonolithicScheduler(name: String,
                           constantThinkTimes: Map[String, Double],
                           perTaskThinkTimes: Map[String, Double],
-                          numMachinesToBlackList: Double = 0)
+                          numMachinesToBlackList: Double = 0,
+                          allocationMode: AllocationModes.Value)
                          extends Scheduler(name,
                                            constantThinkTimes,
                                            perTaskThinkTimes,
-                                           numMachinesToBlackList) {
+                                           numMachinesToBlackList,
+                           allocationMode) {
   val logger = Logger.getLogger(this.getClass.getName)
   logger.debug("scheduler-id-info: %d, %s, %d, %s, %s"
           .format(Thread.currentThread().getId,

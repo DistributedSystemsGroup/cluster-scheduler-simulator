@@ -37,8 +37,8 @@ class OmegaSimulatorDesc(
                           runTime: Double,
                           val conflictMode: String,
                           val transactionMode: String,
-                          allocationMode: AllocationModes.Value)
-  extends ClusterSimulatorDesc(runTime, allocationMode){
+                          val allocationMode: AllocationModes.Value)
+  extends ClusterSimulatorDesc(runTime){
   override
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
@@ -78,7 +78,8 @@ class OmegaSimulatorDesc(
           constantThinkTimes.toMap,
           perTaskThinkTimes.toMap,
           math.floor(newBlackListPercent *
-            cellStateDesc.numMachines.toDouble).toInt)
+            cellStateDesc.numMachines.toDouble).toInt,
+          allocationMode)
     })
     val cellState = new CellState(cellStateDesc.numMachines,
       cellStateDesc.cpusPerMachine,
@@ -102,7 +103,6 @@ class OmegaSimulatorDesc(
       workloadToSchedulerMap,
       workloads,
       prefillWorkloads,
-      allocationMode,
       logging)
   }
 }
@@ -150,11 +150,13 @@ class OmegaSimulatorDesc(
 class OmegaScheduler(name: String,
                      constantThinkTimes: Map[String, Double],
                      perTaskThinkTimes: Map[String, Double],
-                     numMachinesToBlackList: Double = 0)
+                     numMachinesToBlackList: Double = 0,
+                     allocationMode: AllocationModes.Value)
   extends Scheduler(name,
     constantThinkTimes,
     perTaskThinkTimes,
-    numMachinesToBlackList) {
+    numMachinesToBlackList,
+    allocationMode) {
   val logger = Logger.getLogger(this.getClass.getName)
   logger.debug("scheduler-id-info: %d, %s, %d, %s, %s"
     .format(Thread.currentThread().getId,

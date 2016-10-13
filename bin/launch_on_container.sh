@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 ############# User Variables #################################
-SWARM_IP="192.168.45.252:2380"
+SWARM_IP="bf5.bigfoot.eurecom.fr:2380"
 CONTAINER_NAME="cluster-scheduler-simulator"
-CONTAINER_IMAGE="192.168.45.252:5000/pacerepo/cluster-scheduler-simulator"
+CONTAINER_IMAGE="docker-registry:5000/pacerepo/cluster-scheduler-simulator"
 TO_MAIL="francesco.pace@eurecom.fr"
 ##############################################################
 
@@ -18,12 +18,14 @@ docker="sudo docker -H ${SWARM_IP}"
 ### Functions ###
 
 # trap ctrl-c and call ctrl_c()
-trap ctrl_c INT
-
-function ctrl_c() {
-    ${docker} kill ${CONTAINER_NAME}
-    exit 1
-}
+#trap ctrl_c INT
+#do_not_kill_me_now=0
+#function ctrl_c() {
+#    if [ ${do_not_kill_me_now} -eq 1 ];then
+#        ${docker} kill ${CONTAINER_NAME}
+#        exit 1
+#    fi
+#}
 
 # This function setup the container and execute the script to start the simulation
 # When the container exits, we copy the files back to the host
@@ -46,10 +48,12 @@ function run_container(){
         ${docker} rm -f ${CONTAINER_NAME}
     fi
     container_command="bash ${remote_dir}/bin/launch_on_container.sh run-simulation"
+    do_not_kill_me_now=1
     ${docker} create --name ${CONTAINER_NAME} -it ${CONTAINER_IMAGE} ${container_command}
     ${docker} cp "${project_dir}" "${CONTAINER_NAME}:${remote_dir}"
     ${docker} start ${CONTAINER_NAME}
     ${docker} logs -f ${CONTAINER_NAME}
+    do_not_kill_me_now=0
     container_exist_code=$(${docker} inspect -f '{{.State.ExitCode}}' ${CONTAINER_NAME})
 
     if [ "${container_exist_code}" == "0" ];then
@@ -91,11 +95,21 @@ function send_mail(){
         zip_name="${zips_folder}/$(basename ${last_created_dir}).zip"
         zip -r ${zip_name} ${last_created_dir}
         attachment="-A ${zip_name}"
-        echo -e \
-            "Cluster Scheduler Simulation ended with Success.\n" \
-            "You can find the results in the attachment(s).\n" \
-            "Cheers :)\n" \
-            | mail -s "Cluster-Scheduler-Simulator" ${attachment} "${TO_MAIL}"
+        actualsize=$(du -k "${zip_name}" | cut -f 1)
+        if [ ${actualsize} -lt 5242880 ];then
+            echo -e \
+                "Cluster Scheduler Simulation ended with Success.\n" \
+                "You can find the results in the attachment(s).\n" \
+                "Cheers :)\n" \
+                | mail -s "Cluster-Scheduler-Simulator" ${attachment} "${TO_MAIL}"
+        else
+            echo -e \
+                    "Cluster Scheduler Simulation ended with Success.\n" \
+                    "The zip file for the results was too big for an attachment.\n" \
+                    "Please log in the machine and download it (${zip_name}).\n" \
+                    "Cheers :)\n" \
+                    | mail -s "Cluster-Scheduler-Simulator" "${TO_MAIL}"
+        fi
     else
         echo -e \
             "Cluster Scheduler Simulation ended with an Error.\n" \

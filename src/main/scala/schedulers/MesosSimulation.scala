@@ -35,8 +35,8 @@ class MesosSimulatorDesc(
                           schedulerDescs: Seq[MesosSchedulerDesc],
                           runTime: Double,
                           val allocatorConstantThinkTime: Double,
-                          allocationMode: AllocationModes.Value)
-  extends ClusterSimulatorDesc(runTime, allocationMode){
+                          val allocationMode: AllocationModes.Value)
+  extends ClusterSimulatorDesc(runTime){
   override
   def newSimulator(constantThinkTime: Double,
                    perTaskThinkTime: Double,
@@ -73,7 +73,8 @@ class MesosSimulatorDesc(
           perTaskThinkTimes.toMap,
           schedDesc.schedulePartialJobs,
           math.floor(newBlackListPercent *
-            cellStateDesc.numMachines.toDouble).toInt)
+            cellStateDesc.numMachines.toDouble).toInt,
+          allocationMode)
     })
     // It shouldn't matter which transactionMode we choose, but it does
     // matter that we use "resource-fit" conflictMode or else
@@ -112,7 +113,6 @@ class MesosSimulator(cellState: CellState,
     workloadToSchedulerMap,
     workloads,
     prefillWorkloads,
-    allocationMode,
     logging,
     monitorUtilization) {
   assert(cellState.conflictMode.equals("resource-fit"),
@@ -144,11 +144,13 @@ class MesosScheduler(name: String,
                      constantThinkTimes: Map[String, Double],
                      perTaskThinkTimes: Map[String, Double],
                      val schedulePartialJobs: Boolean,
-                     numMachinesToBlackList: Double = 0)
+                     numMachinesToBlackList: Double = 0,
+                     allocationMode: AllocationModes.Value)
   extends Scheduler(name,
     constantThinkTimes,
     perTaskThinkTimes,
-    numMachinesToBlackList) {
+    numMachinesToBlackList,
+    allocationMode) {
   val logger = Logger.getLogger(this.getClass.getName)
   logger.debug("scheduler-id-info: %d, %s, %d, %s, %s"
     .format(Thread.currentThread().getId,

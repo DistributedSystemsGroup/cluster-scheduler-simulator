@@ -43,8 +43,8 @@ object Workloads {
 //  val globalMaxMemPerTask = 8
   // In this way we should disable the limitation introduced by these two variables
   // and completely use the input traces and their distribution
-  val globalMaxCpusPerTask = globalCpusPerMachine
-  val globalMaxMemPerTask = globalMemPerMachine
+  val globalMaxCpusPerTask = globalCpusPerMachine / 5.0
+  val globalMaxMemPerTask = globalMemPerMachine / 5.0
 
 //  val maxTasksPerJob = ((globalNumMachines * globalCpusPerMachine * 1.5) / globalMaxCpusPerTask).toInt
 
@@ -98,17 +98,33 @@ object Workloads {
       jobDurationTraceFileName,
       prefillTraceFileName,
       maxCpusPerTask = globalMaxCpusPerTask,
-      maxMemPerTask = globalMaxMemPerTask)
+      maxMemPerTask = globalMaxMemPerTask,
+      jobsPerWorkload = 5000,
+      allMoldable = false)
 
   val workloadGeneratorTraceAllService =
     new TraceAllZoeWLGenerator(
-      "Service".intern(),
+      "Batch-MPI".intern(),
       interarrivalTraceFileName,
       numTasksTraceFileName,
       jobDurationTraceFileName,
       prefillTraceFileName,
       maxCpusPerTask = globalMaxCpusPerTask,
-      maxMemPerTask = globalMaxMemPerTask)
+      maxMemPerTask = globalMaxMemPerTask,
+      jobsPerWorkload = 5000,
+      allMoldable = true)
+
+  val workloadGeneratorTraceAllInteractive =
+    new TraceAllZoeWLGenerator(
+      "Interactive".intern(),
+      interarrivalTraceFileName,
+      numTasksTraceFileName,
+      jobDurationTraceFileName,
+      prefillTraceFileName,
+      maxCpusPerTask = globalMaxCpusPerTask,
+      maxMemPerTask = globalMaxMemPerTask,
+      jobsPerWorkload = 5000,
+      allMoldable = false)
 
 //  val workloadGeneratorTraceAllBatch =
 //    new UniformZoeWorkloadGenerator(
@@ -117,9 +133,9 @@ object Workloads {
 //      tasksPerJob = 50,
 //      jobDuration = 200,
 //      cpusPerTask = 2,
-//      memPerTask = 16,
-//      moldableTaskPercentage = 40,
-//      jobsPerWorkload = 100)
+//      memPerTask = 4,
+//      numMoldableTasks = 4,
+//      jobsPerWorkload = 0)
 //
 //  val workloadGeneratorTraceAllService =
 //    new UniformZoeWorkloadGenerator(
@@ -128,9 +144,23 @@ object Workloads {
 //      tasksPerJob = 10,
 //      jobDuration = 2000,
 //      cpusPerTask = 2,
-//      memPerTask = 16,
-//      moldableTaskPercentage = 100,
-//      jobsPerWorkload = 100)
+//      memPerTask = 4,
+//      jobsPerWorkload = 4)
+
+//  val fakeWorkloadGenerator = new FakeZoeWorkloadGenerator("Batch")
+//  val fakeWorkloadGenerator = new FakePreemptiveZoeWorkloadGenerator("Batch")
+//
+//  val eurecomCellTraceAllWorkloadPrefillDesc =
+//    WorkloadDesc(
+//      cell = "Eurecom",
+//      assignmentPolicy = "CMB_PBB",
+//      workloadGenerators =
+//        fakeWorkloadGenerator ::
+//          Nil,
+//      cellStateDesc = new CellStateDesc(1,
+//        globalCpusPerMachine,
+//        128.1)
+//    )
 
   val eurecomCellTraceAllWorkloadPrefillDesc =
     WorkloadDesc(
@@ -139,11 +169,23 @@ object Workloads {
       workloadGenerators =
         workloadGeneratorTraceAllBatch ::
           workloadGeneratorTraceAllService ::
+//          workloadGeneratorTraceAllInteractive ::
           Nil,
-      cellStateDesc = eurecomCellStateDesc ,
-      prefillWorkloadGenerators =
-        List(batchServicePrefillTraceWLGenerator)
+      cellStateDesc = eurecomCellStateDesc
     )
+
+//  val eurecomCellTraceAllWorkloadPrefillDesc =
+//    WorkloadDesc(
+//      cell = "Eurecom",
+//      assignmentPolicy = "CMB_PBB",
+//      workloadGenerators =
+//        workloadGeneratorTraceAllBatch ::
+//          workloadGeneratorTraceAllService ::
+//          Nil,
+//      cellStateDesc = eurecomCellStateDesc,
+//        prefillWorkloadGenerators =
+//          List(batchServicePrefillTraceWLGenerator)
+//    )
 
   val tenEurecomCellTraceAllWorkloadPrefillDesc =
     WorkloadDesc(

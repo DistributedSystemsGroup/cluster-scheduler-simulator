@@ -29,7 +29,7 @@ import java.nio.channels.FileChannel
 
 import ClusterSchedulingSimulation._
 import ClusterSchedulingSimulation.Workloads._
-import schedulers.{ZoeSimulatorDesc, _}
+import schedulers.{ZoePreemptionSimulatorDesc, _}
 import ca.zmatrix.utils._
 import org.apache.log4j.Logger
 
@@ -45,8 +45,9 @@ object Simulation{
         System.exit(0)
       }
     }
+    val availableProcessors = Runtime.getRuntime.availableProcessors()
     val pp = new ParseParms(helpString)
-    pp.parm("--thread-pool-size", "1").rex("^\\d*") // optional_arg
+    pp.parm("--thread-pool-size", availableProcessors.toString).rex("^\\d*") // optional_arg
     //    pp.parm("--random-seed", "%d".format(util.Random.nextLong)).rex("^\\d*") // optional_arg
     pp.parm("--random-seed", "0").rex("^\\d*") // optional_arg
 
@@ -59,7 +60,7 @@ object Simulation{
       inputArgs = result._3
     }
 
-    var numThreads = Math.min(inputArgs("--thread-pool-size").toInt, Runtime.getRuntime.availableProcessors())
+    var numThreads = Math.min(inputArgs("--thread-pool-size").toInt, availableProcessors)
     val randomSeed:Long = inputArgs("--random-seed").toLong
 
     logger.info("RUNNING CLUSTER SIMULATOR EXPERIMENTS")
@@ -74,8 +75,9 @@ object Simulation{
     val runMesos = false
     val runOmega = false
     val runZoe = true
+    val runZoePreemption = false
 
-    val globalRunTime = 86400.0 * 3 //86400.0 // 1 Day
+    val globalRunTime = 86400.0 * 120 //86400.0 // 1 Day
     val threadSleep = 5
 
     /**
@@ -125,9 +127,9 @@ object Simulation{
     val perTaskRange = fullPerTaskRange
 
     val pickinessRange = fullPickinessRange
-    val lambdaRange = fullLambdaRange
+//    val lambdaRange = fullLambdaRange
+    val lambdaRange = 1.0 :: Nil
 //    val lambdaRange = 0.01 :: 0.02 :: Nil
-//    val lambdaRange = 1.0 :: Nil
 
 //    val interArrivalScaleRange = 0.009 :: 0.01 :: 0.02 :: 0.1 :: 0.2 :: 1.0 :: Nil
     val interArrivalScaleRange = lambdaRange.map(1/_)
@@ -136,7 +138,7 @@ object Simulation{
 
     val doLogging = false
 
-    val timeout = 60.0 * 60.0 // In seconds.
+    val timeout = None // In seconds.
 
     val sweepC = false
     val sweepL = false
@@ -145,6 +147,27 @@ object Simulation{
     val sweepLambda = true
 
     val allocationModes = List[AllocationModes.Value](AllocationModes.All) //, AllocationModes.Incremental)
+    val policyModes = List[PolicyModes.Value](
+//      PolicyModes.Fifo,
+//      PolicyModes.MyFifo,
+//      PolicyModes.PriorityFifo,
+      PolicyModes.SJF,
+      PolicyModes.MySJF,
+//      PolicyModes.LJF,
+//      PolicyModes.HRRN,
+      PolicyModes.SRPT,
+      PolicyModes.MySRPT,
+      PolicyModes.Size,
+      PolicyModes.MySize//,
+//      PolicyModes.MySizeError,
+//      PolicyModes.MySize2,
+//      PolicyModes.MySize3,
+//      PolicyModes.MySize4,
+//      PolicyModes.MySize5,
+//      PolicyModes.MySize6,
+//      PolicyModes.MySize7,
+//      PolicyModes.MySize8
+    )
 
     val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd-HH-mm-ss")
     /**
@@ -1022,23 +1045,25 @@ object Simulation{
         */
       val zoeSchedulerDesc = new SchedulerDesc(
         name = "Zoe".intern(),
-        constantThinkTimes = Map("Batch" -> 0.01, "Service" -> 0.01),
-        perTaskThinkTimes = Map("Batch" -> 0.005, "Service" -> 0.01))
+        constantThinkTimes = Map("Batch" -> 0.01, "Batch-MPI" -> 0.01, "Service" -> 0.01, "Interactive" -> 0.01),
+        perTaskThinkTimes = Map("Batch" -> 0.005, "Batch-MPI" -> 0.005, "Service" -> 0.01, "Interactive" -> 0.01))
 
       /**
         * Set up workload-to-scheduler mappings.
         */
       val zoeSchedulerWorkloadMap =
-        Map[String, Seq[String]]("Batch" -> Seq("Zoe"),
-          "Service" -> Seq("Zoe"))
+        Map[String, Seq[String]]("Batch" -> Seq("Zoe"), "Batch-MPI" -> Seq("Zoe"),
+          "Service" -> Seq("Zoe"), "Interactive" -> Seq("Zoe"))
 
       /**
         * Set up a simulatorDesc-s.
         */
       val zoeSimulatorDescs: ListBuffer[ZoeSimulatorDesc] = ListBuffer[ZoeSimulatorDesc]()
       allocationModes.foreach(allocationMode => {
-        zoeSimulatorDescs += new ZoeSimulatorDesc(Array(zoeSchedulerDesc),
-          globalRunTime, allocationMode)
+        policyModes.foreach(policyMode => {
+          zoeSimulatorDescs += new ZoeSimulatorDesc(Array(zoeSchedulerDesc),
+            globalRunTime, allocationMode, policyMode)
+        })
       })
 
       /**
@@ -1049,15 +1074,15 @@ object Simulation{
       // apply to both the "Service" and "Batch" workload types for it.
       val singlePathSetup = ("single", Map("Zoe" -> List("Service")))
       val multiPathSetup =
-        ("multi", Map("Zoe" -> List("Service", "Batch")))
+        ("multi", Map("Zoe" -> List("Service", "Batch", "Batch-MPI", "Interactive")))
 //      List(singlePathSetup, multiPathSetup).foreach {
       List(multiPathSetup).foreach{
         case (multiOrSingle, schedulerWorkloadsMap) =>
           zoeSimulatorDescs.foreach(zoeSimulatorDesc => {
             if (sweepC) {
               allExperiments ::= new Experiment(
-                name = "google-zoe-%s_path-vary_c-allocation_%s"
-                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                name = "zoe-%s_path-vary_c-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode, zoeSimulatorDesc.policyMode),
                 workloadToSweepOver = "Service",
                 workloadDescs = wlDescs,
                 schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -1074,8 +1099,8 @@ object Simulation{
 
             if (sweepCL) {
               allExperiments ::= new Experiment(
-                name = "google-zoe-%s_path-vary_cl-allocation_%s"
-                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                name = "zoe-%s_path-vary_cl-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode, zoeSimulatorDesc.policyMode),
                 workloadToSweepOver = "Service",
                 workloadDescs = wlDescs,
                 schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -1092,8 +1117,8 @@ object Simulation{
 
             if (sweepL) {
               allExperiments ::= new Experiment(
-                name = "google-zoe-%s_path-vary_l-allocation_%s"
-                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                name = "zoe-%s_path-vary_l-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode, zoeSimulatorDesc.policyMode),
                 workloadToSweepOver = "Service",
                 workloadDescs = wlDescs,
                 schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -1110,8 +1135,8 @@ object Simulation{
 
             if (sweepPickiness) {
               allExperiments ::= new Experiment(
-                name = "google-zoe-%s_path-vary_pickiness-allocation_%s"
-                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                name = "zoe-%s_path-vary_pickiness-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode, zoeSimulatorDesc.policyMode),
                 workloadToSweepOver = "Service",
                 workloadDescs = wlDescs,
                 schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
@@ -1128,14 +1153,16 @@ object Simulation{
 
             if (sweepLambda) {
               allExperiments ::= new Experiment(
-                name = "google-zoe-%s_path-vary_lambda-allocation_%s"
-                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode),
+                name = "zoe-%s_path-vary_lambda-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoeSimulatorDesc.allocationMode, zoeSimulatorDesc.policyMode),
                 workloadToSweepOver = "Service",
                 workloadDescs = wlDescs,
                 schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
                 avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
-                constantThinkTimeRange = 0.1 :: Nil,
-                perTaskThinkTimeRange = 0.005 :: Nil,
+//                constantThinkTimeRange = 0.1 :: Nil,
+//                perTaskThinkTimeRange = 0.005 :: Nil,
+                constantThinkTimeRange = 0 :: Nil,
+                perTaskThinkTimeRange = 0 :: Nil,
                 blackListPercentRange = 0.0 :: Nil,
                 schedulerWorkloadMap = zoeSchedulerWorkloadMap,
                 simulatorDesc = zoeSimulatorDesc,
@@ -1145,7 +1172,143 @@ object Simulation{
                 simulationTimeout = timeout)
             }
           })
+      }
+    }
 
+    if(runZoePreemption){
+      logger.info("\tZoePreemption")
+      /**
+        * Set up SchedulerDesc-s.
+        */
+      val zoePreemptionSchedulerDesc = new SchedulerDesc(
+        name = "Zoe-Preemptive".intern(),
+        constantThinkTimes = Map("Batch" -> 0.01, "Batch-MPI" -> 0.01, "Service" -> 0.01, "Interactive" -> 0.01),
+        perTaskThinkTimes = Map("Batch" -> 0.005, "Batch-MPI" -> 0.005, "Service" -> 0.01, "Interactive" -> 0.01))
+
+      /**
+        * Set up workload-to-scheduler mappings.
+        */
+      val zoePreemptionSchedulerWorkloadMap =
+      Map[String, Seq[String]]("Batch" -> Seq("Zoe-Preemptive"), "Batch-MPI" -> Seq("Zoe-Preemptive"),
+        "Service" -> Seq("Zoe-Preemptive"), "Interactive" -> Seq("Zoe-Preemptive"))
+
+      /**
+        * Set up a simulatorDesc-s.
+        */
+      val zoePreemptionSimulatorDescs: ListBuffer[ZoePreemptionSimulatorDesc] = ListBuffer[ZoePreemptionSimulatorDesc]()
+      allocationModes.foreach(allocationMode => {
+        policyModes.foreach(policyMode => {
+          zoePreemptionSimulatorDescs += new ZoePreemptionSimulatorDesc(Array(zoePreemptionSchedulerDesc),
+            globalRunTime, allocationMode, policyMode)
+        })
+      })
+
+      /**
+        * Set up a run of experiments.
+        */
+      // Loop over both a single and multi path Monolithic scheduler.
+      // Emulate a single path scheduler by making the parameter sweep
+      // apply to both the "Service" and "Batch" workload types for it.
+      val singlePathSetup = ("single", Map("Zoe-Preemptive" -> List("Service")))
+      val multiPathSetup =
+        ("multi", Map("Zoe-Preemptive" -> List("Service", "Batch", "Batch-MPI", "Interactive")))
+      //      List(singlePathSetup, multiPathSetup).foreach {
+      List(multiPathSetup).foreach{
+        case (multiOrSingle, schedulerWorkloadsMap) =>
+          zoePreemptionSimulatorDescs.foreach(zoePreemptionSimulatorDesc => {
+            if (sweepC) {
+              allExperiments ::= new Experiment(
+                name = "zoe_preemptive-%s_path-vary_c-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoePreemptionSimulatorDesc.allocationMode, zoePreemptionSimulatorDesc.policyMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = constantRange,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoePreemptionSchedulerWorkloadMap,
+                simulatorDesc = zoePreemptionSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
+
+            if (sweepCL) {
+              allExperiments ::= new Experiment(
+                name = "zoe_preemptive-%s_path-vary_cl-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoePreemptionSimulatorDesc.allocationMode, zoePreemptionSimulatorDesc.policyMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = constantRange,
+                perTaskThinkTimeRange = perTaskRange,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoePreemptionSchedulerWorkloadMap,
+                simulatorDesc = zoePreemptionSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
+
+            if (sweepL) {
+              allExperiments ::= new Experiment(
+                name = "zoe_preemptive-%s_path-vary_l-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoePreemptionSimulatorDesc.allocationMode, zoePreemptionSimulatorDesc.policyMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = perTaskRange,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoePreemptionSchedulerWorkloadMap,
+                simulatorDesc = zoePreemptionSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
+
+            if (sweepPickiness) {
+              allExperiments ::= new Experiment(
+                name = "zoe_preemptive-%s_path-vary_pickiness-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoePreemptionSimulatorDesc.allocationMode, zoePreemptionSimulatorDesc.policyMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                constantThinkTimeRange = 0.1 :: Nil,
+                perTaskThinkTimeRange = 0.005 :: Nil,
+                blackListPercentRange = pickinessRange,
+                schedulerWorkloadMap = zoePreemptionSchedulerWorkloadMap,
+                simulatorDesc = zoePreemptionSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
+
+            if (sweepLambda) {
+              allExperiments ::= new Experiment(
+                name = "zoe_preemptive-%s_path-vary_lambda-allocation_%s-policy_%s"
+                  .format(multiOrSingle, zoePreemptionSimulatorDesc.allocationMode, zoePreemptionSimulatorDesc.policyMode),
+                workloadToSweepOver = "Service",
+                workloadDescs = wlDescs,
+                schedulerWorkloadsToSweepOver = schedulerWorkloadsMap,
+                avgJobInterarrivalTimeRange = Some(interArrivalScaleRange),
+//                constantThinkTimeRange = 0.1 :: Nil,
+//                perTaskThinkTimeRange = 0.005 :: Nil,
+                constantThinkTimeRange = 0 :: Nil,
+                perTaskThinkTimeRange = 0 :: Nil,
+                blackListPercentRange = 0.0 :: Nil,
+                schedulerWorkloadMap = zoePreemptionSchedulerWorkloadMap,
+                simulatorDesc = zoePreemptionSimulatorDesc,
+                logging = doLogging,
+                outputDirectory = outputDirName,
+                prefillCpuLimits = prefillCpuLim,
+                simulationTimeout = timeout)
+            }
+          })
       }
     }
 

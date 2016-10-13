@@ -221,7 +221,7 @@ workload_num_jobs_unscheduled = {}
 workload_num_jobs_scheduled = {}
 workload_num_jobs_fully_scheduled = {}
 workload_avg_job_execution_time = {}
-workload_avg_job_completion_time = {}
+workload_avg_job_turnaround_time = {}
 workload_num_jobs_timed_out = {}
 workload_avg_ramp_up_time = {}
 # (cellName, assignmentPolicy, scheduler_name) -> array of data points
@@ -558,9 +558,9 @@ for filename in input_list:
                                           wl_stat.workload_name,
                                           value)
 
-                # Avg completion time.
-                value = Value(x_val, wl_stat.avg_job_completion_time)
-                utils.append_or_create_2d(workload_avg_job_completion_time,
+                # Avg turnaround time.
+                value = Value(x_val, wl_stat.avg_job_turnaround_time)
+                utils.append_or_create_2d(workload_avg_job_turnaround_time,
                                           exp_env,
                                           wl_stat.workload_name,
                                           value)
@@ -1249,10 +1249,10 @@ plot_2d_data_set_dict(workload_avg_job_execution_time,
                       'Avg jobs execution time',
                       "ms-to-day")
 
-plot_2d_data_set_dict(workload_avg_job_completion_time,
-                      string_prefix + "  vs. avg job completion time",
-                      "avg-jobs-completion-time",
-                      'Avg jobs completion time',
+plot_2d_data_set_dict(workload_avg_job_turnaround_time,
+                      string_prefix + "  vs. avg job turnaround time",
+                      "avg-jobs-turnaround-time",
+                      'Avg jobs turnaround time',
                       "ms-to-day")
 
 plot_2d_data_set_dict(workload_avg_ramp_up_time,

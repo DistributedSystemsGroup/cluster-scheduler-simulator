@@ -28,6 +28,7 @@ package ClusterSchedulingSimulation;
 
 message ExperimentResultSet {
   repeated ExperimentEnv experiment_env = 1;
+  optional string experiment_name = 2;
 
   // There is a 1-1 relationship between an ExperimentEnv and a WorkloadDesc.
   message ExperimentEnv {
@@ -39,18 +40,29 @@ message ExperimentResultSet {
     repeated CommonWorkloadStats common_workload_stats = 6;
     // Next field number: 7
 
+    message JobStats {
+      optional int64 id = 1;
+      optional int32 num_tasks = 2;
+      optional double mem_per_task = 3;
+      optional double cpu_per_task = 4;
+      optional double task_duration = 5;
+      optional double arrival_time = 6;
+      optional double inter_arrival_time = 7;
+      optional double turnaround = 8;
+      optional double queue_time = 9;
+      optional double ramp_up_time = 10;
+      optional double execution_time = 11;
+      optional int32 num_inelastic = 12;
+      optional int32 num_elastic = 13;
+      optional int32 num_inelastic_scheduled = 14;
+      optional int32 num_elastic_scheduled = 15;
+
+    }
+
     message CommonWorkloadStats {
       optional string workload_name = 1;
       repeated JobStats job_stats = 2;
       // Job-level stats.
-      message JobStats {
-        optional int64 id = 1;
-        optional int32 num_tasks = 2;
-        optional double mem_per_task = 3;
-        optional double cpu_per_task = 4;
-        optional double task_duration = 5;
-        optional double num_tasks_moldable = 6;
-      }
     }
 
 
@@ -73,27 +85,35 @@ message ExperimentResultSet {
       repeated SchedulerWorkload sweep_scheduler_workload = 9;
       optional double constant_think_time = 10;
       optional double per_task_think_time = 11;
+      optional ResourceUtilization resource_utilization = 12;
       // Next field number: 12
+
+      message ResourceUtilization {
+        repeated double cpu = 1;
+        repeated double memory = 2;
+      }
 
       // Workload-level stats.
       message WorkloadStats {
         optional string workload_name = 1;
-        optional int64 num_jobs = 2;
-        optional int64 num_jobs_scheduled = 3;
-        optional int64 num_jobs_fully_scheduled = 4;
-        optional int64 num_jobs_timed_out_scheduling = 5;
-        optional double job_think_times_90_percentile = 6;
-        optional double avg_job_queue_times_till_first_scheduled = 7;
-        optional double avg_job_queue_times_till_fully_scheduled = 8;
-        optional double job_queue_time_till_first_scheduled_90_percentile = 9;
-        optional double job_queue_time_till_fully_scheduled_90_percentile = 10;
-        optional double num_scheduling_attempts_90_percentile = 11;
-        optional double num_scheduling_attempts_99_percentile = 12;
-        optional double num_task_scheduling_attempts_90_percentile = 13;
-        optional double num_task_scheduling_attempts_99_percentile = 14;
-        optional double avg_job_execution_time = 15;
-        optional double avg_job_completion_time = 16;
-        optional double avg_job_ramp_up_time = 17;
+        repeated JobStats job_stats = 2;
+        optional int64 num_jobs = 3;
+        optional int64 num_jobs_scheduled = 4;
+        optional int64 num_jobs_fully_scheduled = 5;
+        optional int64 num_jobs_timed_out_scheduling = 6;
+        optional double job_think_times_90_percentile = 7;
+        optional double avg_job_queue_times_till_first_scheduled = 8;
+        optional double avg_job_queue_times_till_fully_scheduled = 9;
+        optional double job_queue_time_till_first_scheduled_90_percentile = 10;
+        optional double job_queue_time_till_fully_scheduled_90_percentile = 11;
+        optional double num_scheduling_attempts_90_percentile = 12;
+        optional double num_scheduling_attempts_99_percentile = 13;
+        optional double num_task_scheduling_attempts_90_percentile = 14;
+        optional double num_task_scheduling_attempts_99_percentile = 15;
+        optional double avg_job_turnaround_time = 16;
+        optional double avg_job_execution_time = 17;
+        optional double avg_job_ramp_up_time = 18;
+        optional double num_scheduling_attempts = 19;
       }
 
       message SchedulerStats {
@@ -115,7 +135,13 @@ message ExperimentResultSet {
         // Num jobs in schedulers job queue when simulation ended.
         optional int64 num_jobs_left_in_queue = 14;
         optional int64 failed_find_victim_attempts = 15;
+        optional QueuesStatus queues_status = 16;
         // Next field ID:16
+
+        message QueuesStatus {
+          repeated int64 pending = 1;
+          repeated int64 running = 2;
+        }
 
         // Per-day bucketing of important stats to support error bars.
         message PerDayStats {

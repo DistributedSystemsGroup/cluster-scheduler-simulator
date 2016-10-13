@@ -92,7 +92,7 @@ function graph_experiment() {
     echo "graph_experiment requires 1 parameter (the protobuff file name)."
     exit
   fi
-  filename=$1
+  filenames=$1
 
   for mode in ${modes}; do
     echo mode is ${mode} '(0 = non-paper, 1 = paper)'
@@ -103,7 +103,7 @@ function graph_experiment() {
     fi
 
     # Figure out which simulator type this protobuff came from.
-    case ${filename} in
+    case ${filenames} in
       *omega-resource-fit-incremental*)         sim=omega-resource-fit-incremental;;
       *omega-resource-fit-all-or-nothing*)      sim=omega-resource-fit-all-or-nothing;;
       *omega-sequence-numbers-incremental*)     sim=omega-sequence-numbers-incremental;;
@@ -111,15 +111,16 @@ function graph_experiment() {
       *monolithic*)                             sim=monolithic;;
       *mesos*)                                  sim=mesos;;
       *spark*)                                  sim=spark;;
-      *zoe*)                                    sim=zoe;;
+      *zoe-*)                                   sim=zoe;;
+      *zoe_preemptive*)                         sim=zoe-preemptive;;
       *)                                        echo "Unknown simulator type, in ${filename} exiting."
                                                 exit 1
     esac
 
-    num_service_scheds=`echo ${filename} | \
+    num_service_scheds=`echo ${filenames} | \
                         grep --only-matching '[0-9]\+_service' | \
                         grep --only-matching '[0-9]\+'`
-    num_batch_scheds=`echo ${filename} | \
+    num_batch_scheds=`echo ${filenames} | \
                         grep --only-matching '[0-9]\+_batch' | \
                         grep --only-matching '[0-9]\+'`
     echo "Parsed filename for num service (${num_service_scheds}) and" \
@@ -127,7 +128,7 @@ function graph_experiment() {
     for vd in ${vary_dimensions}; do
       echo generating graphs for dimension ${vd}.
 
-      case ${filename} in
+      case ${filenames} in
         *single_path*) pathness=single_path;;
         *multi_path*)  pathness=multi_path;;
         *)             echo "Protobuf filename must contain"         \
@@ -136,7 +137,7 @@ function graph_experiment() {
       esac
       echo Pathness is ${pathness}.
 
-      case ${filename} in
+      case ${filenames} in
         *allocation_incremental*)   allocation_mode=incremental;;
         *allocation_all*)           allocation_mode=all;;
         *)             echo "Protobuf filename must contain"         \
@@ -154,7 +155,7 @@ function graph_experiment() {
 #           "${mode} ${vd} ${envs_to_plot} ${do_png}"
         PYTHONPATH=${PYTHONPATH}:.. python ${plotting_script}          \
             ${complete_out_dir}                                        \
-            ${input_dir}/${filename}                                 \
+            ${filenames}                                 \
             ${mode} ${vd} ${envs_to_plot} ${do_png}
         echo -e "\n"
       done
@@ -164,11 +165,29 @@ function graph_experiment() {
 
 cd ${CLUSTER_SIM_HOME}/src/main/python/graphing-scripts
 PROTO_LIST=''
-echo capturing: ls ${input_dir}|grep protobuf
-ls ${input_dir} | grep protobuf
-for curr_filename in `ls ${input_dir}|grep protobuf`; do
-  PROTO_LIST+=curr_filename
-  echo Calling graph_experiment with ${curr_filename}
-  graph_experiment ${curr_filename}
+
+echo "capturing: ls ${input_dir}| grep protobuf | grep zoe-"
+ls ${input_dir} | grep protobuf | grep zoe-
+for curr_filename in `ls ${input_dir}|grep protobuf|grep zoe-`; do
+    PROTO_LIST+="${input_dir}/${curr_filename},"
 done
+echo Calling graph_experiment with ${PROTO_LIST}
+graph_experiment ${PROTO_LIST::-1}
+
+PROTO_LIST=''
+echo "capturing: ls ${input_dir}| grep protobuf | grep zoe_preemptive-"
+ls ${input_dir} | grep protobuf | grep zoe_preemptive-
+for curr_filename in `ls ${input_dir}|grep protobuf|grep  zoe_preemptive-`; do
+    PROTO_LIST+="${input_dir}/${curr_filename},"
+done
+echo Calling graph_experiment with ${PROTO_LIST}
+graph_experiment ${PROTO_LIST::-1}
+
+echo "capturing: ls ${input_dir}| grep protobuf | grep -v zoe"
+ls ${input_dir} | grep protobuf | grep -v zoe
+for curr_filename in `ls ${input_dir}|grep protobuf|grep -v zoe`; do
+    echo Calling graph_experiment with ${curr_filename}
+    graph_experiment ${curr_filename}
+done
+
 

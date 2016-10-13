@@ -31,7 +31,6 @@ package ClusterSchedulingSimulation.schedulers
 
 import ClusterSchedulingSimulation.{CellState, Scheduler, _}
 import org.apache.log4j.Logger
-import sun.font.TrueTypeFont
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.{Iterator, mutable}
@@ -41,7 +40,7 @@ import scala.collection.{Iterator, mutable}
  * to create and also to carry any extra fields that the factory needs to
  * construct the simulator.
  */
-class ZoeSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
+class ZoePreemptionSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
                        runTime: Double,
                        val allocationMode: AllocationModes.Value,
                        val policyMode: PolicyModes.Value)
@@ -77,7 +76,7 @@ class ZoeSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
           })
       }
       schedulers(schedDesc.name) =
-        new ZoeScheduler(schedDesc.name,
+        new ZoePreemptionScheduler(schedDesc.name,
           constantThinkTimes.toMap,
           perTaskThinkTimes.toMap,
           math.floor(newBlackListPercent *
@@ -101,11 +100,11 @@ class ZoeSimulatorDesc(schedulerDescs: Seq[SchedulerDesc],
       workloads,
       prefillWorkloads,
       logging,
-      prefillScheduler = new ZoePrefillScheduler(cellState))
+      prefillScheduler = new ZoePreemptionPrefillScheduler(cellState))
   }
 }
 
-class ZoePrefillScheduler(cellState: CellState)
+class ZoePreemptionPrefillScheduler(cellState: CellState)
   extends PrefillScheduler(cellState = cellState) {
 
   override
@@ -152,7 +151,7 @@ class ZoePrefillScheduler(cellState: CellState)
   }
 }
 
-class ZoeScheduler(name: String,
+class ZoePreemptionScheduler(name: String,
                    constantThinkTimes: Map[String, Double],
                    perTaskThinkTimes: Map[String, Double],
                    numMachinesToBlackList: Double = 0,
@@ -178,7 +177,6 @@ class ZoeScheduler(name: String,
 
   var runningQueueAsList = new ListBuffer[Job]()
   override def runningJobQueueSize: Long = runningQueueAsList.count(_ != null)
-
   var numRunningJobs: Int = 0
 
   //  var moldableQueueLength: Int = 0
@@ -330,6 +328,189 @@ class ZoeScheduler(name: String,
       wakeUp()
   }
 
+  def preemptionForInelastic(jobToFit:Job,
+                             jobsThatCanBePreempted: ListBuffer[JobPreemption],
+                             jobsToPreempt: ListBuffer[JobPreemption]): ListBuffer[ClaimDelta] = {
+
+    var jobsThatCanBePreempted_snapshot = new ListBuffer[JobPreemption]()
+    var jobsToPreempt_snapshot = new ListBuffer[JobPreemption]()
+    jobsToPreempt.foreach(job => {
+      jobsToPreempt_snapshot += job.copy()
+    })
+    val privateCell_snapshot = privateCellState.copy
+
+    var claimDelta_inelastic = new ListBuffer[ClaimDelta]()
+    val relativeJobsToPreempt: ListBuffer[JobPreemption] = new ListBuffer[JobPreemption]()
+
+    for(job: JobPreemption <- jobsThatCanBePreempted){
+      jobsThatCanBePreempted_snapshot += job.copy()
+
+      if(job.elasticDeltasAfterPreemption.nonEmpty){
+        for(claimDelta:ClaimDelta <- job.elasticDeltasAfterPreemption if claimDelta_inelastic.isEmpty){
+//          if(claimDelta_inelastic.isEmpty){
+//            simulator.logger.info(schedulerPrefix + " The cell state is (%f cpus, %f mem)".format(privateCellState.availableCpus, privateCellState.availableMem))
+//            simulator.logger.info(schedulerPrefix + " ClaimDelta Machine Info. id: %d / seqNum: %d".format(claimDelta.machineID, claimDelta.machineSeqNum))
+            claimDelta.unApply(privateCellState)
+            job.elasticDeltasAfterPreemption -= claimDelta
+            job.elasticDeltasToPreempt += claimDelta
+
+            claimDelta_inelastic = scheduleJob(jobToFit, privateCellState)
+            if (!isAllocationSuccessfully(claimDelta_inelastic, jobToFit)) {
+              claimDelta_inelastic.foreach(claimDelta => {
+                claimDelta.unApply(privateCellState)
+              })
+              claimDelta_inelastic.clear()
+            }
+//          }
+        }
+        if(claimDelta_inelastic.nonEmpty)
+          relativeJobsToPreempt += job
+      }
+    }
+
+//    if(claimDelta_inelastic.isEmpty){
+//      for(job: JobPreemption <- jobsThatCanBePreempted){
+//        if(job.inelasticDeltasAfterPreemption.nonEmpty){
+//          for(claimDelta:ClaimDelta <- job.inelasticDeltasAfterPreemption){
+//            claimDelta.unApply(privateCellState)
+//            job.inelasticDeltasAfterPreemption -= claimDelta
+//            job.inelasticDeltasToPreempt += claimDelta
+//          }
+//
+//
+//          claimDelta_inelastic = scheduleJob(jobToFit, privateCellState)
+//          if (!isAllocationSuccessfully(claimDelta_inelastic, jobToFit)) {
+//            claimDelta_inelastic.foreach(claimDelta => {
+//              claimDelta.unApply(privateCellState)
+//            })
+//            claimDelta_inelastic.clear()
+//          }
+//          if(!relativeJobsToPreempt.contains(job))
+//            relativeJobsToPreempt += job
+//        }
+//      }
+//    }
+
+    if(claimDelta_inelastic.isEmpty){
+      relativeJobsToPreempt.clear()
+
+      jobsToPreempt.clear()
+      jobsToPreempt ++= jobsToPreempt_snapshot
+
+      jobsThatCanBePreempted.clear()
+      jobsThatCanBePreempted ++= jobsThatCanBePreempted_snapshot
+
+      privateCellState = privateCell_snapshot
+    }
+
+    relativeJobsToPreempt.foreach(job => {
+      if(!jobsToPreempt.contains(job))
+        jobsToPreempt += job
+    })
+
+    claimDelta_inelastic
+  }
+
+  def preemptionForElastic(jobToFit:Job,
+                             jobsThatCanBePreempted: ListBuffer[JobPreemption],
+                             jobsToPreempt: ListBuffer[JobPreemption]): ListBuffer[ClaimDelta] = {
+
+    var jobsThatCanBePreempted_snapshot = new ListBuffer[JobPreemption]()
+    var jobsToPreempt_snapshot = new ListBuffer[JobPreemption]()
+    jobsToPreempt.foreach(job => {
+      jobsToPreempt_snapshot += job.copy()
+    })
+    val privateCell_snapshot = privateCellState.copy
+
+    var claimDelta_elastic = new ListBuffer[ClaimDelta]()
+    val relativeJobsToPreempt: ListBuffer[JobPreemption] = new ListBuffer[JobPreemption]()
+
+    var elasticServicesToSchedule = jobToFit.elasticTasksUnscheduled
+
+    for(job: JobPreemption <- jobsThatCanBePreempted){
+      jobsThatCanBePreempted_snapshot += job.copy()
+
+      if(job.elasticDeltasAfterPreemption.nonEmpty){
+        for(claimDelta:ClaimDelta <- job.elasticDeltasAfterPreemption if elasticServicesToSchedule > 0){
+//          if(elasticServicesToSchedule > 0){
+//            simulator.logger.info(schedulerPrefix + " The cell state is (%f cpus, %f mem)".format(privateCellState.availableCpus, privateCellState.availableMem))
+            claimDelta.unApply(privateCellState)
+            job.elasticDeltasAfterPreemption -= claimDelta
+            job.elasticDeltasToPreempt += claimDelta
+
+            val relativeClaimDelta_elastic = scheduleJob(jobToFit, privateCellState, elastic = true)
+            elasticServicesToSchedule -= relativeClaimDelta_elastic.size
+            claimDelta_elastic ++= relativeClaimDelta_elastic
+//          }
+        }
+        if(claimDelta_elastic.nonEmpty)
+          relativeJobsToPreempt += job
+      }
+    }
+
+//    if(elasticServicesToSchedule > 0){
+//      for(job: JobPreemption <- jobsThatCanBePreempted){
+//        if(job.inelasticDeltasAfterPreemption.nonEmpty){
+//          for(claimDelta:ClaimDelta <- job.inelasticDeltasAfterPreemption){
+//            claimDelta.unApply(privateCellState)
+//            job.inelasticDeltasAfterPreemption -= claimDelta
+//            job.inelasticDeltasToPreempt += claimDelta
+//          }
+//
+//          val relativeClaimDelta_elastic = scheduleJob(jobToFit, privateCellState, elastic = true)
+//          elasticServicesToSchedule -= relativeClaimDelta_elastic.size
+//          claimDelta_elastic ++= relativeClaimDelta_elastic
+//          if(!relativeJobsToPreempt.contains(job))
+//            relativeJobsToPreempt += job
+//        }
+//      }
+//    }
+
+    if(claimDelta_elastic.isEmpty){
+      relativeJobsToPreempt.clear()
+
+      jobsToPreempt.clear()
+      jobsToPreempt ++= jobsToPreempt_snapshot
+
+      jobsThatCanBePreempted.clear()
+      jobsThatCanBePreempted ++= jobsThatCanBePreempted_snapshot
+
+      privateCellState = privateCell_snapshot
+    }
+
+    relativeJobsToPreempt.foreach(job => {
+      if(!jobsToPreempt.contains(job))
+        jobsToPreempt += job
+    })
+
+    claimDelta_elastic
+  }
+
+  def compareMachineSeqNum(o1: ClaimDelta, o2: ClaimDelta): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+
+    if(o1.machineID == o2.machineID)
+      return o1.machineSeqNum.compareTo(o2.machineSeqNum)
+
+    o1.machineID.compareTo(o2.machineID)
+  }
+
+  def compareJobFinishTime(o1: Job, o2: Job): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+
+    o1.jobFinishedWorking.compareTo(o2.jobFinishedWorking)
+  }
+
   /**
     * Checks to see if there is currently a job in this scheduler's job queue.
     * If there is, and this scheduler is not currently scheduling a job, then
@@ -362,7 +543,7 @@ class ZoeScheduler(name: String,
 
         if (previousJob != null && previousJob == jobsToAttemptScheduling.head) {
           jobAttempt += 1
-          if(jobAttempt == 2){
+          if(jobAttempt == 2) {
             jobAttempt = 0
             scheduling = false
             jobsToAttemptScheduling.foreach(job => {
@@ -371,7 +552,6 @@ class ZoeScheduler(name: String,
             simulator.logger.info(schedulerPrefix + " Exiting because we are trying to schedule the same job that failed before.")
             return
           }
-
         }
         previousJob = jobsToAttemptScheduling.head
 
@@ -402,11 +582,11 @@ class ZoeScheduler(name: String,
            */
           val jobsToLaunch: ListBuffer[(Job, ListBuffer[ClaimDelta], ListBuffer[ClaimDelta])] = new ListBuffer[(Job, ListBuffer[ClaimDelta], ListBuffer[ClaimDelta])]()
           val tmpJobsToLaunch: ListBuffer[(Job, ListBuffer[ClaimDelta], ListBuffer[ClaimDelta])] = new ListBuffer[(Job, ListBuffer[ClaimDelta], ListBuffer[ClaimDelta])]()
-
           val jobsCannotFit: ListBuffer[Job] = new ListBuffer[Job]()
-
           var stop:Boolean = false
           var clusterFreeResources: Double = privateCellState.availableCpus * privateCellState.availableMem
+
+          val jobsToPreempt: ListBuffer[JobPreemption] = new ListBuffer[JobPreemption]()
 
           jobsToAttemptScheduling.foreach(job => {
             val jobPrefix = "[Job %d (%s)] ".format(job.id, job.workloadName)
@@ -417,6 +597,23 @@ class ZoeScheduler(name: String,
 
             if(PolicyModes.myPolicies.contains(policyMode)){
               if(!stop){
+                var jobsThatCanBePreempted: ListBuffer[JobPreemption] = new ListBuffer[JobPreemption]()
+                for(job1: Job <- PolicyModes.getJobsWithLowerPriority(runningQueueAsList, policyMode, job, simulator.currentTime, threshold = 1).reverse){
+                  if(job1.finalStatus != JobStates.Completed /*&& job1.scheduledElasticTasks > 0*/){
+                    var inserted: Boolean = false
+                    for(jobToPreempt: JobPreemption <- jobsToPreempt if !inserted){
+                      if(jobToPreempt.job.id == job1.id && (jobToPreempt.elasticDeltasAfterPreemption.nonEmpty || jobToPreempt.inelasticDeltasAfterPreemption.nonEmpty)){
+                        jobsThatCanBePreempted += jobToPreempt
+                        inserted = true
+                      }
+                    }
+                    if(!inserted){
+                      jobsThatCanBePreempted += JobPreemption(job1, job1.claimInelasticDeltas, job1.claimElasticDeltas)
+                    }
+                  }
+                }
+
+
                 tmpJobsToLaunch.clear()
                 jobsToLaunch.foreach { case (job1, inelastic, elastic) =>
                   var tmpClaimDelta_inelastic = new ListBuffer[ClaimDelta]()
@@ -439,23 +636,33 @@ class ZoeScheduler(name: String,
 
                 claimDelta_inelastic = scheduleJob(job, privateCellState)
                 if (!isAllocationSuccessfully(claimDelta_inelastic, job)) {
+                  simulator.logger.info(schedulerPrefix + jobPrefix + " Failed to allocate all services (%d/%d[%d])".format(claimDelta_inelastic.size, job.moldableTasks, job.unscheduledTasks))
                   claimDelta_inelastic.foreach(claimDelta => {
                     claimDelta.unApply(privateCellState)
                   })
                   claimDelta_inelastic.clear()
+                  if(jobsThatCanBePreempted.nonEmpty){
+                    simulator.logger.info(schedulerPrefix + jobPrefix + " Checking for preemptive resources for inelastic services.")
+                    claimDelta_inelastic = preemptionForInelastic(job, jobsThatCanBePreempted, jobsToPreempt)
+                  }
                 }
                 if (claimDelta_inelastic.nonEmpty || job.finalStatus == JobStates.Fully_Scheduled) {
                   jobsToLaunch += ((job, claimDelta_inelastic, claimDelta_elastic))
                 }
                 jobsToLaunch.foreach { case (job1, inelastic, elastic) =>
                   claimDelta_elastic = scheduleJob(job1, privateCellState, elastic = true)
-                  if (claimDelta_elastic.nonEmpty) {
-                    elastic.clear()
-                    elastic ++= claimDelta_elastic
+                  if ((claimDelta_elastic.isEmpty || claimDelta_elastic.size < job1.elasticTasksUnscheduled)
+                    && jobsThatCanBePreempted.nonEmpty
+                    && !job1.workloadName.equals("Interactive")) {
+                    simulator.logger.info(schedulerPrefix + jobPrefix + " Checking for preemptive resources for elastic services.")
+                    claimDelta_elastic = preemptionForElastic(job1, jobsThatCanBePreempted, jobsToPreempt)
                   }
+                  elastic.clear()
+                  elastic ++= claimDelta_elastic
                 }
+
                 val currentFreeResource: Double = privateCellState.availableCpus * privateCellState.availableMem
-                if(currentFreeResource >= clusterFreeResources){
+                if(currentFreeResource >= clusterFreeResources && jobsToPreempt.isEmpty){
                   stop = true
                   jobsToLaunch.clear()
                   jobsToLaunch ++= tmpJobsToLaunch
@@ -486,7 +693,7 @@ class ZoeScheduler(name: String,
                   val taskCanFitPerCpus = Math.floor(privateCellState.cpusPerMachine / job.cpusPerTask) * privateCellState.numMachines
                   val taskCanFitPerMem = Math.floor(privateCellState.memPerMachine / job.memPerTask) * privateCellState.numMachines
                   if(taskCanFitPerCpus < job.numTasks || taskCanFitPerMem < job.numTasks) {
-                    simulator.logger.warn((schedulerPrefix + jobPrefix +  "The cell (%f cpus, %f mem) is not big enough " +
+                    simulator.logger.warn((schedulerPrefix + jobPrefix + " The cell (%f cpus, %f mem) is not big enough " +
                       "to hold this job all at once which requires %d tasks for %f cpus " +
                       "and %f mem in total.").format(privateCellState.totalCpus,
                       privateCellState.totalMem,
@@ -502,6 +709,118 @@ class ZoeScheduler(name: String,
           jobsCannotFit.foreach(job => {
             jobsToAttemptScheduling -= job
           })
+
+//          if(jobsToPreempt.nonEmpty && jobsToLaunch.nonEmpty){
+//            var totalQueueGain: Double = 0
+//            var totalExecutionLoss: Double = 0
+//            jobsToPreempt.foreach(jobToPreempt => {
+//              // The following control should be not necessary, but I had some jobToPreempt with no service to preempt
+//              if(jobToPreempt.elasticDeltasToPreempt.nonEmpty){
+//                val job: Job = jobToPreempt.job
+//                val previousElasticTasksUnscheduled = job.elasticTasksUnscheduled
+//
+//                job.elasticTasksUnscheduled = job.elasticTasksUnscheduled + jobToPreempt.elasticDeltasToPreempt.size
+//                val jobLeftDuration: Double = job.estimateJobDuration(currTime = simulator.currentTime, tasksRemoved = jobToPreempt.elasticDeltasToPreempt.size, mock = true)
+//                job.elasticTasksUnscheduled = previousElasticTasksUnscheduled
+//
+//                val previousDuration: Double = job.jobFinishedWorking - simulator.currentTime
+//                assert(jobLeftDuration > previousDuration, "A job cannot go faster after preemption!(%f | %f)".format(jobLeftDuration, previousDuration))
+//
+//                totalExecutionLoss += jobLeftDuration - previousDuration
+//              }
+//            })
+//            totalExecutionLoss /= jobsToPreempt.size
+//
+//            val jobsAlreadyCounted: ListBuffer[Job] = new ListBuffer[Job]()
+//            jobsToLaunch.foreach{ case (job, inelastic, elastic) =>
+//              val memNeeded: Double = (inelastic.size + elastic.size) * job.memPerTask
+//              val cpusNeeded: Double = (inelastic.size + elastic.size) * job.cpusPerTask
+//
+//              var memFree: Double = 0
+//              var cpusFree: Double = 0
+//
+//              val runningJobSortedPerFinishTime = runningJobs.sortWith(compareJobFinishTime(_,_) < 0)
+//              var finish: Boolean = false
+//              for (elem <- runningJobSortedPerFinishTime if !finish) {
+//                if(elem != null && !jobsAlreadyCounted.contains(elem) && elem.finalStatus != JobStates.Completed){
+//                  val deltaSize = elem.allClaimDeltas.size
+//                  memFree += deltaSize * job.memPerTask
+//                  cpusFree += deltaSize * job.cpusPerTask
+//                  if(memFree >= memNeeded && cpusFree >= cpusNeeded){
+//                    totalQueueGain += (elem.jobFinishedWorking - simulator.currentTime)
+//                    jobsAlreadyCounted += elem
+//                    finish = true
+//                  }
+//                }
+//              }
+//            }
+//            totalQueueGain /= jobsToLaunch.size
+//
+//            if(totalQueueGain <= totalExecutionLoss){
+//              simulator.logger.warn(schedulerPrefix + allJobPrefix + "It is not worth applying preemption. totalQueueGain: %f | totalExecutionLoss: %f".format(totalQueueGain, totalExecutionLoss))
+//              jobsToPreempt.clear()
+//              jobsToLaunch.clear()
+//            }
+//            simulator.logger.info(schedulerPrefix + allJobPrefix + "It is worth applying preemption. totalQueueGain: %f | totalExecutionLoss: %f".format(totalQueueGain, totalExecutionLoss))
+//          }
+
+          simulator.logger.info(schedulerPrefix + allJobPrefix + "There are %d jobs that can be preempted.".format(jobsToPreempt.size))
+          jobsToPreempt.foreach(jobToPreempt => {
+            val job: Job = jobToPreempt.job
+            val jobPrefix = "[Job %d (%s)] ".format(job.id, job.workloadName)
+
+            val elasticClaimDeltasToPreempt: ListBuffer[ClaimDelta] = jobToPreempt.elasticDeltasToPreempt.sortWith(compareMachineSeqNum(_,_) < 0)
+            if(jobToPreempt.elasticDeltasToPreempt.nonEmpty){
+              elasticClaimDeltasToPreempt.foreach(claimDelta => {
+                claimDelta.unApply(simulator.cellState)
+              })
+              job.claimElasticDeltas --= elasticClaimDeltasToPreempt
+              // We have to reinsert the job in queue if this had all it's elastic services allocated
+              if(job.elasticTasksUnscheduled == 0){
+                addPendingJob(job)
+              }
+              job.elasticTasksUnscheduled = job.elasticTasksUnscheduled + elasticClaimDeltasToPreempt.size
+              simulator.logger.info(schedulerPrefix + jobPrefix + "Preempted %d elastic services.".format(elasticClaimDeltasToPreempt.size))
+            }
+
+            val inelasticClaimDeltasToPreempt: ListBuffer[ClaimDelta] = jobToPreempt.inelasticDeltasToPreempt.sortWith(compareMachineSeqNum(_,_) < 0)
+            if(jobToPreempt.inelasticDeltasToPreempt.nonEmpty){
+              inelasticClaimDeltasToPreempt.foreach(claimDelta => {
+                claimDelta.unApply(simulator.cellState)
+              })
+              job.reset()
+              // We have to reinsert the job in queue if this had all it's elastic services allocated
+              removeRunningJob(job)
+              if(!pendingQueueAsList.contains(job))
+                addPendingJob(job)
+              simulator.logger.info(schedulerPrefix + jobPrefix + "Preempted %d inelastic services.".format(inelasticClaimDeltasToPreempt.size))
+            }
+
+            if(jobToPreempt.inelasticDeltasToPreempt.nonEmpty) {
+              // We have to remove all the incoming simulation events that work on this job.
+              simulator.removeIf(x => x.itemId == job.id &&
+                (x.eventType == EventTypes.Remove || x.eventType == EventTypes.Trigger))
+            }else{
+              val jobLeftDuration: Double = job.estimateJobDuration(currTime = simulator.currentTime, tasksRemoved = elasticClaimDeltasToPreempt.size)
+
+              job.jobFinishedWorking = simulator.currentTime + jobLeftDuration
+
+              // We have to remove all the incoming simulation events that work on this job.
+              simulator.removeIf(x => x.itemId == job.id &&
+                (x.eventType == EventTypes.Remove || x.eventType == EventTypes.Trigger))
+
+              simulator.afterDelay(jobLeftDuration, eventType = EventTypes.Remove, itemId = job.id) {
+                simulator.logger.info(schedulerPrefix + jobPrefix + "Completed after %fs.".format(simulator.currentTime - job.jobStartedWorking))
+                job.finalStatus = JobStates.Completed
+                previousJob = null
+                removePendingJob(job)
+                removeRunningJob(job)
+              }
+              simulator.logger.info(schedulerPrefix + elasticPrefix + jobPrefix + "Adding finished event after %f seconds to wake up scheduler.".format(jobLeftDuration))
+              simulator.cellState.scheduleEndEvents(job.allClaimDeltas, delay = jobLeftDuration, jobId = job.id)
+            }
+          })
+
 
           /*
            * After the simulation, we will deploy the allocations on the real cluster
@@ -654,283 +973,52 @@ class ZoeScheduler(name: String,
   }
 }
 
-object PolicyModes extends Enumeration {
-  val Fifo, PriorityFifo, SJF, LJF, HRRN, SRPT, Size,
-  MySJF, MySRPT,  MySize, MyFifo, MySize2, MySize3, MySize4, MySize5, MySize6, MySize7, MySize8,
-  MySizeError, SRPTError = Value
+case class JobPreemption(job: Job,
+                         inelasticDeltas: ListBuffer[ClaimDelta],
+                        elasticDeltas: ListBuffer[ClaimDelta]) {
 
-  val myPolicies = List[PolicyModes.Value](PolicyModes.MyFifo, PolicyModes.MySJF, PolicyModes.MySRPT, PolicyModes.MySize, PolicyModes.MySizeError,
-    PolicyModes.MySize2, PolicyModes.MySize3, PolicyModes.MySize4, PolicyModes.MySize5, PolicyModes.MySize6, PolicyModes.MySize7, PolicyModes.MySize8)
-
-  val logger = Logger.getLogger(this.getClass.getName)
-
-  def applyPolicy(queue: ListBuffer[Job], policy: PolicyModes.Value, currentTime:Double = 0): ListBuffer[Job] = {
-    policy match {
-      case PolicyModes.Fifo | PolicyModes.MyFifo => queue
-      case PolicyModes.PriorityFifo => queue.sortWith(PolicyModes.comparePriority(_,_) > 0)
-      case PolicyModes.SJF | PolicyModes.MySJF => queue.sortWith(PolicyModes.compareJobTime(_,_) < 0)
-      case PolicyModes.LJF => queue.sortWith(PolicyModes.compareJobTime(_,_) > 0)
-      case PolicyModes.HRRN => queue.sortWith(PolicyModes.compareResponseRatio(_,_, currentTime) > 0)
-      case PolicyModes.SRPT | PolicyModes.MySRPT => queue.sortWith(PolicyModes.compareJobRemainingTime(_,_) < 0)
-      case PolicyModes.MySize | PolicyModes.Size => queue.sortWith(PolicyModes.compareSize(_,_) < 0)
-      case PolicyModes.MySize2 => queue.sortWith(PolicyModes.compareSize2(_,_) < 0)
-      case PolicyModes.MySize3 => queue.sortWith(PolicyModes.compareSize3(_,_) < 0)
-      case PolicyModes.MySize4 => queue.sortWith(PolicyModes.compareSize4(_,_) < 0)
-      case PolicyModes.MySize5 => queue.sortWith(PolicyModes.compareSize5(_,_) < 0)
-      case PolicyModes.MySize6 => queue.sortWith(PolicyModes.compareSize6(_,_) < 0)
-      case PolicyModes.MySize7 => queue.sortWith(PolicyModes.compareSize7(_,_) < 0)
-      case PolicyModes.MySize8 => queue.sortWith(PolicyModes.compareSize8(_,_) < 0)
-      case PolicyModes.SRPTError => queue.sortWith(PolicyModes.compareJobRemainingTime(_,_) < 0)
-      case PolicyModes.MySizeError => queue.sortWith(PolicyModes.compareSize(_,_) < 0)
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: JobPreemption => that.job.id == this.job.id
+      case _ => false
     }
+
+  val elasticDeltasAfterPreemption = new ListBuffer[ClaimDelta]()
+  elasticDeltasAfterPreemption ++= elasticDeltas
+
+  val elasticDeltasToPreempt = new ListBuffer[ClaimDelta]()
+
+  val inelasticDeltasAfterPreemption = new ListBuffer[ClaimDelta]()
+  inelasticDeltasAfterPreemption ++= inelasticDeltas
+
+  val inelasticDeltasToPreempt = new ListBuffer[ClaimDelta]()
+
+  def reset(): Unit = {
+    elasticDeltasAfterPreemption.clear()
+    elasticDeltasAfterPreemption ++= elasticDeltas
+
+    elasticDeltasToPreempt.clear()
+
+    inelasticDeltasAfterPreemption.clear()
+    inelasticDeltasAfterPreemption ++= inelasticDeltas
+
+    inelasticDeltasToPreempt.clear()
   }
 
-  def getPriority(job: Job, policy: PolicyModes.Value, currentTime:Double = 0): Double = {
-    policy match {
-      case PolicyModes.Fifo | PolicyModes.MyFifo => -1.0
-      case PolicyModes.PriorityFifo => job.priority
-      case PolicyModes.SJF | PolicyModes.MySJF | PolicyModes.LJF => jobDuration(job)
-      case PolicyModes.HRRN => job.responseRatio(currentTime)
-      case PolicyModes.SRPT | PolicyModes.MySRPT => remainingTime(job)
-      case PolicyModes.MySize | PolicyModes.Size => size(job)
-      case PolicyModes.MySize2 => size2(job)
-      case PolicyModes.MySize3 => size3(job)
-      case PolicyModes.MySize4 => size4(job)
-      case PolicyModes.MySize5 => size5(job)
-      case PolicyModes.MySize6 => size6(job)
-      case PolicyModes.MySize7 => size7(job)
-      case PolicyModes.MySize8 => size8(job)
-      case PolicyModes.SRPTError => remainingTimeWithError(job)
-      case PolicyModes.MySizeError => sizeWithError(job)
-    }
-  }
+  def copy(): JobPreemption = {
+    val newJobPreemption = JobPreemption(job, inelasticDeltas, elasticDeltas)
+    newJobPreemption.elasticDeltasAfterPreemption.clear()
+    newJobPreemption.elasticDeltasAfterPreemption ++= elasticDeltasAfterPreemption
 
-  def getJobsWithSamePriority(queue: ListBuffer[Job], policy: PolicyModes.Value, currentTime:Double = 0) : ListBuffer[Job] = {
-    val sortedQueue = applyPolicy(queue, policy)
-    val jobs: ListBuffer[Job] = new ListBuffer[Job]()
-    var previousPriority: Double = -1.0
+    newJobPreemption.elasticDeltasToPreempt.clear()
+    newJobPreemption.elasticDeltasToPreempt ++= elasticDeltasToPreempt
 
-    for(job:Job <- sortedQueue){
-      if(job != null){
-        val priority: Double = getPriority(job, policy, currentTime)
-        if(previousPriority == -1 || previousPriority == priority){
-          jobs += job
-          previousPriority = priority
-        }
-        if(policy == PolicyModes.Fifo || policy == PolicyModes.MyFifo)
-          return jobs
-      }
-    }
-    jobs
-  }
+    newJobPreemption.inelasticDeltasAfterPreemption.clear()
+    newJobPreemption.inelasticDeltasAfterPreemption ++= inelasticDeltasAfterPreemption
 
-  def getJobsWithLowerPriority(queue: ListBuffer[Job], policy: PolicyModes.Value, targetJob: Job,
-                               currentTime:Double = 0, threshold: Double = 1) : ListBuffer[Job] = {
-    val sortedQueue = queue//applyPolicy(queue, policy)
-    val jobs: ListBuffer[Job] = new ListBuffer[Job]()
-    val targetPriority: Double = getPriority(targetJob, policy, currentTime)
+    newJobPreemption.inelasticDeltasToPreempt.clear()
+    newJobPreemption.inelasticDeltasToPreempt ++= inelasticDeltasToPreempt
 
-    for(job:Job <- sortedQueue){
-      if(job != null){
-        val priority: Double = getPriority(job, policy, currentTime)
-//        if(priority > targetPriority && job.scheduledElasticTasks > 0){
-        if(targetPriority / priority < threshold){
-          logger.debug("Added job with lower priority. Priority: %f / TargetPriority: %f".format(priority, targetPriority))
-          jobs += job
-        }
-        if(policy == PolicyModes.Fifo || policy == PolicyModes.MyFifo )
-          return jobs
-      }
-    }
-    jobs
-  }
-
-  def comparePriority(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    o1.priority.compareTo(o2.priority)
-  }
-
-  def compareJobTime(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    jobDuration(o1).compareTo(jobDuration(o2))
-  }
-
-  def compareJobRemainingTime(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    remainingTime(o1).compareTo(remainingTime(o2))
-  }
-
-  def compareJobRemainingTimeWithError(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    remainingTimeWithError(o1).compareTo(remainingTimeWithError(o2))
-  }
-
-  def compareResponseRatio(o1: Job, o2: Job, currentTime: Double): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    o1.responseRatio(currentTime).compareTo(o2.responseRatio(currentTime))
-  }
-
-  def compareSize(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size(o1).compareTo(size(o2))
-  }
-
-  def compareSizeWithError(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    sizeWithError(o1).compareTo(sizeWithError(o2))
-  }
-
-  def compareSize2(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size2(o1).compareTo(size2(o2))
-  }
-
-  def compareSize3(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size3(o1).compareTo(size3(o2))
-  }
-
-  def compareSize4(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size4(o1).compareTo(size4(o2))
-  }
-
-  def compareSize5(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size5(o1).compareTo(size5(o2))
-  }
-
-  def compareSize6(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size6(o1).compareTo(size6(o2))
-  }
-
-  def compareSize7(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size7(o1).compareTo(size7(o2))
-  }
-
-
-  def compareSize8(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size8(o1).compareTo(size8(o2))
-  }
-
-  def jobDuration(job: Job): Double = {
-    job.jobDuration * job.sizeAdjustment
-  }
-
-  def remainingTime(job: Job): Double = {
-    job.remainingTime * job.sizeAdjustment
-  }
-
-  def size(job:Job): Double = {
-    job.remainingTime * (job.numTasks * job.memPerTask * job.cpusPerTask) * job.sizeAdjustment
-  }
-
-  def remainingTimeWithError(job: Job): Double = {
-    job.remainingTime * job.sizeAdjustment * job.error
-  }
-
-  def sizeWithError(job:Job): Double = {
-    job.remainingTime * job.numTasks * job.sizeAdjustment * job.error
-  }
-
-  def size2(job:Job): Double = {
-    (job.numTasks / job.moldableTasks.toDouble) * job.jobDuration * job.sizeAdjustment
-  }
-
-  def size3(job:Job): Double = {
-    job.remainingTime * (job.unscheduledTasks + job.elasticTasksUnscheduled) * job.sizeAdjustment
-  }
-
-  def size4(job:Job): Double = {
-    (job.numTasks / job.moldableTasks.toDouble) * job.remainingTime * job.sizeAdjustment
-  }
-
-  def size5(job:Job): Double = {
-    job.jobDuration * job.numTasks * job.sizeAdjustment
-  }
-
-  def size6(job:Job): Double = {
-    job.jobDuration * job.moldableTasks * job.sizeAdjustment
-  }
-
-  def size7(job:Job): Double = {
-    job.remainingTime * job.moldableTasks * job.sizeAdjustment
-  }
-
-  def size8(job:Job): Double = {
-    job.remainingTime * job.numTasks * job.sizeAdjustment
+    newJobPreemption
   }
 }
