@@ -34,15 +34,19 @@ import java.io.File
   */
 object Workloads {
 
-  val globalNumMachines = 25
+  val scaleFactor = 5
+  val introduceError = false
+
+  val workloadSize = 4000
+
+  val globalNumMachines = 5 * scaleFactor
   val globalCpusPerMachine = 32
   val globalMemPerMachine = 128 //value must be in GB
 
   val globalMaxCoresPerJob = 20.0 // only used in NewSpark
 //  val globalMaxCpusPerTask = 2
 //  val globalMaxMemPerTask = 8
-  // In this way we should disable the limitation introduced by these two variables
-  // and completely use the input traces and their distribution
+
   val globalMaxCpusPerTask = globalCpusPerMachine / 5.0
   val globalMaxMemPerTask = globalMemPerMachine / 5.0
 
@@ -57,13 +61,13 @@ object Workloads {
     globalCpusPerMachine,
     globalMemPerMachine)
 
-  val tenEurecomCellStateDesc = new CellStateDesc(globalNumMachines * 10,
-    globalCpusPerMachine,
-    globalMemPerMachine)
-
-  val fiveEurecomCellStateDesc = new CellStateDesc(globalNumMachines * 5,
-    globalCpusPerMachine,
-    globalMemPerMachine)
+//  val tenEurecomCellStateDesc = new CellStateDesc(globalNumMachines * 10,
+//    globalCpusPerMachine,
+//    globalMemPerMachine)
+//
+//  val fiveEurecomCellStateDesc = new CellStateDesc(globalNumMachines * 5,
+//    globalCpusPerMachine,
+//    globalMemPerMachine)
 
 
   // example pre-fill workload generators.
@@ -99,8 +103,11 @@ object Workloads {
       prefillTraceFileName,
       maxCpusPerTask = globalMaxCpusPerTask,
       maxMemPerTask = globalMaxMemPerTask,
-      jobsPerWorkload = 5000,
-      allMoldable = false)
+//      jobsPerWorkload = (workloadSize * 0.64).toInt,
+      jobsPerWorkload = (workloadSize * 0.8).toInt,
+      scaleFactor = scaleFactor,
+      allMoldable = false,
+      introduceError = introduceError)
 
   val workloadGeneratorTraceAllService =
     new TraceAllZoeWLGenerator(
@@ -111,8 +118,11 @@ object Workloads {
       prefillTraceFileName,
       maxCpusPerTask = globalMaxCpusPerTask,
       maxMemPerTask = globalMaxMemPerTask,
-      jobsPerWorkload = 5000,
-      allMoldable = true)
+//      jobsPerWorkload = (workloadSize * 0.16).toInt,
+      jobsPerWorkload = (workloadSize * 0.2).toInt,
+      scaleFactor = scaleFactor,
+      allMoldable = true,
+      introduceError = introduceError)
 
   val workloadGeneratorTraceAllInteractive =
     new TraceAllZoeWLGenerator(
@@ -123,8 +133,10 @@ object Workloads {
       prefillTraceFileName,
       maxCpusPerTask = globalMaxCpusPerTask,
       maxMemPerTask = globalMaxMemPerTask,
-      jobsPerWorkload = 5000,
-      allMoldable = false)
+      jobsPerWorkload = (workloadSize * 0.2).toInt,
+      scaleFactor = scaleFactor,
+      allMoldable = false,
+      introduceError = introduceError)
 
 //  val workloadGeneratorTraceAllBatch =
 //    new UniformZoeWorkloadGenerator(
@@ -147,9 +159,9 @@ object Workloads {
 //      memPerTask = 4,
 //      jobsPerWorkload = 4)
 
-//  val fakeWorkloadGenerator = new FakeZoeWorkloadGenerator("Batch")
+  val fakeWorkloadGenerator = new FakeZoeWorkloadGenerator("Batch")
 //  val fakeWorkloadGenerator = new FakePreemptiveZoeWorkloadGenerator("Batch")
-//
+
 //  val eurecomCellTraceAllWorkloadPrefillDesc =
 //    WorkloadDesc(
 //      cell = "Eurecom",
@@ -187,27 +199,27 @@ object Workloads {
 //          List(batchServicePrefillTraceWLGenerator)
 //    )
 
-  val tenEurecomCellTraceAllWorkloadPrefillDesc =
-    WorkloadDesc(
-      cell = "10xEurecom",
-      assignmentPolicy = "CMB_PBB",
-      workloadGenerators =
-        workloadGeneratorTraceAllBatch ::
-          workloadGeneratorTraceAllService ::
-          Nil,
-      cellStateDesc = tenEurecomCellStateDesc,
-      prefillWorkloadGenerators =
-        List(batchServicePrefillTraceWLGenerator))
-
-  val fiveEurecomCellTraceAllWorkloadPrefillDesc =
-    WorkloadDesc(
-      cell = "5xEurecom",
-      assignmentPolicy = "CMB_PBB",
-      workloadGenerators =
-        workloadGeneratorTraceAllBatch ::
-          workloadGeneratorTraceAllService ::
-          Nil,
-      cellStateDesc = fiveEurecomCellStateDesc,
-      prefillWorkloadGenerators =
-        List(batchServicePrefillTraceWLGenerator))
+//  val tenEurecomCellTraceAllWorkloadPrefillDesc =
+//    WorkloadDesc(
+//      cell = "10xEurecom",
+//      assignmentPolicy = "CMB_PBB",
+//      workloadGenerators =
+//        workloadGeneratorTraceAllBatch ::
+//          workloadGeneratorTraceAllService ::
+//          Nil,
+//      cellStateDesc = tenEurecomCellStateDesc,
+//      prefillWorkloadGenerators =
+//        List(batchServicePrefillTraceWLGenerator))
+//
+//  val fiveEurecomCellTraceAllWorkloadPrefillDesc =
+//    WorkloadDesc(
+//      cell = "5xEurecom",
+//      assignmentPolicy = "CMB_PBB",
+//      workloadGenerators =
+//        workloadGeneratorTraceAllBatch ::
+//          workloadGeneratorTraceAllService ::
+//          Nil,
+//      cellStateDesc = fiveEurecomCellStateDesc,
+//      prefillWorkloadGenerators =
+//        List(batchServicePrefillTraceWLGenerator))
 }

@@ -77,7 +77,7 @@ object Simulation{
     val runZoe = true
     val runZoePreemption = false
 
-    val globalRunTime = 86400.0 * 120 //86400.0 // 1 Day
+    val globalRunTime = 86400.0 * 90 //86400.0 // 1 Day
     val threadSleep = 5
 
     /**
@@ -148,25 +148,47 @@ object Simulation{
 
     val allocationModes = List[AllocationModes.Value](AllocationModes.All) //, AllocationModes.Incremental)
     val policyModes = List[PolicyModes.Value](
-//      PolicyModes.Fifo,
-//      PolicyModes.MyFifo,
 //      PolicyModes.PriorityFifo,
-      PolicyModes.SJF,
-      PolicyModes.MySJF,
 //      PolicyModes.LJF,
+
+//      PolicyModes.Fifo,
+//      PolicyModes.eFifo,
+//      PolicyModes.hFifo//,
+//      PolicyModes.PSJF,
+//      PolicyModes.ePSJF,
+//      PolicyModes.hPSJF//,
+//      PolicyModes.SRPT,
+//      PolicyModes.eSRPT,
+//      PolicyModes.hSRPT//,
 //      PolicyModes.HRRN,
-      PolicyModes.SRPT,
-      PolicyModes.MySRPT,
-      PolicyModes.Size,
-      PolicyModes.MySize//,
-//      PolicyModes.MySizeError,
-//      PolicyModes.MySize2,
-//      PolicyModes.MySize3,
-//      PolicyModes.MySize4,
-//      PolicyModes.MySize5,
-//      PolicyModes.MySize6,
-//      PolicyModes.MySize7,
-//      PolicyModes.MySize8
+//      PolicyModes.eHRRN,
+//      PolicyModes.hHRRN//,
+//
+//      PolicyModes.PSJF2D,
+//      PolicyModes.ePSJF2D,
+//      PolicyModes.hPSJF2D,
+//      PolicyModes.SRPT2D1,
+//      PolicyModes.eSRPT2D1,
+//      PolicyModes.hSRPT2D1,
+//      PolicyModes.SRPT2D2,
+//      PolicyModes.eSRPT2D2,
+//      PolicyModes.hSRPT2D2,
+//      PolicyModes.HRRN2D,
+//      PolicyModes.eHRRN2D,
+//      PolicyModes.hHRRN2D//,
+//
+//      PolicyModes.PSJF3D,
+//      PolicyModes.ePSJF3D,
+//      PolicyModes.hPSJF3D,
+//      PolicyModes.SRPT3D1,
+//      PolicyModes.eSRPT3D1,
+//      PolicyModes.hSRPT3D1,
+//      PolicyModes.SRPT3D2,
+//      PolicyModes.eSRPT3D2,
+//      PolicyModes.hSRPT3D2//,
+      PolicyModes.HRRN3D,
+      PolicyModes.eHRRN3D,
+      PolicyModes.hHRRN3D
     )
 
     val formatter = new java.text.SimpleDateFormat("yyyy-MM-dd-HH-mm-ss")
@@ -217,6 +239,10 @@ object Simulation{
 
     var allExperiments: List[Experiment] = List()
     val wlDescs = allWorkloadDescs
+    wlDescs.foreach(wlDesc => {
+      wlDesc.generateWorkloads(globalRunTime)
+    })
+
     // Make the experiment_results dir if it doesn't exist
     val experDir = new java.io.File("experiment_results")
     if (!experDir.exists) {

@@ -65,4 +65,4 @@ fi
 
 printf "Launching sbt from ${JAR}\n"
 #java -Xmx1200m -XX:MaxPermSize=350m -XX:ReservedCodeCacheSize=256m -jar ${JAR} "$@"
-java -Dsbt.log.noformat=${NOFORMAT} ${JAVA_OPTS} -XX:+UseParallelGC -jar ${JAR} "$@"
+java -Dsbt.log.noformat=${NOFORMAT} ${JAVA_OPTS} -jar ${JAR} "$@"

@@ -2,7 +2,7 @@
 
 ############# User Variables #################################
 SWARM_IP="bf5.bigfoot.eurecom.fr:2380"
-CONTAINER_NAME="cluster-scheduler-simulator"
+CONTAINER_NAME="cluster-scheduler-simulator-$(shuf -i 0-65000 -n 1)"
 CONTAINER_IMAGE="docker-registry:5000/pacerepo/cluster-scheduler-simulator"
 TO_MAIL="francesco.pace@eurecom.fr"
 ##############################################################
@@ -26,6 +26,13 @@ docker="sudo docker -H ${SWARM_IP}"
 #        exit 1
 #    fi
 #}
+function delete_container(){
+    task="delete-container"
+
+    if $(${docker} inspect ${CONTAINER_NAME} > /dev/null 2>&1); then
+        ${docker} rm -f ${CONTAINER_NAME}
+    fi
+}
 
 # This function setup the container and execute the script to start the simulation
 # When the container exits, we copy the files back to the host
@@ -44,9 +51,6 @@ function run_container(){
     echo "#     remote_dir: ${remote_dir}"
     echo ""
 
-    if $(${docker} inspect ${CONTAINER_NAME} > /dev/null 2>&1); then
-        ${docker} rm -f ${CONTAINER_NAME}
-    fi
     container_command="bash ${remote_dir}/bin/launch_on_container.sh run-simulation"
     do_not_kill_me_now=1
     ${docker} create --name ${CONTAINER_NAME} -it ${CONTAINER_IMAGE} ${container_command}
@@ -63,6 +67,8 @@ function run_container(){
     fi
     return ${container_exist_code}
 }
+
+
 
 # This function run the simulation script inside a container
 function run_simulation(){
@@ -128,6 +134,7 @@ else
     run_container
     ret=$?
     send_mail ${ret}
+    delete_container
 fi
 echo "It took $(($(date +%s) - ${START_TIME})) seconds to complete task ${task}."
 

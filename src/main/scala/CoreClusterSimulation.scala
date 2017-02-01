@@ -30,6 +30,7 @@ import org.apache.log4j.{Level, Logger}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
 
 object EventTypes extends Enumeration {
@@ -91,9 +92,10 @@ abstract class Simulator(logging: Boolean = false){
     item
   }
 
-
+  var eventId:Long = 0
   private def next(): Double = {
-    logger.trace("next() called.")
+    eventId += 1
+    logger.debug("Processing event number %d".format(eventId))
     val item = deqeue()
     curtime = item.time
     if (curtime < 0)
@@ -1151,7 +1153,7 @@ case class Job(id: Long,
 
   override def equals(that: Any): Boolean =
     that match {
-      case that: Job => that.id == this.id
+      case that: Job => that.id == this.id && that.workloadName.equals(this.workloadName)
       case _ => false
     }
 
@@ -1329,6 +1331,7 @@ case class Job(id: Long,
   def isScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled || finalStatus == JobStates.Fully_Scheduled ||
     (finalStatus == JobStates.TimedOut && unscheduledTasks != moldableTasks) || finalStatus == JobStates.Completed
   def isFullyScheduled: Boolean = finalStatus == JobStates.Fully_Scheduled || finalStatus == JobStates.Completed
+  def isCompleted: Boolean = finalStatus == JobStates.Completed
   def isPartiallyScheduled: Boolean = finalStatus == JobStates.Partially_Scheduled
   def isTimedOut: Boolean = finalStatus == JobStates.TimedOut
   def isNotScheduled: Boolean = finalStatus == JobStates.Not_Scheduled
@@ -1391,7 +1394,7 @@ case class Job(id: Long,
  * ExperimentRun wants to record it in experiment result protos.
  */
 class Workload(val name: String,
-               private val jobs: ListBuffer[Job] = ListBuffer()) {
+               private var jobs: ListBuffer[Job] = ListBuffer()) {
   val logger = Logger.getLogger(this.getClass.getName)
   def getJobs: Seq[Job] = jobs
   def addJob(job: Job) = {
@@ -1404,6 +1407,9 @@ class Workload(val name: String,
   }
   def addJobs(jobs: Seq[Job]) = jobs.foreach(job => {addJob(job)})
   def removeJobs(jobs: Seq[Job]) = jobs.foreach(job => {removeJob(job)})
+  def sortJobs(): Unit = {
+    jobs = jobs.sortBy(_.submitted)
+  }
   def numJobs: Int = jobs.length
 
 //  def cpus: Double = jobs.map(j => {j.numTasks * j.cpusPerTask}).sum
@@ -1589,6 +1595,22 @@ case class WorkloadDesc(
          "Assignment policies cannot have spaces in them.")
   assert(prefillWorkloadGenerators.length ==
          prefillWorkloadGenerators.map(_.workloadName).toSet.size)
+
+  val workloads:ListBuffer[Workload] = ListBuffer[Workload]()
+
+  def generateWorkloads(timeWindow: Double): Unit ={
+    workloadGenerators.foreach(workloadGenerator => {
+      workloads += workloadGenerator.newWorkload(timeWindow)
+    })
+  }
+
+  def cloneWorkloads(): ListBuffer[Workload] ={
+    val newWorkloads:ListBuffer[Workload] = ListBuffer[Workload]()
+    workloads.foreach(workload => {
+      newWorkloads += workload.copy
+    })
+    newWorkloads
+  }
 }
 
 object UniqueIDGenerator {
@@ -1646,29 +1668,49 @@ object DistCache {
     val dataPoints = new collection.mutable.ListBuffer[Double]()
     val refDistribution = new Array[Double](1001)
 
-    logger.info(("Reading tracefile %s and building distribution of " +
-            "job data points based on it.").format(traceFileName))
-    val traceSrc = io.Source.fromFile(traceFileName)
-    val lines = traceSrc.getLines()
     var realDataSum: Double = 0.0
-    lines.foreach(line => {
-      val parsedLine = line.split(" ")
-      // The following parsing code is based on the space-delimited schema
-      // used in textfile. See the README for a description.
-      // val cell: Double = parsedLine(1).toDouble
-      // val allocationPolicy: String = parsedLine(2)
-      val isServiceJob: Boolean = parsedLine(2).equals("1")
-      val dataPoint: Double = parsedLine(3).toDouble
-      // Add the job to this workload if its job type is the same as
-      // this generator's, which we determine based on workloadName.
-      if ((isServiceJob && workloadName.equals("Service")) ||
-          (!isServiceJob && workloadName.equals("Batch")) ||
-          (!isServiceJob && workloadName.equals("Batch-MPI")) ||
-          (isServiceJob && workloadName.equals("Interactive"))) {
+    if(traceFileName.equals("interactive-runtime-dist")){
+      for(i <- 0 until 50){
+        val dataPoint: Double = Random.nextInt(30)
         dataPoints.append(dataPoint)
         realDataSum += dataPoint
       }
-    })
+      for(i <- 0 until 900){
+        val dataPoint: Double = Random.nextInt(50400) + 30
+        dataPoints.append(dataPoint)
+        realDataSum += dataPoint
+      }
+      for(i <- 0 until 50){
+        val dataPoint: Double = Random.nextInt(30) + 50430
+        dataPoints.append(dataPoint)
+        realDataSum += dataPoint
+      }
+    }else{
+      logger.info(("Reading tracefile %s and building distribution of " +
+        "job data points based on it.").format(traceFileName))
+      val traceSrc = io.Source.fromFile(traceFileName)
+      val lines = traceSrc.getLines()
+
+      lines.foreach(line => {
+        val parsedLine = line.split(" ")
+        // The following parsing code is based on the space-delimited schema
+        // used in textfile. See the README for a description.
+        // val cell: Double = parsedLine(1).toDouble
+        // val allocationPolicy: String = parsedLine(2)
+        val isServiceJob: Boolean = parsedLine(2).equals("1")
+        val dataPoint: Double = parsedLine(3).toDouble
+        // Add the job to this workload if its job type is the same as
+        // this generator's, which we determine based on workloadName.
+        if ((isServiceJob && workloadName.equals("Service")) ||
+          (!isServiceJob && workloadName.equals("Batch")) ||
+          (!isServiceJob && workloadName.equals("Batch-MPI")) ||
+          (isServiceJob && workloadName.equals("Interactive"))) {
+          dataPoints.append(dataPoint)
+          realDataSum += dataPoint
+        }
+      })
+    }
+
     assert(dataPoints.nonEmpty,
            "Trace file must contain at least one data point.")
     logger.info(("Done reading tracefile of %d jobs, average of real data " +

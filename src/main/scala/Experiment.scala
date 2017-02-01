@@ -120,14 +120,12 @@ class Experiment(
       experimentEnv.setRunTime(simulatorDesc.runTime)
 
       // Create the workloads to store their stats in the protobuff
-      workloadDesc.workloadGenerators.foreach(workloadGenerator => {
-        val newWorkload = workloadGenerator.newWorkload(timeWindow = simulatorDesc.runTime)
-
+      workloadDesc.cloneWorkloads().foreach(workload => {
         val commonWorkloadStats = ExperimentResultSet.
           ExperimentEnv.CommonWorkloadStats.newBuilder()
-        commonWorkloadStats.setWorkloadName(workloadGenerator.workloadName)
+        commonWorkloadStats.setWorkloadName(workload.name)
         var previousArrivalTime: Double = 0
-        newWorkload.getJobs.foreach(job => {
+        workload.getJobs.foreach(job => {
           val jobStats = ExperimentResultSet.
             ExperimentEnv.JobStats.newBuilder()
 
@@ -153,32 +151,32 @@ class Experiment(
       // Generate preFill workloads. The simulator doesn't modify
       // these workloads like it does the workloads that are played during
       // the simulation.
-      var prefillWorkloads = List[Workload]()
-      workloadDesc.prefillWorkloadGenerators
-        .filter(wlGen => {
-          prefillCpuLimits.contains(wlGen.workloadName) ||
-            prefillMemLimits.contains(wlGen.workloadName)
-        }).foreach(wlGen => {
-        val cpusMaxOpt = prefillCpuLimits.get(wlGen.workloadName).map(i => {
-          i * workloadDesc.cellStateDesc.numMachines *
-            workloadDesc.cellStateDesc.cpusPerMachine
-        })
-
-        val memMaxOpt = prefillMemLimits.get(wlGen.workloadName).map(i => {
-          i * workloadDesc.cellStateDesc.numMachines *
-            workloadDesc.cellStateDesc.memPerMachine
-        })
-        logger.debug(("Creating a new prefill workload from " +
-          "%s with maxCPU %s and maxMem %s")
-          .format(wlGen.workloadName, cpusMaxOpt, memMaxOpt))
-        val newWorkload = wlGen.newWorkload(simulatorDesc.runTime,
-          maxCpus = cpusMaxOpt,
-          maxMem = memMaxOpt)
-        for(job <- newWorkload.getJobs) {
-          assert(job.submitted == 0.0)
-        }
-        prefillWorkloads ::= newWorkload
-      })
+//      var prefillWorkloads = List[Workload]()
+//      workloadDesc.prefillWorkloadGenerators
+//        .filter(wlGen => {
+//          prefillCpuLimits.contains(wlGen.workloadName) ||
+//            prefillMemLimits.contains(wlGen.workloadName)
+//        }).foreach(wlGen => {
+//        val cpusMaxOpt = prefillCpuLimits.get(wlGen.workloadName).map(i => {
+//          i * workloadDesc.cellStateDesc.numMachines *
+//            workloadDesc.cellStateDesc.cpusPerMachine
+//        })
+//
+//        val memMaxOpt = prefillMemLimits.get(wlGen.workloadName).map(i => {
+//          i * workloadDesc.cellStateDesc.numMachines *
+//            workloadDesc.cellStateDesc.memPerMachine
+//        })
+//        logger.debug(("Creating a new prefill workload from " +
+//          "%s with maxCPU %s and maxMem %s")
+//          .format(wlGen.workloadName, cpusMaxOpt, memMaxOpt))
+//        val newWorkload = wlGen.newWorkload(simulatorDesc.runTime,
+//          maxCpus = cpusMaxOpt,
+//          maxMem = memMaxOpt)
+//        for(job <- newWorkload.getJobs) {
+//          assert(job.submitted == 0.0)
+//        }
+//        prefillWorkloads ::= newWorkload
+//      })
 
       // Parameter sweep over lambda.
       // If we have a range for lambda, loop over it, else
@@ -190,30 +188,32 @@ class Experiment(
 
       logger.debug("Set up avgJobInterarrivalTimeRange: %s".format(jobInterarrivalRange))
       jobInterarrivalRange.foreach(avgJobInterarrivalTime => {
-        if (avgJobInterarrivalTime.isEmpty) {
-          logger.debug("Since we're not in a lambda sweep, not overwriting lambda.")
-        } else {
-          logger.debug("Curr avgJobInterArrivalTime: %s".format(avgJobInterarrivalTime))
-        }
-
-        // Set up a list of workloads
-        val commonWorkloadSet = ListBuffer[Workload]()
-        var newAvgJobInterarrivalTime: Option[Double] = None
-        workloadDesc.workloadGenerators.foreach(workloadGenerator => {
-          if (workloadToSweepOver.equals(
-            workloadGenerator.workloadName)) {
-            // Only update the workload interarrival time if this is the
-            // workload we are supposed to sweep over. If this is not a
-            // lambda parameter sweep then updatedAvgJobInterarrivalTime
-            // will remain None after this line is executed.
-            newAvgJobInterarrivalTime = avgJobInterarrivalTime
-          }
-          logger.debug("Generating new Workload %s for window %f seconds long."
-            .format(workloadGenerator.workloadName, simulatorDesc.runTime))
-          val newWorkload = workloadGenerator .newWorkload(timeWindow = simulatorDesc.runTime,
-                updatedAvgJobInterarrivalTime = newAvgJobInterarrivalTime)
-          commonWorkloadSet.append(newWorkload)
-        })
+//        TODO: Since now the workload is created before launching the experiments, we need a way to update the interarrival time
+//        TODO: without creating a new workload.
+//        if (avgJobInterarrivalTime.isEmpty) {
+//          logger.debug("Since we're not in a lambda sweep, not overwriting lambda.")
+//        } else {
+//          logger.debug("Curr avgJobInterArrivalTime: %s".format(avgJobInterarrivalTime))
+//        }
+//
+//        // Set up a list of workloads
+//        val commonWorkloadSet = ListBuffer[Workload]()
+//        var newAvgJobInterarrivalTime: Option[Double] = None
+//        workloadDesc.workloadGenerators.foreach(workloadGenerator => {
+//          if (workloadToSweepOver.equals(
+//            workloadGenerator.workloadName)) {
+//            // Only update the workload interarrival time if this is the
+//            // workload we are supposed to sweep over. If this is not a
+//            // lambda parameter sweep then updatedAvgJobInterarrivalTime
+//            // will remain None after this line is executed.
+//            newAvgJobInterarrivalTime = avgJobInterarrivalTime
+//          }
+//          logger.debug("Generating new Workload %s for window %f seconds long."
+//            .format(workloadGenerator.workloadName, simulatorDesc.runTime))
+//          val newWorkload = workloadGenerator.newWorkload(timeWindow = simulatorDesc.runTime,
+//                updatedAvgJobInterarrivalTime = newAvgJobInterarrivalTime)
+//          commonWorkloadSet.append(newWorkload)
+//        })
 
         // Parameter sweep over L.
         perTaskThinkTimeRange.foreach(perTaskThinkTime => {
@@ -228,17 +228,13 @@ class Experiment(
               logger.debug("Set blackListPercent = %f".format(blackListPercent))
 
               val copyOfPrefillWorkloads = ListBuffer[Workload]()
-              prefillWorkloads.foreach(prefillWorkload => {
-                copyOfPrefillWorkloads.append(prefillWorkload.copy)
-              })
+//              prefillWorkloads.foreach(prefillWorkload => {
+//                copyOfPrefillWorkloads.append(prefillWorkload.copy)
+//              })
 
               // Make a copy of the workloads that this run of the simulator
               // will modify by using them to track statistics.
-              val workloads = ListBuffer[Workload]()
-              commonWorkloadSet.foreach(workload => {
-                workloads.append(workload.copy)
-              })
-
+              val workloads = workloadDesc.cloneWorkloads()
               val copyOfSchedulerWorkloadsToSweepOver = Map[String, Seq[String]]() ++ schedulerWorkloadsToSweepOver
 
               logger.debug("Setting up run %d".format(run_id + 1))
@@ -418,7 +414,7 @@ class ExperimentRun(
         workload.getJobs.count(_.isScheduled))
       totalJobScheduled += workloadStats.getNumJobsScheduled
       workloadStats.setNumJobsFullyScheduled(
-        workload.getJobs.count(_.isFullyScheduled))
+        workload.getJobs.count(_.isCompleted))
       workloadStats.setNumJobsTimedOutScheduling(
         workload.getJobs.count(_.isTimedOut))
       totalTimeouts += workloadStats.getNumJobsTimedOutScheduling
@@ -458,7 +454,7 @@ class ExperimentRun(
       workload.getJobs.foreach(job => {
         var jobTurnaround: Double = -1
         var jobExecutionTime: Double = -1
-        if (job.isFullyScheduled) {
+        if (job.isCompleted) {
           jobTurnaround = job.jobFinishedWorking - job.submitted
           jobExecutionTime = job.jobFinishedWorking - job.jobStartedWorking
           workloadTotalJobExecutionTime += jobExecutionTime
@@ -480,6 +476,7 @@ class ExperimentRun(
         jobStats.setNumElastic(job.elasticTasks)
         jobStats.setNumInelasticScheduled(job.scheduledTasks)
         jobStats.setNumElasticScheduled(job.scheduledElasticTasks)
+        jobStats.setTaskDuration(job.taskDuration)
 
         workloadStats.addJobStats(jobStats)
       })
@@ -495,7 +492,7 @@ class ExperimentRun(
         workloadStats.getAvgJobExecutionTime,
         workloadStats.getAvgJobQueueTimesTillFirstScheduled,
         workloadStats.getAvgJobRampUpTime,
-        workloadStats.getNumJobsScheduled,workloadTotalJobNotScheduled, workloadCountJobFinished, workloadStats.getNumJobs,
+        workloadStats.getNumJobsScheduled, workloadTotalJobNotScheduled, workloadCountJobFinished, workloadStats.getNumJobs,
         workloadStats.getNumJobsTimedOutScheduling,
         schedulingAttempts)
       )

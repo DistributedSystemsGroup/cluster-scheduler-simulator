@@ -69,14 +69,6 @@ while [ "$1" != "" ]; do
   shift
 done
 
-case ${input_dir} in
-  *vary_C*)      vary_dimensions+=c;;
-  *vary_L*)      vary_dimensions+=l;;
-  *vary_Lambda*) vary_dimensions+=lambda;;
-  *)             echo "Protobuf filename must contain \"vary_[C|L|Lambda]\"."
-                 exit 1
-esac
-
 # Use a default env_set if none was specified.
 if [ -z "$env_sets_to_plot" ]; then
   env_sets_to_plot='C'
@@ -85,7 +77,7 @@ fi
 plotting_script='generate-plots-from-protobuff.py'
 
 # Assumes runtime is the last token of the filename.
-run_time=`echo ${input_dir} | grep '[0-9]\+$' --only-matching`
+#run_time=`echo ${input_dir} | grep '[0-9]\+$' --only-matching`
 
 function graph_experiment() {
   if [ -z "$1" ]; then # Is parameter #1 zero length?
@@ -101,6 +93,14 @@ function graph_experiment() {
     else
       out_dir="${input_dir}/"
     fi
+
+    case ${filenames} in
+      *vary_c*)      vary_dimensions=c;;
+      *vary_l*)      vary_dimensions=l;;
+      *vary_lambda*) vary_dimensions=lambda;;
+      *)             echo "Protobuf filename must contain \"vary_[C|L|Lambda]\"."
+                     exit 1
+    esac
 
     # Figure out which simulator type this protobuff came from.
     case ${filenames} in
@@ -166,22 +166,25 @@ function graph_experiment() {
 cd ${CLUSTER_SIM_HOME}/src/main/python/graphing-scripts
 PROTO_LIST=''
 
-echo "capturing: ls ${input_dir}| grep protobuf | grep zoe-"
-ls ${input_dir} | grep protobuf | grep zoe-
-for curr_filename in `ls ${input_dir}|grep protobuf|grep zoe-`; do
+#echo "capturing: ls ${input_dir}| grep protobuf | grep zoe-"
+#ls ${input_dir} | grep protobuf | grep zoe-
+#for curr_filename in `ls ${input_dir}|grep protobuf|grep zoe-`; do
+echo "capturing: ls ${input_dir}| grep protobuf | grep zoe"
+ls ${input_dir} | grep protobuf | grep zoe
+for curr_filename in `ls ${input_dir}|grep protobuf|grep zoe`; do
     PROTO_LIST+="${input_dir}/${curr_filename},"
 done
 echo Calling graph_experiment with ${PROTO_LIST}
 graph_experiment ${PROTO_LIST::-1}
 
-PROTO_LIST=''
-echo "capturing: ls ${input_dir}| grep protobuf | grep zoe_preemptive-"
-ls ${input_dir} | grep protobuf | grep zoe_preemptive-
-for curr_filename in `ls ${input_dir}|grep protobuf|grep  zoe_preemptive-`; do
-    PROTO_LIST+="${input_dir}/${curr_filename},"
-done
-echo Calling graph_experiment with ${PROTO_LIST}
-graph_experiment ${PROTO_LIST::-1}
+#PROTO_LIST=''
+#echo "capturing: ls ${input_dir}| grep protobuf | grep zoe_preemptive-"
+#ls ${input_dir} | grep protobuf | grep zoe_preemptive-
+#for curr_filename in `ls ${input_dir}|grep protobuf|grep  zoe_preemptive-`; do
+#    PROTO_LIST+="${input_dir}/${curr_filename},"
+#done
+#echo Calling graph_experiment with ${PROTO_LIST}
+#graph_experiment ${PROTO_LIST::-1}
 
 echo "capturing: ls ${input_dir}| grep protobuf | grep -v zoe"
 ls ${input_dir} | grep protobuf | grep -v zoe

@@ -59,13 +59,14 @@ def set_leg_fontsize(size):
 
 def set_paper_rcs():
     rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica'],
-                  'serif': ['Helvetica'], 'size': 8})
-    rc('text', usetex=True)
-    rc('legend', fontsize=7)
-    rc('figure', figsize=(3.33, 2.22))
-    #  rc('figure.subplot', left=0.10, top=0.90, bottom=0.12, right=0.95)
-    rc('axes', linewidth=0.5)
-    rc('lines', linewidth=0.5)
+                  'serif': ['Helvetica'], 'size': 22})
+    # rc('text', usetex=True)
+    # rc('legend', fontsize=7)
+    # rc('figure', figsize=(3.33, 2.22))
+    # #  rc('figure.subplot', left=0.10, top=0.90, bottom=0.12, right=0.95)
+    # rc('axes', linewidth=0.5)
+    rc('lines', linewidth=4)
+    # rc('figure', figsize=[20, 6])
 
 
 def set_rcs():
@@ -76,7 +77,7 @@ def set_rcs():
     rc('figure', figsize=(6, 4))
     rc('figure.subplot', left=0.10, top=0.90, bottom=0.12, right=0.95)
     rc('axes', linewidth=0.5)
-    rc('lines', linewidth=0.5)
+    rc('lines', linewidth=0.5, color='y')
 
 
 def append_or_create(d, i, e):

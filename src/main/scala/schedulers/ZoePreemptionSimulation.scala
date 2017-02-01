@@ -264,9 +264,13 @@ class ZoePreemptionScheduler(name: String,
   //    elasticQueueIterator = elasticPendingQueue.iterator
   //  }
 
-  def addPendingJob(job: Job): Unit = {
+  def addPendingJob(job: Job, prepend: Boolean = false): Unit = {
     numJobsInQueue += 1
-    pendingQueueAsList += job
+    if(!prepend)
+      pendingQueueAsList += job
+    else
+      pendingQueueAsList.prepend(job)
+
     //    pendingQueueAsList = applyPolicy(pendingQueueAsList)
     //    moldableQueueIterator = pendingQueueAsList.iterator
   }
@@ -319,12 +323,12 @@ class ZoePreemptionScheduler(name: String,
     addPendingJob(job)
 //    simulator.logger.warn("%f - Added a new Job (%s) in the queue. Num Tasks: %d (%d/%d) | Cpus: %f | Mem: %f | Job Runtime: %f"
 //      .format(simulator.currentTime, job.workloadName, job.numTasks, job.moldableTasks, job.elasticTasks, job.cpusPerTask, job.memPerTask, job.jobDuration ))
-    if(firstTime){
-      if (numJobsInQueue == 3){
-        wakeUp()
-        firstTime = false
-      }
-    }else
+//    if(firstTime){
+//      if (numJobsInQueue == 3){
+//        wakeUp()
+//        firstTime = false
+//      }
+//    }else
       wakeUp()
   }
 
@@ -342,29 +346,32 @@ class ZoePreemptionScheduler(name: String,
     var claimDelta_inelastic = new ListBuffer[ClaimDelta]()
     val relativeJobsToPreempt: ListBuffer[JobPreemption] = new ListBuffer[JobPreemption]()
 
-    for(job: JobPreemption <- jobsThatCanBePreempted){
+    for(job: JobPreemption <- jobsThatCanBePreempted if claimDelta_inelastic.isEmpty){
       jobsThatCanBePreempted_snapshot += job.copy()
 
       if(job.elasticDeltasAfterPreemption.nonEmpty){
+        var servicePreempted = false
         for(claimDelta:ClaimDelta <- job.elasticDeltasAfterPreemption if claimDelta_inelastic.isEmpty){
 //          if(claimDelta_inelastic.isEmpty){
 //            simulator.logger.info(schedulerPrefix + " The cell state is (%f cpus, %f mem)".format(privateCellState.availableCpus, privateCellState.availableMem))
 //            simulator.logger.info(schedulerPrefix + " ClaimDelta Machine Info. id: %d / seqNum: %d".format(claimDelta.machineID, claimDelta.machineSeqNum))
-            claimDelta.unApply(privateCellState)
-            job.elasticDeltasAfterPreemption -= claimDelta
-            job.elasticDeltasToPreempt += claimDelta
+          claimDelta.unApply(privateCellState)
+          job.elasticDeltasAfterPreemption -= claimDelta
+          job.elasticDeltasToPreempt += claimDelta
+          servicePreempted = true
 
-            claimDelta_inelastic = scheduleJob(jobToFit, privateCellState)
-            if (!isAllocationSuccessfully(claimDelta_inelastic, jobToFit)) {
-              claimDelta_inelastic.foreach(claimDelta => {
-                claimDelta.unApply(privateCellState)
-              })
-              claimDelta_inelastic.clear()
-            }
+          claimDelta_inelastic = scheduleJob(jobToFit, privateCellState)
+          if (!isAllocationSuccessfully(claimDelta_inelastic, jobToFit)) {
+            claimDelta_inelastic.foreach(claimDelta => {
+              claimDelta.unApply(privateCellState)
+            })
+            claimDelta_inelastic.clear()
+          }
 //          }
         }
-        if(claimDelta_inelastic.nonEmpty)
+        if(servicePreempted && !relativeJobsToPreempt.contains(job))
           relativeJobsToPreempt += job
+
       }
     }
 
@@ -426,24 +433,29 @@ class ZoePreemptionScheduler(name: String,
     val relativeJobsToPreempt: ListBuffer[JobPreemption] = new ListBuffer[JobPreemption]()
 
     var elasticServicesToSchedule = jobToFit.elasticTasksUnscheduled
-
-    for(job: JobPreemption <- jobsThatCanBePreempted){
+    var servicesPreempted = 0
+    for(job: JobPreemption <- jobsThatCanBePreempted if elasticServicesToSchedule > 0){
       jobsThatCanBePreempted_snapshot += job.copy()
 
       if(job.elasticDeltasAfterPreemption.nonEmpty){
+        var servicePreempted = false
         for(claimDelta:ClaimDelta <- job.elasticDeltasAfterPreemption if elasticServicesToSchedule > 0){
 //          if(elasticServicesToSchedule > 0){
 //            simulator.logger.info(schedulerPrefix + " The cell state is (%f cpus, %f mem)".format(privateCellState.availableCpus, privateCellState.availableMem))
-            claimDelta.unApply(privateCellState)
-            job.elasticDeltasAfterPreemption -= claimDelta
-            job.elasticDeltasToPreempt += claimDelta
+          claimDelta.unApply(privateCellState)
+          job.elasticDeltasAfterPreemption -= claimDelta
+          job.elasticDeltasToPreempt += claimDelta
+          servicesPreempted += 1
+          servicePreempted = true
 
-            val relativeClaimDelta_elastic = scheduleJob(jobToFit, privateCellState, elastic = true)
+          val relativeClaimDelta_elastic = scheduleJob(jobToFit, privateCellState, elastic = true)
+          if(relativeClaimDelta_elastic.nonEmpty){
             elasticServicesToSchedule -= relativeClaimDelta_elastic.size
             claimDelta_elastic ++= relativeClaimDelta_elastic
+          }
 //          }
         }
-        if(claimDelta_elastic.nonEmpty)
+        if(servicePreempted && !relativeJobsToPreempt.contains(job))
           relativeJobsToPreempt += job
       }
     }
@@ -476,13 +488,14 @@ class ZoePreemptionScheduler(name: String,
       jobsThatCanBePreempted ++= jobsThatCanBePreempted_snapshot
 
       privateCellState = privateCell_snapshot
+      servicesPreempted = 0
     }
 
     relativeJobsToPreempt.foreach(job => {
       if(!jobsToPreempt.contains(job))
         jobsToPreempt += job
     })
-
+    simulator.logger.info("[%d (%s)] preemptionForElastic was able to preempt %d to allocate %d services".format(jobToFit.id, jobToFit.workloadName, servicesPreempted, claimDelta_elastic.size))
     claimDelta_elastic
   }
 
@@ -536,24 +549,27 @@ class ZoePreemptionScheduler(name: String,
         scheduling = true
 
         var jobsToAttemptScheduling: ListBuffer[Job] = getJobs(pendingQueueAsList, simulator.currentTime)
+        if(policyMode == PolicyModes.Fifo || policyMode == PolicyModes.hFifo)
+          assert(jobsToAttemptScheduling.length == 1,
+            "For Fifo like policy the jobsToAttemptScheduling length must be 1 (%d)".format(jobsToAttemptScheduling.length))
         if(PolicyModes.myPolicies.contains(policyMode)){
           if (jobsToAttemptScheduling.size > 1)
             jobsToAttemptScheduling = jobsToAttemptScheduling.sortWith(_.numTasks > _.numTasks)
         }
 
-        if (previousJob != null && previousJob == jobsToAttemptScheduling.head) {
-          jobAttempt += 1
-          if(jobAttempt == 2) {
-            jobAttempt = 0
-            scheduling = false
-            jobsToAttemptScheduling.foreach(job => {
-              addPendingJob(job)
-            })
-            simulator.logger.info(schedulerPrefix + " Exiting because we are trying to schedule the same job that failed before.")
-            return
-          }
-        }
-        previousJob = jobsToAttemptScheduling.head
+//        if (previousJob != null && previousJob == jobsToAttemptScheduling.head) {
+//          jobAttempt += 1
+//          if(jobAttempt == 2) {
+//            jobAttempt = 0
+//            scheduling = false
+//            jobsToAttemptScheduling.foreach(job => {
+//              addPendingJob(job)
+//            })
+//            simulator.logger.info(schedulerPrefix + " Exiting because we are trying to schedule the same job that failed before.")
+//            return
+//          }
+//        }
+//        previousJob = jobsToAttemptScheduling.head
 
         totalQueueSize += numJobsInQueue
         numSchedulingCalls += 1
@@ -633,28 +649,35 @@ class ZoePreemptionScheduler(name: String,
                   })
                   elastic.clear()
                 }
-
-                claimDelta_inelastic = scheduleJob(job, privateCellState)
-                if (!isAllocationSuccessfully(claimDelta_inelastic, job)) {
-                  simulator.logger.info(schedulerPrefix + jobPrefix + " Failed to allocate all services (%d/%d[%d])".format(claimDelta_inelastic.size, job.moldableTasks, job.unscheduledTasks))
-                  claimDelta_inelastic.foreach(claimDelta => {
-                    claimDelta.unApply(privateCellState)
-                  })
-                  claimDelta_inelastic.clear()
-                  if(jobsThatCanBePreempted.nonEmpty){
-                    simulator.logger.info(schedulerPrefix + jobPrefix + " Checking for preemptive resources for inelastic services.")
-                    claimDelta_inelastic = preemptionForInelastic(job, jobsThatCanBePreempted, jobsToPreempt)
+                val isJobRunning = runningQueueAsList.contains(job)
+                if(!isJobRunning) {
+                  claimDelta_inelastic = scheduleJob(job, privateCellState)
+                  if (!isAllocationSuccessfully(claimDelta_inelastic, job)) {
+                    simulator.logger.info(schedulerPrefix + jobPrefix + " Failed to allocate all inelastic services (%d/%d[%d])".format(claimDelta_inelastic.size, job.moldableTasks, job.unscheduledTasks))
+                    claimDelta_inelastic.foreach(claimDelta => {
+                      claimDelta.unApply(privateCellState)
+                    })
+                    claimDelta_inelastic.clear()
+                    if (!runningQueueAsList.contains(job) && jobsThatCanBePreempted.nonEmpty) {
+                      simulator.logger.info(schedulerPrefix + jobPrefix + " Checking for preemptive resources for inelastic services.")
+                      claimDelta_inelastic = preemptionForInelastic(job, jobsThatCanBePreempted, jobsToPreempt)
+                    }
+                  } else {
+                    simulator.logger.info(schedulerPrefix + jobPrefix + " Successfully allocated all inelastic services (%d/%d[%d])".format(claimDelta_inelastic.size, job.moldableTasks, job.unscheduledTasks))
                   }
                 }
-                if (claimDelta_inelastic.nonEmpty || job.finalStatus == JobStates.Fully_Scheduled) {
+                if (claimDelta_inelastic.nonEmpty || isJobRunning) {
                   jobsToLaunch += ((job, claimDelta_inelastic, claimDelta_elastic))
                 }
                 jobsToLaunch.foreach { case (job1, inelastic, elastic) =>
                   claimDelta_elastic = scheduleJob(job1, privateCellState, elastic = true)
-                  if ((claimDelta_elastic.isEmpty || claimDelta_elastic.size < job1.elasticTasksUnscheduled)
+                  if (job1.elasticTasksUnscheduled > 0
+                    && (claimDelta_elastic.isEmpty || claimDelta_elastic.size < job1.elasticTasksUnscheduled)
                     && jobsThatCanBePreempted.nonEmpty
                     && !job1.workloadName.equals("Interactive")) {
-                    simulator.logger.info(schedulerPrefix + jobPrefix + " Checking for preemptive resources for elastic services.")
+                    simulator.logger.info(schedulerPrefix + jobPrefix +
+                      "[%d (%s)] Checking for preemptive resources for elastic services. (%d/%d)".format(
+                        job1.id, job1.workloadName, job1.elasticTasksUnscheduled, job1.elasticTasks))
                     claimDelta_elastic = preemptionForElastic(job1, jobsThatCanBePreempted, jobsToPreempt)
                   }
                   elastic.clear()
@@ -777,30 +800,31 @@ class ZoePreemptionScheduler(name: String,
               job.claimElasticDeltas --= elasticClaimDeltasToPreempt
               // We have to reinsert the job in queue if this had all it's elastic services allocated
               if(job.elasticTasksUnscheduled == 0){
-                addPendingJob(job)
+                addPendingJob(job, prepend = true)
               }
               job.elasticTasksUnscheduled = job.elasticTasksUnscheduled + elasticClaimDeltasToPreempt.size
               simulator.logger.info(schedulerPrefix + jobPrefix + "Preempted %d elastic services.".format(elasticClaimDeltasToPreempt.size))
             }
 
-            val inelasticClaimDeltasToPreempt: ListBuffer[ClaimDelta] = jobToPreempt.inelasticDeltasToPreempt.sortWith(compareMachineSeqNum(_,_) < 0)
-            if(jobToPreempt.inelasticDeltasToPreempt.nonEmpty){
-              inelasticClaimDeltasToPreempt.foreach(claimDelta => {
-                claimDelta.unApply(simulator.cellState)
-              })
-              job.reset()
-              // We have to reinsert the job in queue if this had all it's elastic services allocated
-              removeRunningJob(job)
-              if(!pendingQueueAsList.contains(job))
-                addPendingJob(job)
-              simulator.logger.info(schedulerPrefix + jobPrefix + "Preempted %d inelastic services.".format(inelasticClaimDeltasToPreempt.size))
-            }
+//            val inelasticClaimDeltasToPreempt: ListBuffer[ClaimDelta] = jobToPreempt.inelasticDeltasToPreempt.sortWith(compareMachineSeqNum(_,_) < 0)
+//            if(jobToPreempt.inelasticDeltasToPreempt.nonEmpty){
+//              inelasticClaimDeltasToPreempt.foreach(claimDelta => {
+//                claimDelta.unApply(simulator.cellState)
+//              })
+//              job.reset()
+//              // We have to reinsert the job in queue if this had all it's elastic services allocated
+//              removeRunningJob(job)
+//              if(!pendingQueueAsList.contains(job))
+//                addPendingJob(job)
+//              simulator.logger.info(schedulerPrefix + jobPrefix + "Preempted %d inelastic services.".format(inelasticClaimDeltasToPreempt.size))
+//            }
 
-            if(jobToPreempt.inelasticDeltasToPreempt.nonEmpty) {
-              // We have to remove all the incoming simulation events that work on this job.
-              simulator.removeIf(x => x.itemId == job.id &&
-                (x.eventType == EventTypes.Remove || x.eventType == EventTypes.Trigger))
-            }else{
+//            if(jobToPreempt.inelasticDeltasToPreempt.nonEmpty) {
+//              // We have to remove all the incoming simulation events that work on this job.
+//              simulator.removeIf(x => x.itemId == job.id &&
+//                (x.eventType == EventTypes.Remove || x.eventType == EventTypes.Trigger))
+//            }else
+            if(jobToPreempt.elasticDeltasToPreempt.nonEmpty){
               val jobLeftDuration: Double = job.estimateJobDuration(currTime = simulator.currentTime, tasksRemoved = elasticClaimDeltasToPreempt.size)
 
               job.jobFinishedWorking = simulator.currentTime + jobLeftDuration
@@ -826,6 +850,7 @@ class ZoePreemptionScheduler(name: String,
            * After the simulation, we will deploy the allocations on the real cluster
            */
           simulator.logger.info(schedulerPrefix + allJobPrefix + "There are %d jobs that can be allocated.".format(jobsToLaunch.size))
+          var serviceDeployed = 0
           jobsToLaunch.foreach { case (job, inelastic, elastic) =>
             val jobPrefix = "[Job %d (%s)] ".format(job.id, job.workloadName)
             var inelasticTasksUnscheduled: Int = job.unscheduledTasks
@@ -837,6 +862,7 @@ class ZoePreemptionScheduler(name: String,
                 val commitResult = simulator.cellState.commit(inelastic)
                 if (commitResult.committedDeltas.nonEmpty) {
 //                  recordUsefulTimeScheduling(job, getThinkTime(job), job.numSchedulingAttempts == 1)
+                  serviceDeployed += commitResult.committedDeltas.size
 
                   inelasticTasksUnscheduled -= commitResult.committedDeltas.size
                   job.claimInelasticDeltas ++= commitResult.committedDeltas
@@ -909,6 +935,7 @@ class ZoePreemptionScheduler(name: String,
                 val commitResult = simulator.cellState.commit(elastic)
                 if (commitResult.committedDeltas.nonEmpty) {
 //                  recordUsefulTimeScheduling(job, getThinkTime(job), job.numSchedulingAttempts == 1)
+                  serviceDeployed += commitResult.committedDeltas.size
 
                   elasticTasksLaunched = commitResult.committedDeltas.size
                   elasticTasksUnscheduled -= elasticTasksLaunched
@@ -966,7 +993,14 @@ class ZoePreemptionScheduler(name: String,
           })
 
           scheduling = false
-          scheduleNextJob()
+          if(serviceDeployed == 0) {
+            jobAttempt += 1
+          }
+          if(jobAttempt == 2) {
+            jobAttempt = 0
+            simulator.logger.info(schedulerPrefix + " Exiting because we could not schedule the job. This means that not enough resources were available.")
+          }else
+            scheduleNextJob()
         }
       }
     }

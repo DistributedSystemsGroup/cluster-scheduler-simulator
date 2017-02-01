@@ -1,0 +1,21 @@
+{
+	"name": "cluster-scheduler-simulator",
+	"priority": 512,
+	"services": [{
+		"startup_order": 0,
+		"name": "cluster-scheduler-simulator",
+		"command": "/mnt/workspace/cluster-scheduler-simulator/bin/launch.sh",
+		"monitor": true,
+		"total_count": 1,
+		"essential_count": 1,
+		"ports": [],
+		"environment": [],
+		"docker_image": "docker-registry:5000/pacerepo/cluster-scheduler-simulator",
+		"required_resources": {
+			"memory": 103079215104
+		}
+	}],
+	"will_end": true,
+	"requires_binary": true,
+	"version": 2
+}

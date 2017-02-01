@@ -173,7 +173,6 @@ class ZoeScheduler(name: String,
 
   var pendingQueueAsList = new ListBuffer[Job]()
   override def jobQueueSize = pendingQueueAsList.count(_ != null)
-//  var pendingQueueIterator = pendingQueueAsList.iterator
   var numJobsInQueue: Int = 0
 
   var runningQueueAsList = new ListBuffer[Job]()
@@ -181,15 +180,6 @@ class ZoeScheduler(name: String,
 
   var numRunningJobs: Int = 0
 
-  //  var moldableQueueLength: Int = 0
-
-  //  var elasticPendingQueue = new collection.mutable.ListBuffer[Job]()
-  //  var elasticQueueIterator = elasticPendingQueue.iterator
-  //  var numElasticJobsInQueue: Int = 0
-  //  var schedulingElastic: Boolean = false
-  //  var interruptElasticScheduling: Boolean = false
-  //  var numElasticJobsSeen: Int = 0
-//  var numJobsSeen: Int = 0
   var jobAttempt: Int = 0
 
   var privateCellState: CellState = _
@@ -199,10 +189,11 @@ class ZoeScheduler(name: String,
   var previousJob: Job = _
 
   def getJobs(queue: ListBuffer[Job], currentTime:Double): ListBuffer[Job] ={
-    val jobs = PolicyModes.getJobsWithSamePriority(queue, policyMode, currentTime)
-    jobs.foreach(job => {
-      removePendingJob(job)
-    })
+//    val jobs = PolicyModes.getJobsWithSamePriority(queue, policyMode, currentTime)
+    val jobs = PolicyModes.getJobs(queue, policyMode)
+//    jobs.foreach(job => {
+//      removePendingJob(job)
+//    })
     jobs
   }
 
@@ -231,11 +222,6 @@ class ZoeScheduler(name: String,
       numJobsInQueue -= 1
       pendingQueueAsList(idx) = null
     }
-
-    //    pendingQueueAsList -= job
-    //    moldableQueueIterator = pendingQueueAsList.iterator
-    //    for (i <- 0 until currentIndex)
-    //        moldableQueueIterator.next()
   }
 
   def removeRunningJob(job: Job): Unit = {
@@ -246,38 +232,25 @@ class ZoeScheduler(name: String,
     }
   }
 
-
-  //  def removeElasticJob(job: Job): Unit = {
-  //    val idx = elasticPendingQueue.indexOf(job)
-  //    if(idx != -1 && elasticPendingQueue(idx) != null){
-  //      numElasticJobsInQueue -= 1
-  //      elasticPendingQueue(idx) = null
-  //    }
-  ////    elasticPendingQueue -= job
-  ////    elasticQueueIterator = elasticPendingQueue.iterator
-  ////    for (i <- 0 until currentIndex)
-  ////      elasticQueueIterator.next()
-  //  }
-
-  //  def addElasticJob(job: Job): Unit = {
-  //    numElasticJobsInQueue += 1
-  //    elasticPendingQueue += job
-  ////    elasticPendingQueue = applyPolicy(elasticPendingQueue)
-  //    elasticQueueIterator = elasticPendingQueue.iterator
-  //  }
-
-  def addPendingJob(job: Job): Unit = {
+  def addPendingJob(job: Job, prepend: Boolean = false): Unit = {
     numJobsInQueue += 1
-    pendingQueueAsList += job
-    //    pendingQueueAsList = applyPolicy(pendingQueueAsList)
-    //    moldableQueueIterator = pendingQueueAsList.iterator
+    if(!prepend)
+      pendingQueueAsList += job
+    else
+      pendingQueueAsList.prepend(job)
+  }
+
+  def addPendingJobs(jobs: ListBuffer[Job], prepend: Boolean = false): Unit = {
+    numJobsInQueue += jobs.length
+    if(!prepend)
+      pendingQueueAsList ++= jobs
+    else
+      pendingQueueAsList.prependAll(jobs)
   }
 
   def addRunningJob(job: Job): Unit = {
     numRunningJobs += 1
     runningQueueAsList += job
-    //    pendingQueueAsList = applyPolicy(pendingQueueAsList)
-    //    moldableQueueIterator = pendingQueueAsList.iterator
   }
 
 
@@ -299,14 +272,6 @@ class ZoeScheduler(name: String,
   def wakeUp(): Unit = {
     simulator.logger.trace("wakeUp method called.")
 //    simulator.logger.warn("%f - Jobs in Queue: %d | Jobs Running: %d ".format(simulator.currentTime, numJobsInQueue, numRunningJobs))
-    //    pendingQueueAsList = applyPolicy(pendingQueueAsList)
-    // This is necessary when we order the list, because the job can be put at the begin on it
-    // Caused by the async nature of this call
-    //    moldableQueueIterator = pendingQueueAsList.iterator
-
-    //    interruptElasticScheduling = true
-    //    if(policyMode == PolicyModes.Fifo || policyMode == PolicyModes.PriorityFifo)
-    //      numJobsSeen = 0
 
     scheduleNextJob()
   }
@@ -322,7 +287,7 @@ class ZoeScheduler(name: String,
 //    simulator.logger.warn("%f - Added a new Job (%s) in the queue. Num Tasks: %d (%d/%d) | Cpus: %f | Mem: %f | Job Runtime: %f"
 //      .format(simulator.currentTime, job.workloadName, job.numTasks, job.moldableTasks, job.elasticTasks, job.cpusPerTask, job.memPerTask, job.jobDuration ))
     if(firstTime){
-      if (numJobsInQueue == 3){
+      if (numJobsInQueue == 4){
         wakeUp()
         firstTime = false
       }
@@ -354,26 +319,14 @@ class ZoeScheduler(name: String,
       if (numJobsInQueue > 0) {
         scheduling = true
 
-        var jobsToAttemptScheduling: ListBuffer[Job] = getJobs(pendingQueueAsList, simulator.currentTime)
-        if(PolicyModes.myPolicies.contains(policyMode)){
-          if (jobsToAttemptScheduling.size > 1)
-            jobsToAttemptScheduling = jobsToAttemptScheduling.sortWith(_.numTasks > _.numTasks)
-        }
-
-        if (previousJob != null && previousJob == jobsToAttemptScheduling.head) {
-          jobAttempt += 1
-          if(jobAttempt == 2){
-            jobAttempt = 0
-            scheduling = false
-            jobsToAttemptScheduling.foreach(job => {
-              addPendingJob(job)
-            })
-            simulator.logger.info(schedulerPrefix + " Exiting because we are trying to schedule the same job that failed before.")
-            return
-          }
-
-        }
-        previousJob = jobsToAttemptScheduling.head
+        val jobsToAttemptScheduling: ListBuffer[Job] = getJobs(pendingQueueAsList, simulator.currentTime)
+        if(policyMode == PolicyModes.Fifo || policyMode == PolicyModes.eFifo)
+          assert(jobsToAttemptScheduling.length == 1,
+            "For Fifo and eFifo policy the jobsToAttemptScheduling length must be 1 (%d)".format(jobsToAttemptScheduling.length))
+//        if(PolicyModes.myPolicies.contains(policyMode)){
+//          if (jobsToAttemptScheduling.size > 1)
+//            jobsToAttemptScheduling = jobsToAttemptScheduling.sortWith(_.numTasks > _.numTasks)
+//        }
 
         totalQueueSize += numJobsInQueue
         numSchedulingCalls += 1
@@ -437,14 +390,17 @@ class ZoeScheduler(name: String,
                   elastic.clear()
                 }
 
-                claimDelta_inelastic = scheduleJob(job, privateCellState)
-                if (!isAllocationSuccessfully(claimDelta_inelastic, job)) {
-                  claimDelta_inelastic.foreach(claimDelta => {
-                    claimDelta.unApply(privateCellState)
-                  })
-                  claimDelta_inelastic.clear()
+                val isJobRunning = runningQueueAsList.contains(job)
+                if(!isJobRunning){
+                  claimDelta_inelastic = scheduleJob(job, privateCellState)
+                  if (!isAllocationSuccessfully(claimDelta_inelastic, job)) {
+                    claimDelta_inelastic.foreach(claimDelta => {
+                      claimDelta.unApply(privateCellState)
+                    })
+                    claimDelta_inelastic.clear()
+                  }
                 }
-                if (claimDelta_inelastic.nonEmpty || job.finalStatus == JobStates.Fully_Scheduled) {
+                if (claimDelta_inelastic.nonEmpty || isJobRunning) {
                   jobsToLaunch += ((job, claimDelta_inelastic, claimDelta_elastic))
                 }
                 jobsToLaunch.foreach { case (job1, inelastic, elastic) =>
@@ -462,13 +418,40 @@ class ZoeScheduler(name: String,
                 }
                 clusterFreeResources = currentFreeResource
               }
-            }else{
+            }else if(PolicyModes.elasticPolicies.contains(policyMode)){
               claimDelta_inelastic = scheduleJob(job, privateCellState)
               if (!isAllocationSuccessfully(claimDelta_inelastic, job)) {
                 claimDelta_inelastic.foreach(claimDelta => {
                   claimDelta.unApply(privateCellState)
                 })
-              }else {
+                claimDelta_inelastic.clear()
+              }
+              if (runningQueueAsList.contains(job) || claimDelta_inelastic.nonEmpty)
+                claimDelta_elastic = scheduleJob(job, privateCellState, elastic = true)
+              if (claimDelta_inelastic.nonEmpty || claimDelta_elastic.nonEmpty)
+                jobsToLaunch += ((job, claimDelta_inelastic, claimDelta_elastic))
+//                simulator.logger.info(schedulerPrefix + jobPrefix + " The cellstate now have (%f cpu, %f mem) free."
+//                  .format(privateCellState.availableCpus, privateCellState.availableMem))
+              val taskCanFitPerCpus = Math.floor(privateCellState.cpusPerMachine / job.cpusPerTask) * privateCellState.numMachines
+              val taskCanFitPerMem = Math.floor(privateCellState.memPerMachine / job.memPerTask) * privateCellState.numMachines
+              if (taskCanFitPerCpus < job.numTasks || taskCanFitPerMem < job.numTasks) {
+                simulator.logger.warn((schedulerPrefix + jobPrefix + "The cell (%f cpus, %f mem) is not big enough " +
+                  "to hold this job all at once which requires %d tasks for %f cpus " +
+                  "and %f mem in total.").format(privateCellState.totalCpus,
+                  privateCellState.totalMem,
+                  job.numTasks,
+                  job.cpusPerTask * job.numTasks,
+                  job.memPerTask * job.numTasks))
+                jobsCannotFit += job
+              }
+            }else if(PolicyModes.rigidPolicies.contains(policyMode)){
+              claimDelta_inelastic = scheduleJob(job, privateCellState)
+              if (!isAllocationSuccessfully(claimDelta_inelastic, job)) {
+                claimDelta_inelastic.foreach(claimDelta => {
+                  claimDelta.unApply(privateCellState)
+                })
+                claimDelta_inelastic.clear()
+              }else{
                 claimDelta_elastic = scheduleJob(job, privateCellState, elastic = true)
                 if(claimDelta_elastic.size == job.elasticTasks){
                   jobsToLaunch += ((job, claimDelta_inelastic, claimDelta_elastic))
@@ -500,13 +483,14 @@ class ZoeScheduler(name: String,
             }
           })
           jobsCannotFit.foreach(job => {
-            jobsToAttemptScheduling -= job
+            removePendingJob(job)
           })
 
           /*
            * After the simulation, we will deploy the allocations on the real cluster
            */
           simulator.logger.info(schedulerPrefix + allJobPrefix + "There are %d jobs that can be allocated.".format(jobsToLaunch.size))
+          var serviceDeployed = 0
           jobsToLaunch.foreach { case (job, inelastic, elastic) =>
             val jobPrefix = "[Job %d (%s)] ".format(job.id, job.workloadName)
             var inelasticTasksUnscheduled: Int = job.unscheduledTasks
@@ -518,6 +502,7 @@ class ZoeScheduler(name: String,
                 val commitResult = simulator.cellState.commit(inelastic)
                 if (commitResult.committedDeltas.nonEmpty) {
 //                  recordUsefulTimeScheduling(job, getThinkTime(job), job.numSchedulingAttempts == 1)
+                  serviceDeployed += commitResult.committedDeltas.size
 
                   inelasticTasksUnscheduled -= commitResult.committedDeltas.size
                   job.claimInelasticDeltas ++= commitResult.committedDeltas
@@ -590,6 +575,7 @@ class ZoeScheduler(name: String,
                 val commitResult = simulator.cellState.commit(elastic)
                 if (commitResult.committedDeltas.nonEmpty) {
 //                  recordUsefulTimeScheduling(job, getThinkTime(job), job.numSchedulingAttempts == 1)
+                  serviceDeployed += commitResult.committedDeltas.size
 
                   elasticTasksLaunched = commitResult.committedDeltas.size
                   elasticTasksUnscheduled -= elasticTasksLaunched
@@ -638,16 +624,19 @@ class ZoeScheduler(name: String,
             }
 
             if (job.finalStatus == JobStates.Completed || (inelasticTasksUnscheduled == 0 && elasticTasksUnscheduled == 0)) {
-              jobsToAttemptScheduling -= job
+              removePendingJob(job)
             }
           }
 
-          jobsToAttemptScheduling.foreach(job => {
-            addPendingJob(job)
-          })
-
           scheduling = false
-          scheduleNextJob()
+          if(serviceDeployed == 0) {
+            jobAttempt += 1
+          }
+          if(jobAttempt == 2) {
+            jobAttempt = 0
+            simulator.logger.info(schedulerPrefix + " Exiting because we could not schedule the job. This means that not enough resources were available.")
+          }else
+            scheduleNextJob()
         }
       }
     }
@@ -655,54 +644,96 @@ class ZoeScheduler(name: String,
 }
 
 object PolicyModes extends Enumeration {
-  val Fifo, PriorityFifo, SJF, LJF, HRRN, SRPT, Size,
-  MySJF, MySRPT,  MySize, MyFifo, MySize2, MySize3, MySize4, MySize5, MySize6, MySize7, MySize8,
-  MySizeError, SRPTError = Value
+  val
+  Fifo, PSJF, SRPT, HRRN,
+  PSJF2D, SRPT2D1, SRPT2D2, HRRN2D,
+  PSJF3D, SRPT3D1, SRPT3D2, HRRN3D,
 
-  val myPolicies = List[PolicyModes.Value](PolicyModes.MyFifo, PolicyModes.MySJF, PolicyModes.MySRPT, PolicyModes.MySize, PolicyModes.MySizeError,
-    PolicyModes.MySize2, PolicyModes.MySize3, PolicyModes.MySize4, PolicyModes.MySize5, PolicyModes.MySize6, PolicyModes.MySize7, PolicyModes.MySize8)
+  eFifo, ePSJF, eSRPT, eHRRN,
+  ePSJF2D, eSRPT2D1, eSRPT2D2, eHRRN2D,
+  ePSJF3D, eSRPT3D1, eSRPT3D2, eHRRN3D,
+
+  hFifo, hPSJF, hSRPT, hHRRN,
+  hPSJF2D, hSRPT2D1, hSRPT2D2, hHRRN2D,
+  hPSJF3D, hSRPT3D1, hSRPT3D2, hHRRN3D,
+
+  PriorityFifo, LJF  = Value
+
+  val myPolicies = List[PolicyModes.Value](
+    PolicyModes.hFifo, PolicyModes.hPSJF, PolicyModes.hSRPT, PolicyModes.hHRRN,
+    PolicyModes.hPSJF2D, PolicyModes.hSRPT2D1, PolicyModes.hSRPT2D2, PolicyModes.hHRRN2D,
+    PolicyModes.hPSJF3D, PolicyModes.hSRPT3D1, PolicyModes.hSRPT3D2, PolicyModes.hHRRN3D
+  )
+
+  val elasticPolicies = List[PolicyModes.Value](
+    PolicyModes.eFifo, PolicyModes.ePSJF, PolicyModes.eSRPT, PolicyModes.eHRRN,
+    PolicyModes.ePSJF2D, PolicyModes.eSRPT2D1, PolicyModes.eSRPT2D2, PolicyModes.eHRRN2D,
+    PolicyModes.ePSJF3D, PolicyModes.eSRPT3D1, PolicyModes.eSRPT3D2, PolicyModes.eHRRN3D
+  )
+
+  val rigidPolicies = List[PolicyModes.Value](
+    PolicyModes.Fifo, PolicyModes.PSJF, PolicyModes.SRPT, PolicyModes.HRRN,
+    PolicyModes.PSJF2D, PolicyModes.SRPT2D1, PolicyModes.SRPT2D2, PolicyModes.HRRN2D,
+    PolicyModes.PSJF3D, PolicyModes.SRPT3D1, PolicyModes.SRPT3D2, PolicyModes.HRRN3D
+  )
+
+  val noPriorityPolicies = List[PolicyModes.Value](
+    PolicyModes.hFifo, PolicyModes.eFifo, PolicyModes.Fifo
+  )
 
   val logger = Logger.getLogger(this.getClass.getName)
 
   def applyPolicy(queue: ListBuffer[Job], policy: PolicyModes.Value, currentTime:Double = 0): ListBuffer[Job] = {
     policy match {
-      case PolicyModes.Fifo | PolicyModes.MyFifo => queue
       case PolicyModes.PriorityFifo => queue.sortWith(PolicyModes.comparePriority(_,_) > 0)
-      case PolicyModes.SJF | PolicyModes.MySJF => queue.sortWith(PolicyModes.compareJobTime(_,_) < 0)
       case PolicyModes.LJF => queue.sortWith(PolicyModes.compareJobTime(_,_) > 0)
-      case PolicyModes.HRRN => queue.sortWith(PolicyModes.compareResponseRatio(_,_, currentTime) > 0)
-      case PolicyModes.SRPT | PolicyModes.MySRPT => queue.sortWith(PolicyModes.compareJobRemainingTime(_,_) < 0)
-      case PolicyModes.MySize | PolicyModes.Size => queue.sortWith(PolicyModes.compareSize(_,_) < 0)
-      case PolicyModes.MySize2 => queue.sortWith(PolicyModes.compareSize2(_,_) < 0)
-      case PolicyModes.MySize3 => queue.sortWith(PolicyModes.compareSize3(_,_) < 0)
-      case PolicyModes.MySize4 => queue.sortWith(PolicyModes.compareSize4(_,_) < 0)
-      case PolicyModes.MySize5 => queue.sortWith(PolicyModes.compareSize5(_,_) < 0)
-      case PolicyModes.MySize6 => queue.sortWith(PolicyModes.compareSize6(_,_) < 0)
-      case PolicyModes.MySize7 => queue.sortWith(PolicyModes.compareSize7(_,_) < 0)
-      case PolicyModes.MySize8 => queue.sortWith(PolicyModes.compareSize8(_,_) < 0)
-      case PolicyModes.SRPTError => queue.sortWith(PolicyModes.compareJobRemainingTime(_,_) < 0)
-      case PolicyModes.MySizeError => queue.sortWith(PolicyModes.compareSize(_,_) < 0)
+
+      case PolicyModes.Fifo | PolicyModes.hFifo | PolicyModes.eFifo => queue
+      case PolicyModes.PSJF | PolicyModes.hPSJF | PolicyModes.ePSJF => queue.sortWith(PolicyModes.compareJobTime(_,_) < 0)
+      case PolicyModes.HRRN | PolicyModes.hHRRN | PolicyModes.eHRRN => queue.sortWith(PolicyModes.compareResponseRatio(_,_, currentTime) < 0)
+      case PolicyModes.SRPT | PolicyModes.hSRPT | PolicyModes.eSRPT => queue.sortWith(PolicyModes.compareJobRemainingTime(_,_) < 0)
+      case PolicyModes.PSJF2D | PolicyModes.hPSJF2D | PolicyModes.ePSJF2D => queue.sortWith(PolicyModes.comparePSJF2D(_,_) < 0)
+      case PolicyModes.SRPT2D1 | PolicyModes.hSRPT2D1 | PolicyModes.eSRPT2D1 => queue.sortWith(PolicyModes.compareSRPT2D1(_,_) < 0)
+      case PolicyModes.SRPT2D2 | PolicyModes.hSRPT2D2 | PolicyModes.eSRPT2D2 => queue.sortWith(PolicyModes.compareSRPT2D2(_,_) < 0)
+      case PolicyModes.HRRN2D | PolicyModes.hHRRN2D | PolicyModes.eHRRN2D => queue.sortWith(PolicyModes.compareHRRN2D(_,_, currentTime) < 0)
+      case PolicyModes.PSJF3D | PolicyModes.hPSJF3D | PolicyModes.ePSJF3D => queue.sortWith(PolicyModes.comparePSJF3D(_,_) < 0)
+      case PolicyModes.SRPT3D1 | PolicyModes.hSRPT3D1 | PolicyModes.eSRPT3D1 => queue.sortWith(PolicyModes.compareSRPT3D1(_,_) < 0)
+      case PolicyModes.SRPT3D2 | PolicyModes.hSRPT3D2 | PolicyModes.eSRPT3D2 => queue.sortWith(PolicyModes.compareSRPT3D2(_,_) < 0)
+      case PolicyModes.HRRN3D | PolicyModes.hHRRN3D | PolicyModes.eHRRN3D => queue.sortWith(PolicyModes.compareHRRN3D(_,_, currentTime) < 0)
     }
   }
 
   def getPriority(job: Job, policy: PolicyModes.Value, currentTime:Double = 0): Double = {
     policy match {
-      case PolicyModes.Fifo | PolicyModes.MyFifo => -1.0
       case PolicyModes.PriorityFifo => job.priority
-      case PolicyModes.SJF | PolicyModes.MySJF | PolicyModes.LJF => jobDuration(job)
-      case PolicyModes.HRRN => job.responseRatio(currentTime)
-      case PolicyModes.SRPT | PolicyModes.MySRPT => remainingTime(job)
-      case PolicyModes.MySize | PolicyModes.Size => size(job)
-      case PolicyModes.MySize2 => size2(job)
-      case PolicyModes.MySize3 => size3(job)
-      case PolicyModes.MySize4 => size4(job)
-      case PolicyModes.MySize5 => size5(job)
-      case PolicyModes.MySize6 => size6(job)
-      case PolicyModes.MySize7 => size7(job)
-      case PolicyModes.MySize8 => size8(job)
-      case PolicyModes.SRPTError => remainingTimeWithError(job)
-      case PolicyModes.MySizeError => sizeWithError(job)
+
+      case PolicyModes.Fifo | PolicyModes.hFifo | PolicyModes.eFifo => -1.0
+      case PolicyModes.PSJF | PolicyModes.hPSJF | PolicyModes.LJF | PolicyModes.ePSJF => jobDuration(job)
+      case PolicyModes.HRRN | PolicyModes.hHRRN | PolicyModes.eHRRN => responseRatio(job, currentTime)
+      case PolicyModes.SRPT | PolicyModes.hSRPT | PolicyModes.eSRPT => remainingTime(job)
+      case PolicyModes.PSJF2D | PolicyModes.hPSJF2D | PolicyModes.ePSJF2D => pSJF2D(job)
+      case PolicyModes.SRPT2D1 | PolicyModes.hSRPT2D1 | PolicyModes.eSRPT2D1 => sRPT2D1(job)
+      case PolicyModes.SRPT2D2 | PolicyModes.hSRPT2D2 | PolicyModes.eSRPT2D2 => sRPT2D2(job)
+      case PolicyModes.HRRN2D | PolicyModes.hHRRN2D | PolicyModes.eHRRN2D => hRRN2D(job, currentTime)
+      case PolicyModes.PSJF3D | PolicyModes.hPSJF3D | PolicyModes.ePSJF3D => pSJF3D(job)
+      case PolicyModes.SRPT3D1| PolicyModes.hSRPT3D1 | PolicyModes.eSRPT3D1 => sRPT3D1(job)
+      case PolicyModes.SRPT3D2 | PolicyModes.hSRPT3D2 | PolicyModes.eSRPT3D2 => sRPT3D2(job)
+      case PolicyModes.HRRN3D | PolicyModes.hHRRN3D | PolicyModes.eHRRN3D => hRRN3D(job, currentTime)
     }
+  }
+
+  def getJobs(queue: ListBuffer[Job], policy: PolicyModes.Value) : ListBuffer[Job] = {
+    val sortedQueue = applyPolicy(queue, policy)
+    val jobs: ListBuffer[Job] = new ListBuffer[Job]()
+
+    for(job:Job <- sortedQueue){
+      if(job != null) {
+        jobs += job
+        if(!myPolicies.contains(policy))
+          return jobs
+      }
+    }
+    jobs
   }
 
   def getJobsWithSamePriority(queue: ListBuffer[Job], policy: PolicyModes.Value, currentTime:Double = 0) : ListBuffer[Job] = {
@@ -716,9 +747,9 @@ object PolicyModes extends Enumeration {
         if(previousPriority == -1 || previousPriority == priority){
           jobs += job
           previousPriority = priority
+          if(noPriorityPolicies.contains(policy))
+            return jobs
         }
-        if(policy == PolicyModes.Fifo || policy == PolicyModes.MyFifo)
-          return jobs
       }
     }
     jobs
@@ -737,9 +768,9 @@ object PolicyModes extends Enumeration {
         if(targetPriority / priority < threshold){
           logger.debug("Added job with lower priority. Priority: %f / TargetPriority: %f".format(priority, targetPriority))
           jobs += job
+          if(noPriorityPolicies.contains(policy))
+            return jobs
         }
-        if(policy == PolicyModes.Fifo || policy == PolicyModes.MyFifo )
-          return jobs
       }
     }
     jobs
@@ -764,6 +795,9 @@ object PolicyModes extends Enumeration {
       return -1
     jobDuration(o1).compareTo(jobDuration(o2))
   }
+  def jobDuration(job: Job): Double = {
+    job.jobDuration * job.sizeAdjustment * job.error
+  }
 
   def compareJobRemainingTime(o1: Job, o2: Job): Int = {
     if (o1 == null && o2 == null)
@@ -774,15 +808,8 @@ object PolicyModes extends Enumeration {
       return -1
     remainingTime(o1).compareTo(remainingTime(o2))
   }
-
-  def compareJobRemainingTimeWithError(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    remainingTimeWithError(o1).compareTo(remainingTimeWithError(o2))
+  def remainingTime(job: Job): Double = {
+    job.remainingTime * job.sizeAdjustment * job.error
   }
 
   def compareResponseRatio(o1: Job, o2: Job, currentTime: Double): Int = {
@@ -794,143 +821,140 @@ object PolicyModes extends Enumeration {
       return -1
     o1.responseRatio(currentTime).compareTo(o2.responseRatio(currentTime))
   }
+  def responseRatio(job:Job, currentTime:Double): Double = {
+    job.responseRatio(currentTime) * job.error
+  }
 
-  def compareSize(o1: Job, o2: Job): Int = {
+  def comparePSJF2D(o1: Job, o2: Job): Int = {
     if (o1 == null && o2 == null)
       return 0
     if (o1 == null)
       return 1
     if (o2 == null)
       return -1
-    size(o1).compareTo(size(o2))
+    pSJF2D(o1).compareTo(pSJF2D(o2))
+  }
+  def pSJF2D(job:Job): Double = {
+    job.jobDuration * job.numTasks * job.sizeAdjustment * job.error
   }
 
-  def compareSizeWithError(o1: Job, o2: Job): Int = {
+  def compareSRPT2D1(o1: Job, o2: Job): Int = {
     if (o1 == null && o2 == null)
       return 0
     if (o1 == null)
       return 1
     if (o2 == null)
       return -1
-    sizeWithError(o1).compareTo(sizeWithError(o2))
+    sRPT2D1(o1).compareTo(sRPT2D1(o2))
   }
-
-  def compareSize2(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size2(o1).compareTo(size2(o2))
-  }
-
-  def compareSize3(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size3(o1).compareTo(size3(o2))
-  }
-
-  def compareSize4(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size4(o1).compareTo(size4(o2))
-  }
-
-  def compareSize5(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size5(o1).compareTo(size5(o2))
-  }
-
-  def compareSize6(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size6(o1).compareTo(size6(o2))
-  }
-
-  def compareSize7(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size7(o1).compareTo(size7(o2))
-  }
-
-
-  def compareSize8(o1: Job, o2: Job): Int = {
-    if (o1 == null && o2 == null)
-      return 0
-    if (o1 == null)
-      return 1
-    if (o2 == null)
-      return -1
-    size8(o1).compareTo(size8(o2))
-  }
-
-  def jobDuration(job: Job): Double = {
-    job.jobDuration * job.sizeAdjustment
-  }
-
-  def remainingTime(job: Job): Double = {
-    job.remainingTime * job.sizeAdjustment
-  }
-
-  def size(job:Job): Double = {
-    job.remainingTime * (job.numTasks * job.memPerTask * job.cpusPerTask) * job.sizeAdjustment
-  }
-
-  def remainingTimeWithError(job: Job): Double = {
-    job.remainingTime * job.sizeAdjustment * job.error
-  }
-
-  def sizeWithError(job:Job): Double = {
+  def sRPT2D1(job:Job): Double = {
     job.remainingTime * job.numTasks * job.sizeAdjustment * job.error
   }
 
-  def size2(job:Job): Double = {
-    (job.numTasks / job.moldableTasks.toDouble) * job.jobDuration * job.sizeAdjustment
+  def compareSRPT2D2(o1: Job, o2: Job): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+    sRPT2D2(o1).compareTo(sRPT2D2(o2))
+  }
+  def sRPT2D2(job:Job): Double = {
+    job.remainingTime * (job.elasticTasksUnscheduled + job.unscheduledTasks) * job.sizeAdjustment * job.error
   }
 
-  def size3(job:Job): Double = {
-    job.remainingTime * (job.unscheduledTasks + job.elasticTasksUnscheduled) * job.sizeAdjustment
+  def compareHRRN2D(o1: Job, o2: Job, currentTime:Double): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+    hRRN2D(o1, currentTime).compareTo(hRRN2D(o2, currentTime))
+  }
+  def hRRN2D(job:Job, currentTime:Double): Double = {
+    job.responseRatio(currentTime = currentTime) * job.numTasks * job.sizeAdjustment * job.error
   }
 
-  def size4(job:Job): Double = {
-    (job.numTasks / job.moldableTasks.toDouble) * job.remainingTime * job.sizeAdjustment
+  def comparePSJF3D(o1: Job, o2: Job): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+    pSJF3D(o1).compareTo(pSJF3D(o2))
+  }
+  def pSJF3D(job:Job): Double = {
+    job.jobDuration * (job.numTasks * job.memPerTask * job.cpusPerTask) * job.sizeAdjustment * job.error
   }
 
-  def size5(job:Job): Double = {
-    job.jobDuration * job.numTasks * job.sizeAdjustment
+  def compareSRPT3D1(o1: Job, o2: Job): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+    sRPT3D1(o1).compareTo(sRPT3D1(o2))
+  }
+  def sRPT3D1(job:Job): Double = {
+    job.remainingTime * (job.numTasks * job.memPerTask * job.cpusPerTask) * job.sizeAdjustment * job.error
   }
 
-  def size6(job:Job): Double = {
-    job.jobDuration * job.moldableTasks * job.sizeAdjustment
+  def compareSRPT3D2(o1: Job, o2: Job): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+    sRPT3D2(o1).compareTo(sRPT3D2(o2))
+  }
+  def sRPT3D2(job:Job): Double = {
+    job.remainingTime * ((job.elasticTasksUnscheduled + job.unscheduledTasks) * (job.memPerTask * job.cpusPerTask)) * job.sizeAdjustment * job.error
   }
 
-  def size7(job:Job): Double = {
-    job.remainingTime * job.moldableTasks * job.sizeAdjustment
+  def compareHRRN3D(o1: Job, o2: Job, currentTime:Double): Int = {
+    if (o1 == null && o2 == null)
+      return 0
+    if (o1 == null)
+      return 1
+    if (o2 == null)
+      return -1
+    hRRN3D(o1, currentTime).compareTo(hRRN3D(o2, currentTime))
+  }
+  def hRRN3D(job:Job, currentTime:Double): Double = {
+    job.responseRatio(currentTime = currentTime) * job.numTasks * job.memPerTask * job.cpusPerTask * job.sizeAdjustment * job.error
   }
 
-  def size8(job:Job): Double = {
-    job.remainingTime * job.numTasks * job.sizeAdjustment
-  }
+
+//  def compareJobRemainingTimeWithError(o1: Job, o2: Job): Int = {
+//    if (o1 == null && o2 == null)
+//      return 0
+//    if (o1 == null)
+//      return 1
+//    if (o2 == null)
+//      return -1
+//    remainingTimeWithError(o1).compareTo(remainingTimeWithError(o2))
+//  }
+
+//  def compareSizeWithError(o1: Job, o2: Job): Int = {
+//    if (o1 == null && o2 == null)
+//      return 0
+//    if (o1 == null)
+//      return 1
+//    if (o2 == null)
+//      return -1
+//    sizeWithError(o1).compareTo(sizeWithError(o2))
+//  }
+
+//  def remainingTimeWithError(job: Job): Double = {
+//    job.remainingTime * job.sizeAdjustment * job.error
+//  }
+//
+//  def sizeWithError(job:Job): Double = {
+//    job.remainingTime * job.numTasks * job.sizeAdjustment * job.error
+//  }
 }

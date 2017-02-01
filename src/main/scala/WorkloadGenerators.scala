@@ -2,6 +2,7 @@ package ClusterSchedulingSimulation
 
 
 import org.apache.commons.math.distribution.ExponentialDistributionImpl
+import org.apache.commons.math3.distribution.LogNormalDistribution
 import org.apache.log4j.Logger
 
 /**
@@ -539,7 +540,9 @@ class TraceAllZoeWLGenerator(val workloadName: String,
                              maxCpusPerTask: Double,
                              maxMemPerTask: Double,
                              jobsPerWorkload: Int = 10000,
-                             allMoldable: Boolean = false)
+                             scaleFactor: Int = 1,
+                             allMoldable: Boolean = false,
+                             introduceError:Boolean = false)
   extends WorkloadGenerator {
   val logger = Logger.getLogger(this.getClass.getName)
   logger.info("Generating %s Workload...".format(workloadName))
@@ -552,8 +555,13 @@ class TraceAllZoeWLGenerator(val workloadName: String,
     DistCache.getDistribution(workloadName, tasksPerJobTraceFileName)
 
 
-  var jobDurationDist: Array[Double] =
+  var jobDurationDist: Array[Double] = if(!workloadName.equals("Interactive")){
     DistCache.getDistribution(workloadName, jobDurationTraceFileName)
+  }else{
+    DistCache.getDistribution(workloadName, "interactive-runtime-dist")
+  }
+
+
   val cpusPerTaskDist: Array[Double] =
     PrefillJobListsCache.getCpusPerTaskDistribution(workloadName,
       prefillTraceFileName)
@@ -562,13 +570,19 @@ class TraceAllZoeWLGenerator(val workloadName: String,
       prefillTraceFileName)
   val randomNumberGenerator = new util.Random(Seed())
 
-  def generateError(): Double = {
-    val randomNumberGenerator = util.Random
-    var error: Double = 1 - (randomNumberGenerator.nextDouble() * (randomNumberGenerator.nextInt(2) - 1))
-    while(error <= 0 && error >= 2)
-      error = 1 - (randomNumberGenerator.nextDouble() * (randomNumberGenerator.nextInt(2) - 1))
-
+  def generateError(mu:Double = 0, sigma:Double = 0.5, factor:Double = 1): Double = {
+    var error:Double = 1
+    if(introduceError){
+      val logNormal:LogNormalDistribution  = new LogNormalDistribution(mu, sigma)
+      error = factor * logNormal.sample()
+    }
     error
+
+//    val randomNumberGenerator = util.Random
+//    var error: Double = 1 - (randomNumberGenerator.nextDouble() * (randomNumberGenerator.nextInt(2) - 1))
+//    while(error <= 0 && error >= 2)
+//      error = 1 - (randomNumberGenerator.nextDouble() * (randomNumberGenerator.nextInt(2) - 1))
+//    error
   }
 
   /**
@@ -589,19 +603,22 @@ class TraceAllZoeWLGenerator(val workloadName: String,
     }
   }
 
-  def newJob(submissionTime: Double, numMoldableTasks: Integer): Job = {
+  def newJob(submissionTime: Double, numMoldableTasks: Integer, timeWindow: Double): Job = {
     // Don't allow jobs with duration 0.
     var dur = 0.0
-    while (dur <= 0.0)
-      dur = getQuantile(jobDurationDist, randomNumberGenerator.nextFloat) / 4.0
-//    if(workloadName.equals("Interactive"))
-//      dur *= 4
+    while (dur <= 0.0 || dur >= timeWindow * 0.1) {
+      dur = getQuantile(jobDurationDist, randomNumberGenerator.nextFloat)
+      if (!workloadName.equals("Interactive"))
+        dur *= 30
+    }
 
     // Use ceil to avoid jobs with 0 tasks.
     var numTasks = math.ceil(getQuantile(tasksPerJobDist, randomNumberGenerator.nextFloat).toFloat).toInt
     assert(numTasks != 0, "Jobs must have at least one task.")
-    if(!workloadName.equals("Interactive"))
-      numTasks *= 20
+    if(workloadName.equals("Batch"))
+      numTasks *= 10
+    if(workloadName.equals("Interactive"))
+      numTasks -= 1
 
     // Sample from the empirical distribution until we get task
     // cpu and mem sizes that are small enough.
@@ -650,14 +667,15 @@ class TraceAllZoeWLGenerator(val workloadName: String,
     while (numJobs < jobsPerWorkload) {
       if (nextJobSubmissionTime < timeWindow) {
         var moldableTasks: Integer =  randomNumberGenerator.nextInt(5)
-        if(workloadName.equals("Interactive"))
-          moldableTasks = randomNumberGenerator.nextInt(3)
+//        if(workloadName.equals("Interactive"))
+//          moldableTasks = randomNumberGenerator.nextInt(3)
         if(allMoldable)
           moldableTasks = null
-
-        val job = newJob(nextJobSubmissionTime, moldableTasks)
-        assert(job.workloadName == workload.name)
-        workload.addJob(job)
+        for (i <- 1 to scaleFactor){
+          val job = newJob(nextJobSubmissionTime, moldableTasks, timeWindow)
+          assert(job.workloadName == workload.name)
+          workload.addJob(job)
+        }
         numJobs += 1
       }
       // For this type of WorkloadGenerator in which interarrival rate is
@@ -665,11 +683,20 @@ class TraceAllZoeWLGenerator(val workloadName: String,
       // updatedAvgJobInterarrivalTime parameter represents a scaling factor
       // for the value sampled from the distribution.
       val newinterArrivalTime = updatedAvgJobInterarrivalTime.getOrElse(1.0) *
-        getQuantile(interarrivalDist, randomNumberGenerator.nextFloat)
-      if (newinterArrivalTime + nextJobSubmissionTime < timeWindow)
+        getQuantile(interarrivalDist, randomNumberGenerator.nextFloat) * 100
+      if (newinterArrivalTime + nextJobSubmissionTime < timeWindow * 0.5)
         nextJobSubmissionTime += newinterArrivalTime
+      else{
+        logger.warn("[%s] job submission going outside the time window. Resetting it.".format(workloadName))
+        nextJobSubmissionTime = getQuantile(interarrivalDist, randomNumberGenerator.nextFloat)
+      }
+
     }
-    assert(numJobs == workload.numJobs, "Num Jobs generated differs from what has been asked")
+//    assert(numJobs == workload.numJobs, "Num Jobs generated differs from what has been asked")
+    workload.sortJobs()
+    val lastJob = workload.getJobs.last
+    logger.info("[%s] The last job arrives at %f and will finish at %f".format(workloadName, lastJob.submitted, lastJob.submitted + lastJob.jobDuration))
+
     workload
   }
 
@@ -755,7 +782,7 @@ class FakeZoeWorkloadGenerator(
 
     val jobA = Job(1,
       0,
-      2,
+      4,
       10,
       workloadName,
       0.1,
@@ -766,8 +793,8 @@ class FakeZoeWorkloadGenerator(
     workload.addJob(jobA)
     val jobB = Job(2,
       0,
-      1,
-      12.5,
+      3,
+      10,
       workloadName,
       0.1,
       12.8,
@@ -777,19 +804,19 @@ class FakeZoeWorkloadGenerator(
     workload.addJob(jobB)
     val jobC = Job(3,
       0,
-      4,
-      6.25,
+      5,
+      10,
       workloadName,
       0.1,
       12.8,
       isRigid = false,
-      numMoldableTasks = Option(4)
+      numMoldableTasks = Option(3)
     )
     workload.addJob(jobC)
     val jobD = Job(4,
+      0,
+      2,
       10,
-      4,
-      20,
       workloadName,
       0.1,
       12.8,

@@ -42,5 +42,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.5" % "test"
 libraryDependencies += "com.google.protobuf" % "protobuf-java" % "2.6.1"
 
 libraryDependencies += "log4j" % "log4j" % "1.2.14"
+// https://mvnrepository.com/artifact/org.apache.commons/commons-math3
+libraryDependencies += "org.apache.commons" % "commons-math3" % "3.2"
+
 
 
