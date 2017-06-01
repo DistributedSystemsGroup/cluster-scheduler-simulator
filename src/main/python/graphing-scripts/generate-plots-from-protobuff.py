@@ -299,17 +299,17 @@ label_translation = {
     "Batch-MPI": "B-R",
     "Interactive": "Int",
 
-    # "PSJF": "SJF",
-    # "hPSJF": "hSJF",
-    # "ePSJF": "eSJF",
-    #
-    # "PSJF2D": "SJF2D",
-    # "hPSJF2D": "hSJF2D",
-    # "ePSJF2D": "eSJF2D",
-    #
-    # "PSJF3D": "SJF3D",
-    # "hPSJF3D": "hSJF3D",
-    # "ePSJF3D": "eSJF3D",
+    "PSJF": "SJF",
+    "hPSJF": "hSJF",
+    "ePSJF": "eSJF",
+
+    "PSJF2D": "SJF2D",
+    "hPSJF2D": "hSJF2D",
+    "ePSJF2D": "eSJF2D",
+
+    "PSJF3D": "SJF3D",
+    "hPSJF3D": "hSJF3D",
+    "ePSJF3D": "eSJF3D",
 }
 
 
@@ -1500,31 +1500,37 @@ def plot_distribution(data_set_1d_dict,
 
 
 def sort_keys(dictionary):
+    def strip_first_letter(label):
+        label = label.encode('ascii', 'ignore')
+        if label.startswith('h') or label.startswith('e'):
+            label = label[1:]
+        return label
+
+    def parse_key(label):
+        label = strip_first_letter(label)
+        index = label.find('-')
+        label = label[index + 1:] + '-' + label[:index]
+        return label
+
     sorted_keys = []
     keys = dictionary.keys()
     if len(keys) > 0:
-        keys = sorted(keys)
-    for exp_env in keys:
-        if exp_env not in sorted_keys:
-            lb = exp_env.encode('ascii', 'ignore')
-            if lb.startswith('h'):
-                lb = lb[1:]
-            inserted = False
-            for idx in range(len(sorted_keys)):
-                lb1 = sorted_keys[idx].encode('ascii', 'ignore')
-                if lb1.startswith('h'):
-                    lb1 = lb1[1:]
+        keys = sorted(keys, key=parse_key)
 
-                if lb == lb1:
-                    if lb == exp_env:
-                        sorted_keys.insert(idx, exp_env)
-                    else:
-                        sorted_keys.insert(idx + 1, exp_env)
-                    inserted = True
-                    break
-            if not inserted:
-                sorted_keys.append(exp_env)
-    # logging.info("{}".format(sorted_keys))
+        # sorted_keys = keys
+        tmp_keys = [keys[0]]
+        for exp_env in keys[1:]:
+            label = strip_first_letter(exp_env)
+            if label == strip_first_letter(tmp_keys[0]):
+                if label != exp_env:
+                    tmp_keys.append(exp_env)
+                else:
+                    tmp_keys.insert(0, exp_env)
+            else:
+                [sorted_keys.append(l) for l in tmp_keys]
+                tmp_keys = [exp_env]
+        [sorted_keys.append(l) for l in tmp_keys]
+        # sorted_keys = keys
     return sorted_keys
 
 
@@ -2107,12 +2113,12 @@ plot_boxplot_2d(workload_job_scheduled_turnaround,
 #                      u'Runtime (s)',
 #                      "0-to-1")
 
-plot_boxplot_2d(workload_job_scheduled_execution_time,
-                "Application Execution",
-                "job-execution-time-distribution",
-                u'Time (s)',
-                "abs",
-                "boxplot")
+# plot_boxplot_2d(workload_job_scheduled_execution_time,
+#                 "Application Execution",
+#                 "job-execution-time-distribution",
+#                 u'Time (s)',
+#                 "abs",
+#                 "boxplot")
 
 # plot_distribution_2d(workload_job_scheduled_queue_time,
 #                      "Application Queue Time distribution",
